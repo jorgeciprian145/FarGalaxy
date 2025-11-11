@@ -17,9 +17,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -35,12 +38,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -385,6 +391,47 @@ fun LaunchButton(
 }
 
 /**
+ * ImpulseLayer composable - displays the ship's engine thrust/impulse effect.
+ * The image animates from 0% to 100% width over 3 seconds when travel starts.
+ * 
+ * @param isTraveling Boolean flag indicating if travel is active
+ * @param modifier Modifier for positioning and sizing
+ * 
+ * The impulse effect:
+ * - Uses impulse1.png from drawable-nodpi
+ * - Fixed width of 124.dp
+ * - Starts at 0% width and expands to 100% over 3 seconds
+ * - Vertically centered
+ * - Offset 40.dp to the left from center
+ * - Only visible when isTraveling is true
+ */
+@Composable
+fun ImpulseLayer(
+    isTraveling: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    // TEST: Start with fixed width to verify image loads
+    if (!isTraveling) {
+        return
+    }
+
+    Box(
+        modifier = modifier
+            .offset(x = (-120).dp), // Debug background
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.impulse1),
+            contentDescription = "Engine thrust effect",
+            modifier = Modifier
+                .width(600.dp)
+                .height(100.dp), // Fixed width for testing
+            contentScale = ContentScale.Fit
+        )
+    }
+}
+
+/**
  * CountdownRing composable - displays a circular progress ring that visually represents remaining time.
  * The ring is drawn using Canvas and shows a shrinking arc as time progresses.
  * When first appearing, the ring animates from 0° to full circle over 5 seconds.
@@ -613,13 +660,28 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
         )
 
         // Radar animation layer: Lottie animation displayed as a centered 640.dp square.
-        // Positioned at the vertical center. Radar speed changes are handled by RadarLayer composable.
+        // Positioned at the vertical center. Radar speed changes based on travel state:
+        // - When traveling: 1.75f (faster animation)
+        // - When idle: 0.8f (normal speed)
         RadarLayer(
+            isTraveling = isTraveling,
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(640.dp)
                 .clipToBounds()
         )
+
+        // Impulse/thrust effect layer: Engine thrust effect that appears when traveling.
+        // Positioned above the radar but below the ship image.
+        // Animates from 0% to 100% width over 3 seconds when travel starts.
+        // Vertically centered and offset 40.dp to the left from center.
+        if (isTraveling) {
+            ImpulseLayer(
+                isTraveling = isTraveling,
+                modifier = Modifier
+                    .align(Alignment.Center)
+            )
+        }
 
         // Countdown ring layer: Circular progress ring centered on the radar and ship.
         // Only visible when isTraveling is true.
