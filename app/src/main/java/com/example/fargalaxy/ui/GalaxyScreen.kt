@@ -243,8 +243,9 @@ fun PlusButton(
 }
 
 /**
- * TimeLabel composable - displays the time duration in minutes.
- * Shows different text based on travel state:
+ * TimeLabel composable - displays the time duration in minutes or launch countdown.
+ * Shows different text based on state:
+ * - When preparing: "Launching in X" (where X is 3, 2, or 1)
  * - When idle: "$selectedMinutes mins"
  * - When traveling: "$remainingMinutes mins remaining" (converts seconds to minutes)
  * Uses Exo 2 Regular font at 24.sp with white color for visibility on dark background.
@@ -254,15 +255,18 @@ fun TimeLabel(
     selectedMinutes: Int = 25,
     remainingSeconds: Int = 25 * 60,
     isTraveling: Boolean = false,
+    isPreparingLaunch: Boolean = false,
+    launchCountdown: Int = 3,
     modifier: Modifier = Modifier
 ) {
-    // Determine the text to display based on travel state
-    // When traveling, convert seconds to minutes (round up to show at least 1 minute if any time remains)
-    val displayText = if (isTraveling) {
-        val remainingMinutes = (remainingSeconds + 59) / 60 // Round up to nearest minute
-        "$remainingMinutes mins remaining"
-    } else {
-        "$selectedMinutes mins"
+    // Determine the text to display based on state
+    val displayText = when {
+        isPreparingLaunch -> "Launching in $launchCountdown"
+        isTraveling -> {
+            val remainingMinutes = (remainingSeconds + 59) / 60 // Round up to nearest minute
+            "$remainingMinutes mins remaining"
+        }
+        else -> "$selectedMinutes mins"
     }
     
     Text(
@@ -277,34 +281,39 @@ fun TimeLabel(
 
 /**
  * TimeControlsBar composable - horizontal row containing time adjustment controls.
- * When not traveling: Displays MinusButton on the left, TimeLabel in the center, and PlusButton on the right.
- * When traveling: Only displays TimeLabel in the center (buttons are hidden).
+ * When not traveling/preparing: Displays MinusButton on the left, TimeLabel in the center, and PlusButton on the right.
+ * When traveling/preparing: Only displays TimeLabel in the center (buttons are hidden).
  * Uses SpaceBetween arrangement to evenly distribute elements across the full width.
- * Buttons are hidden when isTraveling is true.
+ * Buttons are hidden when isTraveling or isPreparingLaunch is true.
  */
 @Composable
 fun TimeControlsBar(
     selectedMinutes: Int = 25,
     remainingSeconds: Int = 25 * 60,
     isTraveling: Boolean = false,
+    isPreparingLaunch: Boolean = false,
+    launchCountdown: Int = 3,
     modifier: Modifier = Modifier,
     onMinusClick: () -> Unit = {},
     onPlusClick: () -> Unit = {}
 ) {
+    // Center the label when traveling or preparing, otherwise space buttons
+    val shouldCenter = isTraveling || isPreparingLaunch
+    
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(51.dp)
             .padding(horizontal = 24.dp),
-        horizontalArrangement = if (isTraveling) {
-            Arrangement.Center // Center the label when traveling
+        horizontalArrangement = if (shouldCenter) {
+            Arrangement.Center // Center the label when traveling or preparing
         } else {
-            Arrangement.SpaceBetween // Space buttons when not traveling
+            Arrangement.SpaceBetween // Space buttons when not traveling/preparing
         },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Only show buttons when not traveling
-        if (!isTraveling) {
+        // Only show buttons when not traveling or preparing
+        if (!shouldCenter) {
             MinusButton(
                 onClick = onMinusClick,
                 enabled = true
@@ -314,11 +323,13 @@ fun TimeControlsBar(
         TimeLabel(
             selectedMinutes = selectedMinutes,
             remainingSeconds = remainingSeconds,
-            isTraveling = isTraveling
+            isTraveling = isTraveling,
+            isPreparingLaunch = isPreparingLaunch,
+            launchCountdown = launchCountdown
         )
         
-        // Only show buttons when not traveling
-        if (!isTraveling) {
+        // Only show buttons when not traveling or preparing
+        if (!shouldCenter) {
             PlusButton(
                 onClick = onPlusClick,
                 enabled = true
@@ -330,31 +341,34 @@ fun TimeControlsBar(
 /**
  * LaunchButton composable - displays the main action button at the bottom of the screen.
  * Primary style (idle): White background with rounded corners (80.dp radius) and dark text.
- * Secondary style (traveling): Transparent background with 1px white border and white text.
- * Button text toggles between "LAUNCH" (when idle) and "STOP TRAVEL" (when traveling).
+ * Secondary style (traveling/preparing): Transparent background with 1px white border and white text.
+ * Button text toggles between "LAUNCH" (when idle), "CANCEL" (when preparing), and "STOP TRAVEL" (when traveling).
  * Uses Exo 2 Regular font at 24.sp for the button label.
  */
 @Composable
 fun LaunchButton(
     onClick: () -> Unit = {},
     isTraveling: Boolean = false,
+    isPreparingLaunch: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // Determine button text based on travel state
-    val buttonText = if (isTraveling) {
-        "STOP TRAVEL"
-    } else {
-        "LAUNCH"
+    // Determine button text based on state
+    val buttonText = when {
+        isPreparingLaunch -> "CANCEL"
+        isTraveling -> "STOP TRAVEL"
+        else -> "LAUNCH"
     }
 
-    // Determine button styling based on travel state
-    val backgroundColor = if (isTraveling) {
+    // Determine button styling based on state
+    // Preparing and traveling use secondary style (transparent with border)
+    val useSecondaryStyle = isTraveling || isPreparingLaunch
+    val backgroundColor = if (useSecondaryStyle) {
         Color.Transparent // Secondary style: no fill
     } else {
         Color(0xFFFFFFFF) // Primary style: white fill
     }
 
-    val textColor = if (isTraveling) {
+    val textColor = if (useSecondaryStyle) {
         Color(0xFFFFFFFF) // Secondary style: white text
     } else {
         Color(0xFF010102) // Primary style: dark text
@@ -367,8 +381,8 @@ fun LaunchButton(
             .padding(horizontal = 24.dp)
             .clip(RoundedCornerShape(80.dp))
             .then(
-                // Add border only when in secondary style (traveling)
-                if (isTraveling) {
+                // Add border only when in secondary style (traveling or preparing)
+                if (useSecondaryStyle) {
                     Modifier.border(
                         width = 1.dp,
                         color = Color(0xFFFFFFFF), // White border
@@ -389,24 +403,26 @@ fun LaunchButton(
             lineHeight = 24.sp,
             color = textColor,
             textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = (-2).dp)
         )
     }
 }
 
 /**
  * ImpulseLayer composable - displays the ship's engine thrust/impulse effect.
- * The image animates from 0% to 100% width over 3 seconds when travel starts.
+ * The image fades in from 0% to 100% opacity over 4 seconds when travel starts.
  * 
  * @param isTraveling Boolean flag indicating if travel is active
  * @param modifier Modifier for positioning and sizing
  * 
  * The impulse effect:
  * - Uses impulse1.png from drawable-nodpi
- * - Fixed width of 124.dp
- * - Starts at 0% width and expands to 100% over 3 seconds
+ * - Fixed width of 600.dp and height of 100.dp
+ * - Starts at 0% opacity and fades to 100% over 4 seconds when travel begins
  * - Vertically centered
- * - Offset 40.dp to the left from center
+ * - Offset 120.dp to the left from center
  * - Only visible when isTraveling is true
  */
 @Composable
@@ -414,10 +430,31 @@ fun ImpulseLayer(
     isTraveling: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // TEST: Start with fixed width to verify image loads
+    // Return early if not traveling
     if (!isTraveling) {
         return
     }
+
+    // State to control opacity target - starts at 0f, animates to 1f when travel begins
+    var targetOpacity by remember(isTraveling) { mutableStateOf(0f) }
+    
+    // Trigger fade-in animation when isTraveling becomes true
+    LaunchedEffect(isTraveling) {
+        if (isTraveling) {
+            targetOpacity = 0f // Start from 0
+            delay(10) // Small delay to ensure state is set
+            targetOpacity = 1f // Animate to 1f
+        } else {
+            targetOpacity = 0f // Reset when travel stops
+        }
+    }
+
+    // Animate opacity from 0f to 1f over 4 seconds
+    val opacity by animateFloatAsState(
+        targetValue = targetOpacity,
+        animationSpec = tween(durationMillis = 4000),
+        label = "impulse_fade_in"
+    )
 
     Box(
         modifier = modifier
@@ -429,7 +466,8 @@ fun ImpulseLayer(
             contentDescription = "Engine thrust effect",
             modifier = Modifier
                 .width(600.dp)
-                .height(100.dp), // Fixed width for testing
+                .height(100.dp)
+                .alpha(opacity), // Apply fade-in animation
             contentScale = ContentScale.Fit
         )
     }
@@ -437,7 +475,7 @@ fun ImpulseLayer(
 
 /**
  * SpeedEffectLayer composable - displays a Lottie animation speed effect.
- * The animation appears when traveling and loops continuously.
+ * The animation appears at full opacity and speeds up from 0.5x to 1.0x over 8 seconds.
  * 
  * @param isVisible Boolean flag indicating if the speed effect should be visible
  * @param modifier Modifier for positioning and sizing
@@ -447,7 +485,8 @@ fun ImpulseLayer(
  * - Scales to full width of the screen using fillMaxWidth()
  * - Maintains aspect ratio using ContentScale.Fit
  * - Loops continuously when visible
- * - Returns early if isVisible is false
+ * - Appears at full opacity (100%) when visible
+ * - Animates speed from 0.5x to 1.0x over 8 seconds when visible
  */
 @Composable
 fun SpeedEffectLayer(
@@ -459,11 +498,36 @@ fun SpeedEffectLayer(
         return
     }
 
+    // State to control speed target - starts at 0.5f, animates to 1.0f when visible
+    var targetSpeed by remember(isVisible) { mutableStateOf(0.5f) }
+    
+    // Trigger speed animation when isVisible becomes true
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            // Start from initial speed
+            targetSpeed = 0.5f // Start from 0.5
+            
+            // Start speed animation immediately
+            targetSpeed = 1.0f // Animate speed from 0.5f to 1.0f over 8 seconds
+        } else {
+            // Reset to initial speed when not visible
+            targetSpeed = 0.5f
+        }
+    }
+
+    // Animate speed from 0.5f to 1.0f over 8 seconds
+    val speed by animateFloatAsState(
+        targetValue = targetSpeed,
+        animationSpec = tween(durationMillis = 8000),
+        label = "speed_effect_speed"
+    )
+
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.speedeffect))
 
     LottieAnimation(
         composition = composition,
         iterations = LottieConstants.IterateForever,
+        speed = speed, // Apply animated speed
         modifier = modifier
             .fillMaxWidth(),
         contentScale = ContentScale.Fit
@@ -636,6 +700,13 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
     // Appears 2 seconds after travel starts and disappears immediately when travel stops
     var showSpeedEffect by remember { mutableStateOf(false) }
     
+    // isPreparingLaunch: Boolean flag that indicates if the launch preparation countdown is active
+    // When true, shows 3-second countdown before actual travel begins
+    var isPreparingLaunch by remember { mutableStateOf(false) }
+    
+    // launchCountdown: The countdown number displayed during launch preparation (3, 2, 1)
+    var launchCountdown by remember { mutableStateOf(3) }
+    
     // Handler: Increment selectedMinutes by 5, clamped to maximum of 60
     // Only works when not traveling (buttons are disabled during travel)
     fun onIncrement() {
@@ -653,14 +724,18 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
     }
     
     // Handler: Toggle travel state (launch/stop travel)
-    // When launching: Set isTraveling to true and initialize remainingSeconds to selectedMinutes * 60
+    // When launching: Start preparation countdown instead of immediately starting travel
+    // When preparing: Cancel the launch preparation
     // When stopping: Set isTraveling to false (countdown will stop automatically)
     fun onLaunchToggle() {
-        if (!isTraveling) {
-            // Start travel: Initialize countdown with selected time (convert minutes to seconds)
-            isTraveling = true
-            remainingSeconds = selectedMinutes * 60
-            isInitialRingAppearance = true // Trigger initial drawing animation
+        if (isPreparingLaunch) {
+            // Cancel launch during preparation
+            isPreparingLaunch = false
+            launchCountdown = 3 // Reset countdown
+        } else if (!isTraveling) {
+            // Start preparation instead of immediate launch
+            isPreparingLaunch = true
+            launchCountdown = 3 // Initialize countdown
         } else {
             // Stop travel: Cancel countdown
             isTraveling = false
@@ -692,12 +767,37 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
         }
     }
     
+    // Launch preparation countdown: 3-second countdown before actual travel begins
+    // Decrements launchCountdown every second (3, 2, 1)
+    // After countdown completes, automatically starts travel if not cancelled
+    LaunchedEffect(isPreparingLaunch) {
+        if (isPreparingLaunch) {
+            launchCountdown = 3 // Reset to 3
+            while (isPreparingLaunch && launchCountdown > 0) {
+                delay(1000) // Wait 1 second
+                if (isPreparingLaunch) { // Check if still preparing (not cancelled)
+                    launchCountdown--
+                }
+            }
+            // After countdown completes, start travel if still preparing
+            if (isPreparingLaunch) {
+                isPreparingLaunch = false
+                isTraveling = true
+                remainingSeconds = selectedMinutes * 60
+                isInitialRingAppearance = true // Trigger initial drawing animation
+                launchCountdown = 3 // Reset for next time
+            }
+        } else {
+            launchCountdown = 3 // Reset when cancelled
+        }
+    }
+    
     // Speed effect visibility management: Controls when the speed effect appears
-    // When isTraveling becomes true: wait 2 seconds, then set showSpeedEffect = true (only if still traveling)
+    // When isTraveling becomes true: wait 5 seconds, then set showSpeedEffect = true (only if still traveling)
     // When isTraveling becomes false: immediately set showSpeedEffect = false
     LaunchedEffect(isTraveling) {
         if (isTraveling) {
-            delay(2000) // Wait 2 seconds
+            delay(5000) // Wait 5 seconds
             if (isTraveling) { // Check if still traveling after delay
                 showSpeedEffect = true
             }
@@ -820,9 +920,10 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
                 )
         )
 
-        // Top controls area: Shows different content based on travel state
-        // When not traveling: Shows TopControlsBar with navigation controls
-        // When traveling: Shows "In travel" label with same styling as TimeLabel
+        // Top controls area: Shows different content based on state
+        // When preparing: Shows "Preparing for launch" label
+        // When traveling: Shows "In travel" label
+        // When idle: Shows TopControlsBar with navigation controls
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -832,20 +933,35 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
                 .height(51.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (isTraveling) {
-                // Show "In travel" label when traveling
-                // Uses same font style as TimeLabel (Exo2 Regular, 24.sp, white color)
-                Text(
-                    text = "In travel",
-                    fontFamily = Exo2,
-                    fontSize = 24.sp,
-                    lineHeight = 24.sp,
-                    color = Color(0xFFFFFFFF),
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                // Show navigation controls when not traveling
-                TopControlsBar()
+            when {
+                isPreparingLaunch -> {
+                    // Show "Preparing for launch" label when preparing
+                    // Uses same font style as TimeLabel (Exo2 Regular, 24.sp, white color)
+                    Text(
+                        text = "Preparing for launch",
+                        fontFamily = Exo2,
+                        fontSize = 24.sp,
+                        lineHeight = 24.sp,
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                isTraveling -> {
+                    // Show "In travel" label when traveling
+                    // Uses same font style as TimeLabel (Exo2 Regular, 24.sp, white color)
+                    Text(
+                        text = "In travel",
+                        fontFamily = Exo2,
+                        fontSize = 24.sp,
+                        lineHeight = 24.sp,
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                else -> {
+                    // Show navigation controls when idle
+                    TopControlsBar()
+                }
             }
         }
 
@@ -862,21 +978,24 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Time controls bar: Displays minus button, time label, and plus button.
-            // When traveling: Only shows time label (buttons are hidden).
-            // When not traveling: Shows all controls with buttons enabled.
+            // When traveling/preparing: Only shows time label (buttons are hidden).
+            // When not traveling/preparing: Shows all controls with buttons enabled.
             TimeControlsBar(
                 selectedMinutes = selectedMinutes,
                 remainingSeconds = remainingSeconds,
                 isTraveling = isTraveling,
+                isPreparingLaunch = isPreparingLaunch,
+                launchCountdown = launchCountdown,
                 onMinusClick = ::onDecrement,
                 onPlusClick = ::onIncrement
             )
             
-            // Launch button: Toggles between "LAUNCH" and "STOP TRAVEL" based on travel state.
-            // Calls onLaunchToggle handler to start or stop the countdown.
+            // Launch button: Toggles between "LAUNCH", "CANCEL" (when preparing), and "STOP TRAVEL" (when traveling).
+            // Calls onLaunchToggle handler to start preparation, cancel, or stop the countdown.
             LaunchButton(
                 onClick = ::onLaunchToggle,
-                isTraveling = isTraveling
+                isTraveling = isTraveling,
+                isPreparingLaunch = isPreparingLaunch
             )
         }
 
