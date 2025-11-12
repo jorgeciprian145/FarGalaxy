@@ -57,6 +57,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import kotlinx.coroutines.delay
 
@@ -432,6 +436,41 @@ fun ImpulseLayer(
 }
 
 /**
+ * SpeedEffectLayer composable - displays a Lottie animation speed effect.
+ * The animation appears when traveling and loops continuously.
+ * 
+ * @param isVisible Boolean flag indicating if the speed effect should be visible
+ * @param modifier Modifier for positioning and sizing
+ * 
+ * The speed effect:
+ * - Uses speedeffect.json from raw resources
+ * - Scales to full width of the screen using fillMaxWidth()
+ * - Maintains aspect ratio using ContentScale.Fit
+ * - Loops continuously when visible
+ * - Returns early if isVisible is false
+ */
+@Composable
+fun SpeedEffectLayer(
+    isVisible: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    // Return early if not visible
+    if (!isVisible) {
+        return
+    }
+
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.speedeffect))
+
+    LottieAnimation(
+        composition = composition,
+        iterations = LottieConstants.IterateForever,
+        modifier = modifier
+            .fillMaxWidth(),
+        contentScale = ContentScale.Fit
+    )
+}
+
+/**
  * CountdownRing composable - displays a circular progress ring that visually represents remaining time.
  * The ring is drawn using Canvas and shows a shrinking arc as time progresses.
  * When first appearing, the ring animates from 0° to full circle over 5 seconds.
@@ -593,6 +632,10 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
     // Used to trigger the initial drawing animation (0° to 360° over 5 seconds)
     var isInitialRingAppearance by remember { mutableStateOf(false) }
     
+    // showSpeedEffect: Controls visibility of the speed effect Lottie animation
+    // Appears 2 seconds after travel starts and disappears immediately when travel stops
+    var showSpeedEffect by remember { mutableStateOf(false) }
+    
     // Handler: Increment selectedMinutes by 5, clamped to maximum of 60
     // Only works when not traveling (buttons are disabled during travel)
     fun onIncrement() {
@@ -649,6 +692,20 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
         }
     }
     
+    // Speed effect visibility management: Controls when the speed effect appears
+    // When isTraveling becomes true: wait 2 seconds, then set showSpeedEffect = true (only if still traveling)
+    // When isTraveling becomes false: immediately set showSpeedEffect = false
+    LaunchedEffect(isTraveling) {
+        if (isTraveling) {
+            delay(2000) // Wait 2 seconds
+            if (isTraveling) { // Check if still traveling after delay
+                showSpeedEffect = true
+            }
+        } else {
+            showSpeedEffect = false // Immediately hide when travel stops
+        }
+    }
+    
     // Main container Box that fills the entire screen
     Box(modifier = modifier.fillMaxSize()) {
         // Background layer: Full-screen galaxy background image, cropped to fill the screen
@@ -671,13 +728,16 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
                 .clipToBounds()
         )
 
-        // Impulse/thrust effect layer: Engine thrust effect that appears when traveling.
-        // Positioned above the radar but below the ship image.
-        // Animates from 0% to 100% width over 3 seconds when travel starts.
-        // Vertically centered and offset 40.dp to the left from center.
-        if (isTraveling) {
-            ImpulseLayer(
-                isTraveling = isTraveling,
+        // Speed effect layer: Lottie animation that appears 2 seconds after travel starts.
+        // Positioned between the radar layer and countdown ring.
+        // Scales to full width and maintains aspect ratio.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .align(Alignment.Center)
+        ) {
+            SpeedEffectLayer(
+                isVisible = showSpeedEffect,
                 modifier = Modifier
                     .align(Alignment.Center)
             )
@@ -685,7 +745,7 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
 
         // Countdown ring layer: Circular progress ring centered on the radar and ship.
         // Only visible when isTraveling is true.
-        // Positioned above the radar but below the ship image.
+        // Positioned above the radar but below the ship image and impulse.
         // The ring visually represents remaining time, shrinking as the countdown progresses.
         // Decreases smoothly every second for continuous visual feedback.
         // On first appearance, animates from 0° to full circle over 5 seconds.
@@ -701,8 +761,21 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
             )
         }
 
+        // Impulse/thrust effect layer: Engine thrust effect that appears when traveling.
+        // Positioned above the countdown ring but below the ship image.
+        // Animates from 0% to 100% width over 3 seconds when travel starts.
+        // Vertically centered and offset 40.dp to the left from center.
+        if (isTraveling) {
+            ImpulseLayer(
+                isTraveling = isTraveling,
+                modifier = Modifier
+                    .align(Alignment.Center)
+            )
+        }
+
         // Spaceship layer: Centered spaceship image with fixed height of 170.dp.
         // Positioned at the vertical center to align with the radar animation and countdown ring.
+        // Appears above the countdown ring and impulse layer.
         Image(
             painter = painterResource(id = R.drawable.ship1),
             contentDescription = null,
