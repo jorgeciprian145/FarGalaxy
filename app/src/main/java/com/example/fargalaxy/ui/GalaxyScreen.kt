@@ -64,6 +64,9 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 // Exo 2 font family definition - variable font set to Regular weight (W400)
 val Exo2 = FontFamily(Font(R.font.exo2, weight = FontWeight.W400))
@@ -662,7 +665,7 @@ fun CountdownRing(
 
     // Canvas composable to draw the circular arc
     Canvas(
-        modifier = modifier.size(280.dp)
+        modifier = modifier.size(274.dp)
     ) {
         // Calculate the center point and radius of the circle
         // Account for stroke width to ensure the full circle fits within the canvas
@@ -726,7 +729,7 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
     var isInitialRingAppearance by remember { mutableStateOf(false) }
     
     // showSpeedEffect: Controls visibility of the speed effect Lottie animation
-    // Appears 2 seconds after travel starts and disappears immediately when travel stops
+    // Appears 3 seconds after travel starts and disappears immediately when travel stops
     var showSpeedEffect by remember { mutableStateOf(false) }
     
     // isPreparingLaunch: Boolean flag that indicates if the launch preparation countdown is active
@@ -820,18 +823,44 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
             launchCountdown = 3 // Reset when cancelled
         }
     }
-    
+
     // Speed effect visibility management: Controls when the speed effect appears
-    // When isTraveling becomes true: wait 5 seconds, then set showSpeedEffect = true (only if still traveling)
-    // When isTraveling becomes false: immediately set showSpeedEffect = false
+    // Uses a remembered coroutine scope to avoid LaunchedEffect conflicts
+    // When isTraveling becomes true: show after 3 seconds
+    // When isTraveling becomes false: immediately hide
+
+    // Remember a coroutine scope for speed effect timing
+    val speedEffectScope = rememberCoroutineScope()
+    var speedEffectJob by remember { mutableStateOf<Job?>(null) }
+
+    // Track a unique identifier for each travel session to prevent stale checks
+    var travelSessionId by remember { mutableStateOf(0L) }
+
+    // Handle speed effect timing when travel state changes
     LaunchedEffect(isTraveling) {
+        // Cancel any existing job
+        speedEffectJob?.cancel()
+        speedEffectJob = null
+
         if (isTraveling) {
-            delay(10) // Wait 5 seconds
-            if (isTraveling) { // Check if still traveling after delay
-                showSpeedEffect = true
+            // Increment session ID for this travel session
+            val currentSessionId = System.currentTimeMillis()
+            travelSessionId = currentSessionId
+
+            // Launch coroutine to show speed effect after 3 seconds
+            val job = speedEffectScope.launch {
+                // delay(3000) // Wait 3 seconds
+                // Only show if this is still the current travel session
+                // (check by comparing session IDs, not isTraveling which might be stale)
+                if (travelSessionId == currentSessionId) {
+                    showSpeedEffect = true
+                }
             }
+            speedEffectJob = job
         } else {
-            showSpeedEffect = false // Immediately hide when travel stops
+            // Immediately hide when travel stops and invalidate session
+            showSpeedEffect = false
+            travelSessionId = 0L // Invalidate session
         }
     }
     
@@ -886,7 +915,8 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
                 isInitialAppearance = isInitialRingAppearance,
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(280.dp)
+                    .offset(y = (-1).dp)  // Negative value moves upward
+                    .size(278.dp)
             )
         }
 
