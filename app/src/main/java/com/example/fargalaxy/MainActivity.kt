@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.fargalaxy.ui.theme.FarGalaxyTheme
-import com.example.fargalaxy.ui.GalaxyScreen
+import com.example.fargalaxy.ui.MainScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FarGalaxyTheme {
-                GalaxyScreen()
+                MainScreen()
             }
         }
     }

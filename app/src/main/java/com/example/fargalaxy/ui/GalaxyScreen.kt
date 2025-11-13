@@ -72,39 +72,36 @@ import androidx.compose.runtime.rememberCoroutineScope
 val Exo2 = FontFamily(Font(R.font.exo2, weight = FontWeight.W400))
 
 /**
+ * Enum to represent which screen is active in the indicator
+ */
+enum class ActiveScreen {
+    LEFT,   // Career screen
+    CENTER, // Galaxy screen
+    RIGHT   // Collection screen (future)
+}
+
+/**
  * Indicator composable - displays three pagination dots in a horizontal row.
- * The center dot is filled white when active, while the outer dots show as white outlines.
+ * The active dot is filled white, while inactive dots show as white outlines.
  * Used to indicate the current page/screen in the navigation.
  */
 @Composable
-fun Indicator(isCenterActive: Boolean = true) {
+fun Indicator(activeScreen: ActiveScreen = ActiveScreen.CENTER) {
     // Horizontal row containing three dots with 8.dp spacing between them
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left dot - inactive state: transparent fill with 1.dp white border
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .border(
-                    width = 1.dp,
-                    color = Color.White,
-                    shape = CircleShape
-                )
-        )
-        
-        // Center dot - active state: filled white when isCenterActive is true,
-        // otherwise shows as outline like the other inactive dots
+        // Left dot - active when activeScreen is LEFT
         Box(
             modifier = Modifier
                 .size(8.dp)
                 .background(
-                    color = if (isCenterActive) Color.White else Color.Transparent,
+                    color = if (activeScreen == ActiveScreen.LEFT) Color.White else Color.Transparent,
                     shape = CircleShape
                 )
                 .then(
-                    if (!isCenterActive) {
+                    if (activeScreen != ActiveScreen.LEFT) {
                         Modifier.border(
                             width = 1.dp,
                             color = Color.White,
@@ -114,14 +111,41 @@ fun Indicator(isCenterActive: Boolean = true) {
                 )
         )
         
-        // Right dot - inactive state: transparent fill with 1.dp white border
+        // Center dot - active when activeScreen is CENTER
         Box(
             modifier = Modifier
                 .size(8.dp)
-                .border(
-                    width = 1.dp,
-                    color = Color.White,
+                .background(
+                    color = if (activeScreen == ActiveScreen.CENTER) Color.White else Color.Transparent,
                     shape = CircleShape
+                )
+                .then(
+                    if (activeScreen != ActiveScreen.CENTER) {
+                        Modifier.border(
+                            width = 1.dp,
+                            color = Color.White,
+                            shape = CircleShape
+                        )
+                    } else Modifier
+                )
+        )
+        
+        // Right dot - active when activeScreen is RIGHT
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(
+                    color = if (activeScreen == ActiveScreen.RIGHT) Color.White else Color.Transparent,
+                    shape = CircleShape
+                )
+                .then(
+                    if (activeScreen != ActiveScreen.RIGHT) {
+                        Modifier.border(
+                            width = 1.dp,
+                            color = Color.White,
+                            shape = CircleShape
+                        )
+                    } else Modifier
                 )
         )
     }
@@ -173,6 +197,7 @@ fun CollectionButton(
 @Composable
 fun TopControlsBar(
     modifier: Modifier = Modifier,
+    activeScreen: ActiveScreen = ActiveScreen.CENTER,
     onCareerClick: () -> Unit = {},
     onCollectionClick: () -> Unit = {}
 ) {
@@ -186,7 +211,7 @@ fun TopControlsBar(
     ) {
         CareerButton(onClick = onCareerClick)
         
-        Indicator(isCenterActive = true)
+        Indicator(activeScreen = activeScreen)
         
         CollectionButton(onClick = onCollectionClick)
     }
@@ -709,9 +734,21 @@ fun CountdownRing(
  * - remainingSeconds: Current remaining time in seconds that decreases every second during countdown
  * 
  * All state is preserved across configuration changes using rememberSaveable.
+ * 
+ * @param modifier Modifier for the screen
+ * @param isIdleCallback Callback to notify parent when idle state changes (true when idle, false when preparing/traveling)
+ * @param activeScreen The currently active screen for indicator display
+ * @param onCareerClick Callback for career icon click
+ * @param onCollectionClick Callback for collection icon click
  */
 @Composable
-fun GalaxyScreen(modifier: Modifier = Modifier) {
+fun GalaxyScreen(
+    modifier: Modifier = Modifier,
+    isIdleCallback: (Boolean) -> Unit = {},
+    activeScreen: ActiveScreen = ActiveScreen.CENTER,
+    onCareerClick: () -> Unit = {},
+    onCollectionClick: () -> Unit = {}
+) {
     // State management: All state is saved across configuration changes (screen rotation, etc.)
     // selectedMinutes: The time duration selected by the user (range: 5-60, step: 5)
     var selectedMinutes by rememberSaveable { mutableStateOf(25) }
@@ -738,6 +775,12 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
     
     // launchCountdown: The countdown number displayed during launch preparation (3, 2, 1)
     var launchCountdown by remember { mutableStateOf(3) }
+    
+    // Notify parent about idle state changes
+    LaunchedEffect(isPreparingLaunch, isTraveling) {
+        val isIdle = !isPreparingLaunch && !isTraveling
+        isIdleCallback(isIdle)
+    }
     
     // Handler: Increment selectedMinutes by 5, clamped to maximum of 60
     // Only works when not traveling (buttons are disabled during travel)
@@ -865,15 +908,8 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
     }
     
     // Main container Box that fills the entire screen
+    // Note: Background and noise are handled by MainScreen (static layers)
     Box(modifier = modifier.fillMaxSize()) {
-        // Background layer: Full-screen galaxy background image, cropped to fill the screen
-        Image(
-            painter = painterResource(id = R.drawable.bg_galaxy),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
         // Radar animation layer: Lottie animation displayed as a centered 640.dp square.
         // Positioned at the vertical center. Radar speed changes based on travel state:
         // - When traveling: 1.75f (faster animation)
@@ -1018,8 +1054,20 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
                     )
                 }
                 else -> {
-                    // Show navigation controls when idle
-                    TopControlsBar()
+                    // Show navigation controls when idle - buttons only (indicator is in MainScreen)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(51.dp)
+                            .padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CareerButton(onClick = onCareerClick)
+                        // Indicator is shown in MainScreen (static), so we leave space for it
+                        Box(modifier = Modifier.width(8.dp)) // Spacer to maintain layout
+                        CollectionButton(onClick = onCollectionClick)
+                    }
                 }
             }
         }
@@ -1058,16 +1106,7 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
             )
         }
 
-        // Noise overlay: Fine grain texture applied on top of all other layers.
-        // Uses low opacity (0.082f) to add subtle texture without obscuring content.
-        Image(
-            painter = painterResource(id = R.drawable.noise_8bit),
-            contentDescription = null,
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(0.082f),
-            contentScale = ContentScale.Crop
-        )
+        // Note: Noise overlay is handled by MainScreen (static layer)
     }
 }
 
