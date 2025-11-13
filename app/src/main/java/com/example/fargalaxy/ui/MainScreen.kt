@@ -128,16 +128,19 @@ fun MainScreen(modifier: Modifier = Modifier) {
         )
         
         // Static indicator - positioned above everything (rendered last so it's on top)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .statusBarsPadding()
-                .padding(top = 48.dp)
-                .fillMaxWidth()
-                .height(51.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Indicator(activeScreen = activeScreen)
+        // Hide indicator when traveling or preparing (only show when idle or on CareerScreen)
+        if (pagerState.currentPage == 0 || isGalaxyIdle) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 48.dp)
+                    .fillMaxWidth()
+                    .height(51.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Indicator(activeScreen = activeScreen)
+            }
         }
     }
 }
