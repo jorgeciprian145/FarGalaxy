@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -192,6 +193,7 @@ fun TopControlsBar(
  * MinusButton composable - displays the minus/decrement icon for time controls.
  * Uses a vector drawable that maintains its aspect ratio when sized to 51.dp height.
  * Button is disabled (non-clickable) when enabled is false.
+ * Shows tap state (minustap) when pressed, default (minusdefault) otherwise.
  */
 @Composable
 fun MinusButton(
@@ -199,17 +201,30 @@ fun MinusButton(
     enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    // Interaction source to track press state
+    val interactionSource = remember { MutableInteractionSource() }
+    
+    // Collect pressed state to detect when button is being tapped
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    // Select drawable based on press state
+    val drawableId = if (isPressed) {
+        R.drawable.minustap
+    } else {
+        R.drawable.minusdefault
+    }
+    
     Image(
-        painter = painterResource(id = R.drawable.minusdefault),
+        painter = painterResource(id = drawableId),
         contentDescription = "Decrease time",
         modifier = modifier
-            .height(51.dp)
+            .size(51.dp) // Fixed size to prevent layout shifts when switching drawables
             .alpha(if (enabled) 1f else 0.5f) // Reduce opacity when disabled
             .clickable(
                 enabled = enabled,
                 onClick = onClick,
                 indication = null,
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = interactionSource
             ),
         contentScale = ContentScale.Fit
     )
@@ -219,6 +234,7 @@ fun MinusButton(
  * PlusButton composable - displays the plus/increment icon for time controls.
  * Uses a vector drawable that maintains its aspect ratio when sized to 51.dp height.
  * Button is disabled (non-clickable) when enabled is false.
+ * Shows tap state (plustap) when pressed, default (plusdefault) otherwise.
  */
 @Composable
 fun PlusButton(
@@ -226,17 +242,30 @@ fun PlusButton(
     enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    // Interaction source to track press state
+    val interactionSource = remember { MutableInteractionSource() }
+    
+    // Collect pressed state to detect when button is being tapped
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    // Select drawable based on press state
+    val drawableId = if (isPressed) {
+        R.drawable.plustap
+    } else {
+        R.drawable.plusdefault
+    }
+    
     Image(
-        painter = painterResource(id = R.drawable.plusdefault),
+        painter = painterResource(id = drawableId),
         contentDescription = "Increase time",
         modifier = modifier
-            .height(51.dp)
+            .size(51.dp) // Fixed size to prevent layout shifts when switching drawables
             .alpha(if (enabled) 1f else 0.5f) // Reduce opacity when disabled
             .clickable(
                 enabled = enabled,
                 onClick = onClick,
                 indication = null,
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = interactionSource
             ),
         contentScale = ContentScale.Fit
     )
@@ -797,7 +826,7 @@ fun GalaxyScreen(modifier: Modifier = Modifier) {
     // When isTraveling becomes false: immediately set showSpeedEffect = false
     LaunchedEffect(isTraveling) {
         if (isTraveling) {
-            delay(5000) // Wait 5 seconds
+            delay(10) // Wait 5 seconds
             if (isTraveling) { // Check if still traveling after delay
                 showSpeedEffect = true
             }
