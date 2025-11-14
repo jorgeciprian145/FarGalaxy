@@ -81,6 +81,33 @@ fun CareerScreen(modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center
             )
         }
+        
+        // LevelStatusCard: positioned 24.dp below the indicator
+        // Indicator is at 48.dp from top (with status bar padding) and is 51.dp high
+        // So indicator ends at 48.dp + 51.dp = 99.dp
+        // Card should be at 99.dp + 24.dp = 123.dp from top (with status bar padding)
+        // Card has 8px left margin and 16px right margin, full width otherwise
+        // LevelStatusCard combines the badge and SpaceLicenseCard into a single component
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(top = 123.dp)
+                .fillMaxWidth()
+        ) {
+            // LevelStatusCard with margins: 8px left, 16px right
+            // The card expands horizontally to fill available width while maintaining margins
+            LevelStatusCard(
+                title = "Space license",
+                xpCurrent = 320,
+                xpToNext = 680,
+                level = 1,
+                progress = 320f / (320f + 680f), // 320 / 1000 = 0.32
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, end = 16.dp)
+            )
+        }
     }
 }
 
