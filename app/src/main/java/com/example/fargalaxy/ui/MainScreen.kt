@@ -27,20 +27,21 @@ import com.example.fargalaxy.R
 import kotlinx.coroutines.launch
 
 /**
- * MainScreen composable - manages navigation between CareerScreen and GalaxyScreen.
+ * MainScreen composable - manages navigation between CareerScreen, GalaxyScreen, and VaultScreen.
  * Uses HorizontalPager for smooth swipe transitions.
  * Static layers (background, noise, indicator) are placed outside the pager so they remain fixed.
  * 
  * Pages:
- * - Index 0: CareerScreen
+ * - Index 0: CareerScreen (left)
  * - Index 1: GalaxyScreen (center)
+ * - Index 2: VaultScreen (right)
  */
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
     // Pager state - initial page is 1 (GalaxyScreen)
     val pagerState = rememberPagerState(
         initialPage = 1,
-        pageCount = { 2 }
+        pageCount = { 3 }
     )
     
     val coroutineScope = rememberCoroutineScope()
@@ -56,8 +57,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             activeScreen = when (page) {
-                0 -> ActiveScreen.LEFT
-                1 -> ActiveScreen.CENTER
+                0 -> ActiveScreen.LEFT   // CareerScreen
+                1 -> ActiveScreen.CENTER // GalaxyScreen
+                2 -> ActiveScreen.RIGHT  // VaultScreen
                 else -> ActiveScreen.CENTER
             }
         }
@@ -77,9 +79,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
     }
     
-    // Handle collection icon click (future)
+    // Handle collection icon click - navigate to VaultScreen (only if idle)
     val onCollectionClick: () -> Unit = {
-        // Future implementation
+        if (isGalaxyIdle) {
+            navigateToPage(2) // Navigate to VaultScreen
+        }
     }
     
     // Disable user scrolling when not idle
@@ -114,6 +118,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onCollectionClick = onCollectionClick
                     )
                 }
+                2 -> {
+                    // VaultScreen - content only (no background/noise/indicator)
+                    VaultScreen()
+                }
             }
         }
         
@@ -128,8 +136,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         )
         
         // Static indicator - positioned above everything (rendered last so it's on top)
-        // Hide indicator when traveling or preparing (only show when idle or on CareerScreen)
-        if (pagerState.currentPage == 0 || isGalaxyIdle) {
+        // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
+        if (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
