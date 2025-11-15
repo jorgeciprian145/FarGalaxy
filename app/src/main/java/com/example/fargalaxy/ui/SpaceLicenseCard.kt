@@ -3,6 +3,7 @@ package com.example.fargalaxy.ui
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -222,6 +223,11 @@ fun ProgressBar(
             .background(
                 color = backgroundColor,
                 shape = RoundedCornerShape(4.dp) // Rounded corners
+            )
+            .border(
+                width = 1.dp,
+                color = Color.White, // White stroke for the empty portion
+                shape = RoundedCornerShape(4.dp) // Match the background shape
             )
     ) {
         // Animated progress fill - uses Box with fraction of width

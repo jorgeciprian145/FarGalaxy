@@ -3,12 +3,16 @@ package com.example.fargalaxy.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,21 +86,18 @@ fun CareerScreen(modifier: Modifier = Modifier) {
             )
         }
         
-        // LevelStatusCard: positioned 24.dp below the indicator
-        // Indicator is at 48.dp from top (with status bar padding) and is 51.dp high
-        // So indicator ends at 48.dp + 51.dp = 99.dp
-        // Card should be at 99.dp + 24.dp = 123.dp from top (with status bar padding)
-        // Card has 8px left margin and 16px right margin, full width otherwise
-        // LevelStatusCard combines the badge and SpaceLicenseCard into a single component
-        Box(
+        // Main content column: Contains all elements with consistent 20.dp spacing
+        // Uses Column layout for automatic spacing instead of fixed positions
+        Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .statusBarsPadding()
-                .padding(top = 123.dp)
-                .fillMaxWidth()
+                .padding(top = 123.dp) // Position 24.dp below indicator (48.dp + 51.dp + 24.dp = 123.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control for 20.dp between elements
         ) {
-            // LevelStatusCard with margins: 8px left, 16px right
-            // The card expands horizontally to fill available width while maintaining margins
+            // LevelStatusCard: combines the badge and SpaceLicenseCard into a single component
+            // Card has 8px left margin and 16px right margin, full width otherwise
             LevelStatusCard(
                 title = "Space license",
                 xpCurrent = 320,
@@ -107,24 +108,76 @@ fun CareerScreen(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .padding(start = 8.dp, end = 16.dp)
             )
+            
+            // 20.dp spacing between level card and first horizontal line
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Horizontal line 1: 1dp height white line with 16dp side padding
+            HorizontalDivider(modifier = Modifier.fillMaxWidth())
+            
+            // 20.dp spacing between first horizontal line and "Discoveries" label
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // "Discoveries" label: 18sp, bold, Exo2 font with 24dp horizontal padding
+            Text(
+                text = "Discoveries",
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color(0xFFFFFFFF),
+                modifier = Modifier.padding(horizontal = 24.dp) // 24dp padding to match ProgressSection Row padding
+            )
+            
+            // 20.dp spacing between "Discoveries" label and progress items row
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // ProgressSection: Contains the progress items row (no title shown, handled separately above)
+            ProgressSection(
+                starshipsCount = "1/10",
+                locationsCount = "1/30",
+                collectiblesCount = "1/30",
+                showTitle = false, // Don't show title, it's handled separately above
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            // 20.dp spacing between progress items row and second horizontal line
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Horizontal line 2: 1dp height white line with 16dp side padding
+            HorizontalDivider(modifier = Modifier.fillMaxWidth())
+            
+            // 20.dp spacing between second horizontal line and "Achievements" label
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // "Achievements" label: 18sp, bold, Exo2 font with 24dp horizontal padding
+            Text(
+                text = "Achievements",
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color(0xFFFFFFFF),
+                modifier = Modifier.padding(horizontal = 24.dp) // 24dp padding to match other labels
+            )
         }
-        
-        // ProgressSection: positioned 32.dp below the level container
-        // LevelStatusCard starts at 123.dp from top
-        // Badge height is 125.dp (the taller element in LevelStatusCard)
-        // So level container ends at 123.dp + 125.dp = 248.dp
-        // ProgressSection should start at 248.dp + 32.dp = 280.dp from top
-        // ProgressSection has 16dp side padding and handles its own internal spacing
-        ProgressSection(
-            starshipsCount = "1/10",
-            locationsCount = "1/30",
-            collectiblesCount = "1/30",
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .padding(top = 280.dp)
-                .fillMaxWidth()
-        )
     }
+}
+
+/**
+ * HorizontalDivider composable - displays a horizontal white line with side padding.
+ * 
+ * Creates a 1dp height white line with 16dp horizontal padding on both sides.
+ * Used to separate sections in the CareerScreen.
+ * 
+ * @param modifier Modifier for the divider
+ */
+@Composable
+private fun HorizontalDivider(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .height(1.dp)
+            .padding(horizontal = 16.dp) // 16dp side padding
+            .fillMaxWidth()
+            .background(Color(0xFFFFFFFF)) // White color (#FFFFFF)
+    )
 }
 

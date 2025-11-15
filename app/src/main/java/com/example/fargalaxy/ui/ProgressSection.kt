@@ -57,6 +57,7 @@ import com.example.fargalaxy.R
  * @param starshipsCount Current count of starships (e.g., "1/10")
  * @param locationsCount Current count of locations (e.g., "1/30")
  * @param collectiblesCount Current count of collectibles (e.g., "1/30")
+ * @param showTitle Whether to show the "Discoveries" title (default true, set to false if title is handled externally)
  * @param modifier Modifier for the entire ProgressSection
  */
 @Composable
@@ -64,22 +65,30 @@ fun ProgressSection(
     starshipsCount: String = "1/10",
     locationsCount: String = "1/30",
     collectiblesCount: String = "1/30",
+    showTitle: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp) // 16dp spacing between title and items row
+        verticalArrangement = if (showTitle) {
+            Arrangement.spacedBy(16.dp) // 16dp spacing between title and items row
+        } else {
+            Arrangement.spacedBy(0.dp) // No spacing if title is hidden
+        }
     ) {
-        // "Progress" title: 18sp, bold, Exo2 font with 24dp horizontal padding to match Row padding
-        Text(
-            text = "Progress",
-            fontFamily = Exo2,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            color = Color(0xFFFFFFFF),
-            modifier = Modifier.padding(horizontal = 24.dp) // 24dp padding to match Row padding below
-        )
+        // "Discoveries" title: 18sp, bold, Exo2 font with 24dp horizontal padding to match Row padding
+        // Only shown if showTitle is true
+        if (showTitle) {
+            Text(
+                text = "Discoveries",
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color(0xFFFFFFFF),
+                modifier = Modifier.padding(horizontal = 24.dp) // 24dp padding to match Row padding below
+            )
+        }
         
         // Progress items row: ProgressItem – ProgressConnector – ProgressItem – ProgressConnector – ProgressItem
         // This structure creates responsive horizontal connecting lines between fixed-width progress items
