@@ -1,9 +1,13 @@
 package com.example.fargalaxy.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,16 +15,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fargalaxy.R
 
 /**
  * CareerScreen composable - displays the career/progress screen content.
@@ -149,15 +161,86 @@ fun CareerScreen(modifier: Modifier = Modifier) {
             // 20.dp spacing between second horizontal line and "Achievements" label
             Spacer(modifier = Modifier.height(20.dp))
             
-            // "Achievements" label: 18sp, bold, Exo2 font with 24dp horizontal padding
-            Text(
-                text = "Achievements",
-                fontFamily = Exo2,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color(0xFFFFFFFF),
-                modifier = Modifier.padding(horizontal = 24.dp) // 24dp padding to match other labels
-            )
+            // "Achievements" section header: Row with "Achievements" label on left and count on right
+            // Both labels are bottom-aligned, with 16dp padding on respective sides
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                // "Achievements" label: 18sp, bold, Exo2 font
+                Text(
+                    text = "Achievements",
+                    fontFamily = Exo2,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFFFFFFFF)
+                )
+                
+                // Dynamic count label: 20sp, bold, Exo2 font (e.g., "1/24")
+                Text(
+                    text = "1/24", // TODO: Make this dynamic based on unlocked achievements
+                    fontFamily = Exo2,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color(0xFFFFFFFF)
+                )
+            }
+            
+            // 20.dp spacing between labels and achievements grid
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Achievements grid container: 4 columns with 16dp side padding
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Column 1
+                AchievementColumn(
+                    achievementName = "Locked",
+                    isLocked = true,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Column 2
+                AchievementColumn(
+                    achievementName = "Locked",
+                    isLocked = true,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Column 3
+                AchievementColumn(
+                    achievementName = "Locked",
+                    isLocked = true,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Column 4
+                AchievementColumn(
+                    achievementName = "Locked",
+                    isLocked = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            // 20.dp spacing between achievements grid and VIEW ALL button
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // VIEW ALL button: Fixed size, same style as CANCEL/STOP TRAVEL buttons
+            // Centered horizontally in the available width
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                ViewAllButton(
+                    onClick = { /* TODO: Navigate to achievements screen */ }
+                )
+            }
         }
     }
 }
@@ -177,7 +260,96 @@ private fun HorizontalDivider(modifier: Modifier = Modifier) {
             .height(1.dp)
             .padding(horizontal = 16.dp) // 16dp side padding
             .fillMaxWidth()
-            .background(Color(0xFFFFFFFF)) // White color (#FFFFFF)
+            .background(Color(0x66FFFFFF)) // White color with 40% opacity (0x66 = ~40% alpha)
     )
+}
+
+/**
+ * AchievementColumn composable - displays a single achievement column with icon and label.
+ * 
+ * When locked: Shows achievementlocked SVG and "Locked" label
+ * When unlocked: Shows achievement-specific SVG and achievement name
+ * 
+ * @param achievementName The name of the achievement (or "Locked" when not unlocked)
+ * @param isLocked Whether the achievement is currently locked
+ * @param modifier Modifier for the column
+ */
+@Composable
+private fun AchievementColumn(
+    achievementName: String = "Locked",
+    isLocked: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .widthIn(max = 96.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Achievement icon: 48x48dp fixed size
+        Image(
+            painter = painterResource(
+                id = if (isLocked) {
+                    R.drawable.achievementlocked
+                } else {
+                    // TODO: Add achievement-specific drawables when implementing unlock logic
+                    R.drawable.achievementlocked
+                }
+            ),
+            contentDescription = achievementName,
+            modifier = Modifier.size(48.dp),
+            contentScale = ContentScale.Fit
+        )
+        
+        // Achievement label: 4dp spacing below icon, 14sp font size, regular weight
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = achievementName,
+            fontFamily = Exo2,
+            fontSize = 14.sp,
+            color = Color(0xFFFFFFFF),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+/**
+ * ViewAllButton composable - displays the "VIEW ALL" button with secondary style.
+ * 
+ * Uses the same visual format as CANCEL/STOP TRAVEL buttons:
+ * - Transparent background with white border
+ * - White text
+ * - Rounded corners (80dp radius)
+ * - Fixed size: 144dp width, 32dp height
+ * - 16sp font size, regular weight
+ * 
+ * @param onClick Callback when button is clicked
+ * @param modifier Modifier for the button
+ */
+@Composable
+private fun ViewAllButton(
+    onClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .width(144.dp)
+            .height(32.dp)
+            .clip(RoundedCornerShape(80.dp))
+            .border(
+                width = 1.dp,
+                color = Color(0xFFFFFFFF), // White border
+                shape = RoundedCornerShape(80.dp)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "VIEW ALL",
+            fontFamily = Exo2,
+            fontSize = 16.sp,
+            color = Color(0xFFFFFFFF), // White text
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
