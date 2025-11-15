@@ -108,6 +108,23 @@ fun CareerScreen(modifier: Modifier = Modifier) {
                     .padding(start = 8.dp, end = 16.dp)
             )
         }
+        
+        // ProgressSection: positioned 32.dp below the level container
+        // LevelStatusCard starts at 123.dp from top
+        // Badge height is 125.dp (the taller element in LevelStatusCard)
+        // So level container ends at 123.dp + 125.dp = 248.dp
+        // ProgressSection should start at 248.dp + 32.dp = 280.dp from top
+        // ProgressSection has 16dp side padding and handles its own internal spacing
+        ProgressSection(
+            starshipsCount = "1/10",
+            locationsCount = "1/30",
+            collectiblesCount = "1/30",
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(top = 280.dp)
+                .fillMaxWidth()
+        )
     }
 }
 
