@@ -121,10 +121,22 @@ fun CareerScreen(modifier: Modifier = Modifier) {
                     .padding(start = 8.dp, end = 16.dp)
             )
             
-            // 20.dp spacing between level card and first horizontal line
+            // 20.dp spacing between level card and horizontal divider
             Spacer(modifier = Modifier.height(20.dp))
             
+            // Horizontal divider: Separates level card from current ship section
+            HorizontalDivider(modifier = Modifier.fillMaxWidth())
+            
+            // Current ship row: Contains ship name labels on left and "VIEW" button on right
+            // Row has 20dp vertical padding, so no additional spacer needed
+            CurrentShipRow(
+                shipName = "B14 Phantom", // TODO: Connect to actual ship state
+                onViewClick = { /* TODO: Navigate to ship details screen */ },
+                modifier = Modifier.fillMaxWidth()
+            )
+            
             // Horizontal line 1: 1dp height white line with 16dp side padding
+            // Row has 20dp vertical padding, so no additional spacer needed
             HorizontalDivider(modifier = Modifier.fillMaxWidth())
             
             // 20.dp spacing between first horizontal line and "Discoveries" label
@@ -307,6 +319,105 @@ private fun AchievementColumn(
             fontFamily = Exo2,
             fontSize = 14.sp,
             color = Color(0xFFFFFFFF),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+/**
+ * CurrentShipRow composable - displays the current ship information with a view button.
+ * 
+ * Contains:
+ * - Left side: Two labels stacked vertically
+ *   - Top: Dynamic ship name (16sp, bold)
+ *   - Bottom: Static "Current ship" label (14sp, regular)
+ *   - 4dp vertical spacing between labels
+ * - Right side: "view" button (88dp width, same style as ViewAllButton)
+ * 
+ * The row has 16dp horizontal padding and 20dp vertical padding.
+ * 
+ * @param shipName The name of the currently selected ship
+ * @param onViewClick Callback when the view button is clicked
+ * @param modifier Modifier for the row
+ */
+@Composable
+private fun CurrentShipRow(
+    shipName: String,
+    onViewClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left side: Column with ship name and "Current ship" label
+        Column(
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
+            // Dynamic ship name: 16sp, bold
+            Text(
+                text = shipName,
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = Color(0xFFFFFFFF)
+            )
+            
+            // Static "Current ship" label: 14sp, regular
+            Text(
+                text = "Current ship",
+                fontFamily = Exo2,
+                fontSize = 14.sp,
+                color = Color(0xFFFFFFFF)
+            )
+        }
+        
+        // Right side: "view" button
+        ViewButton(
+            onClick = onViewClick
+        )
+    }
+}
+
+/**
+ * ViewButton composable - displays the "view" button with secondary style.
+ * 
+ * Uses the same visual format as ViewAllButton but with a fixed width of 88dp:
+ * - Transparent background with white border
+ * - White text
+ * - Rounded corners (80dp radius)
+ * - Fixed size: 88dp width, 32dp height
+ * - 16sp font size, regular weight
+ * 
+ * @param onClick Callback when button is clicked
+ * @param modifier Modifier for the button
+ */
+@Composable
+private fun ViewButton(
+    onClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .width(88.dp)
+            .height(32.dp)
+            .clip(RoundedCornerShape(80.dp))
+            .border(
+                width = 1.dp,
+                color = Color(0xFFFFFFFF), // White border
+                shape = RoundedCornerShape(80.dp)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "VIEW",
+            fontFamily = Exo2,
+            fontSize = 16.sp,
+            color = Color(0xFFFFFFFF), // White text
             textAlign = TextAlign.Center
         )
     }
