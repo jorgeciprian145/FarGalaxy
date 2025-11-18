@@ -40,16 +40,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fargalaxy.R
+import com.example.fargalaxy.model.Ship
 
 /**
  * CareerScreen composable - displays the career/progress screen content.
  * Note: Background, noise, and indicator are handled by MainScreen (static layers).
  * Only the content moves when swiping.
  * 
+ * @param currentShip The currently selected ship
+ * @param onViewShipClick Callback when the "view" button next to ship name is clicked
  * @param modifier Modifier for the screen
  */
 @Composable
-fun CareerScreen(modifier: Modifier = Modifier) {
+fun CareerScreen(
+    currentShip: Ship,
+    onViewShipClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     // Scroll state to track when content is being clipped
     val scrollState = rememberScrollState()
     
@@ -180,8 +187,8 @@ fun CareerScreen(modifier: Modifier = Modifier) {
                 // Current ship row: Contains ship name labels on left and "VIEW" button on right
                 // Row has 20dp vertical padding, so no additional spacer needed
                 CurrentShipRow(
-                    shipName = "B14 Phantom", // TODO: Connect to actual ship state
-                    onViewClick = { /* TODO: Navigate to ship details screen */ },
+                    shipName = currentShip.name,
+                    onViewClick = onViewShipClick,
                     modifier = Modifier.fillMaxWidth()
                 )
                 

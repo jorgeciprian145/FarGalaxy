@@ -24,6 +24,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.fargalaxy.R
+import com.example.fargalaxy.data.ShipRepository
+import com.example.fargalaxy.model.Ship
 import kotlinx.coroutines.launch
 
 /**
@@ -52,6 +54,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Track active screen based on current page
     var activeScreen by remember { mutableStateOf(ActiveScreen.CENTER) }
+    
+    // Track if ShipDetailsScreen should be shown
+    var showShipDetails by remember { mutableStateOf(false) }
+    
+    // Track the current ship
+    var currentShip by remember { mutableStateOf<Ship>(ShipRepository.getCurrentShip()) }
     
     // Update active screen when page changes
     LaunchedEffect(pagerState) {
@@ -86,6 +94,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
     }
     
+    // Handle ship details navigation
+    val onViewShipClick: () -> Unit = {
+        showShipDetails = true
+    }
+    
+    // Handle back from ship details
+    val onBackFromShipDetails: () -> Unit = {
+        showShipDetails = false
+    }
+    
     // Disable user scrolling when not idle
     val userScrollEnabled = isGalaxyIdle
     
@@ -107,7 +125,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
             when (page) {
                 0 -> {
                     // CareerScreen - content only (no background/noise/indicator)
-                    CareerScreen()
+                    CareerScreen(
+                        currentShip = currentShip,
+                        onViewShipClick = onViewShipClick
+                    )
                 }
                 1 -> {
                     // GalaxyScreen - content only (no background/noise/indicator)
@@ -126,18 +147,22 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
-        Image(
-            painter = painterResource(id = R.drawable.noise_8bit),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.085f),
-            contentScale = ContentScale.Crop
-        )
+        // Hide noise when ShipDetailsScreen is shown (it has its own background)
+        if (!showShipDetails) {
+            Image(
+                painter = painterResource(id = R.drawable.noise_8bit),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(0.085f),
+                contentScale = ContentScale.Crop
+            )
+        }
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        if (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle) {
+        // Also hide when ShipDetailsScreen is shown
+        if (!showShipDetails && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -149,6 +174,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
             ) {
                 Indicator(activeScreen = activeScreen)
             }
+        }
+        
+        // ShipDetailsScreen overlay - shown on top of everything when showShipDetails is true
+        if (showShipDetails) {
+            ShipDetailsScreen(
+                ship = currentShip,
+                onBackClick = onBackFromShipDetails
+            )
         }
     }
 }

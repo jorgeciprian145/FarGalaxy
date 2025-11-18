@@ -977,7 +977,7 @@ fun GalaxyScreen(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth()
-                .height(170.dp),
+                .height(113.dp),
             contentScale = ContentScale.Fit
         )
 
