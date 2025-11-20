@@ -1,6 +1,5 @@
 package com.example.fargalaxy.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -28,16 +28,24 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -167,7 +175,7 @@ fun CareerScreen(
                 verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control for 20.dp between elements
             ) {
                 // Initial spacer: Push content down 8dp from clip line (so it starts at 123dp visually)
-                Spacer(modifier = Modifier.height(0git .dp))
+                Spacer(modifier = Modifier.height(0.dp))
                 
                 // Total Time Traveling Counter - NEW COMPONENT
                 TotalTimeTravelingCounter(
@@ -176,7 +184,7 @@ fun CareerScreen(
                 )
                 
                 // 20.dp spacing between time counter and level card
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 
                 // LevelStatusCard: combines the badge and SpaceLicenseCard into a single component
                 // Card has 8px left margin and 16px right margin, full width otherwise
@@ -382,17 +390,18 @@ fun CareerScreen(
 }
 
 /**
- * TotalTimeTravelingCounter composable - displays the total time traveling with decorative side elements.
+ * TotalTimeTravelingCounter composable - displays the total time traveling with decorative SVG side elements.
  * 
  * Layout:
- * - Row with decorative elements on left, center content, and decorative elements on right
- * - Left decorative: 3 horizontal lines + vertical line on right (touching)
- * - Right decorative: vertical line on left + 3 horizontal lines (touching)
- * - Center: Large number (56sp bold) + "m" (40sp bold) with 0px spacing, and label below (14sp regular)
+ * - Row with decorative SVG elements on left, center content, and decorative SVG elements on right
+ * - Left decorative: SVG image (sidedecoration)
+ * - Right decorative: SVG image (sidedecoration, mirrored)
+ * - Center: Large number (56sp bold) + "m" (40sp bold) with spacing, and label below (14sp regular)
+ * - Center content auto-scales down if it exceeds available space
  * 
  * Spacing:
- * - 16dp padding from screen edges
- * - 16dp internal padding between decorative elements and center content
+ * - 16dp padding from screen edges (for SVGs)
+ * - 8dp internal padding between decorative elements and center content
  * 
  * @param totalMinutes The total number of minutes traveled
  * @param modifier Modifier for the component
@@ -402,179 +411,188 @@ private fun TotalTimeTravelingCounter(
     totalMinutes: Int,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp), // 16dp padding from screen edges
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Left decorative element: 3 horizontal lines + vertical line on right
-        DecorativeSideElement(
-            isLeft = true,
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .padding(end = 16.dp) // 16dp internal padding from center content
-        )
+    val density = LocalDensity.current
+    
+    // Track SVG width to calculate available space for center content
+    var leftSvgWidth by remember { mutableStateOf(0.dp) }
+    var rightSvgWidth by remember { mutableStateOf(0.dp) }
+    
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val totalWidth = maxWidth
+        val sidePadding = 16.dp
+        val internalPadding = 12.dp
         
-        // Center content: Number + "m" + label
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(0.dp) // 4px spacing between number/m and label
+        // Calculate available width based on SVG widths (recalculates when SVG widths change)
+        val availableWidth = derivedStateOf {
+            (totalWidth - sidePadding.times(2) - leftSvgWidth - rightSvgWidth - internalPadding.times(2))
+                .coerceAtLeast(0.dp)
+        }
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = sidePadding), // 16dp padding from screen edges
+            horizontalArrangement = Arrangement.Center, // Center the entire group
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Number and "m" in a Row with 0px spacing (marked for manual adjustment)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp), // TODO: Adjust spacing manually if needed
-                verticalAlignment = Alignment.Bottom
+            // Left decorative element: SVG image
+            Box(
+                modifier = Modifier
+                    .onSizeChanged { size ->
+                        with(density) {
+                            leftSvgWidth = size.width.toDp()
+                        }
+                    }
+                    .padding(end = internalPadding) // 8dp internal padding to center content
             ) {
-                // Number: 56sp, bold
-                Text(
-                    text = totalMinutes.toString(),
-                    fontFamily = Exo2,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 56.sp,
-                    color = Color(0xFFFFFFFF)
-                )
-                // "m": 40sp, bold
-                Text(
-                    text = "m",
-                    fontFamily = Exo2,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 40.sp,
-                    color = Color(0xFFFFFFFF)
+                Image(
+                    painter = painterResource(id = R.drawable.sidedecoration),
+                    contentDescription = null,
+                    modifier = Modifier.height(88.dp), // Fixed height of 88px
+                    contentScale = ContentScale.Fit // Maintain original aspect ratio
                 )
             }
             
-            // "Total time traveling" label: 14sp, regular
-            Text(
-                text = "Total time traveling",
-                fontFamily = Exo2,
-                fontSize = 14.sp,
-                color = Color(0xFFFFFFFF)
-            )
+            // Center content: Number + "m" + label (responsive, auto-scales)
+            // This should be centered as a unit with the SVGs hugging it
+            Box(
+                modifier = Modifier
+                    .widthIn(max = availableWidth.value)
+            ) {
+                AutoSizingTimeDisplay(
+                    totalMinutes = totalMinutes,
+                    maxWidth = availableWidth.value,
+                    density = density
+                )
+            }
+            
+            // Right decorative element: SVG image (mirrored)
+            Box(
+                modifier = Modifier
+                    .onSizeChanged { size ->
+                        with(density) {
+                            rightSvgWidth = size.width.toDp()
+                        }
+                    }
+                    .padding(start = internalPadding) // 8dp internal padding to center content
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.sidedecoration),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .height(88.dp) // Fixed height of 88px
+                        .scale(scaleX = -1f, scaleY = 1f), // Mirror horizontally
+                    contentScale = ContentScale.Fit // Maintain original aspect ratio
+                )
+            }
         }
-        
-        // Right decorative element: vertical line on left + 3 horizontal lines
-        DecorativeSideElement(
-            isLeft = false,
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .padding(start = 16.dp) // 16dp internal padding from center content
-        )
     }
 }
 
 /**
- * DecorativeSideElement composable - displays decorative lines on the sides of the time counter.
+ * AutoSizingTimeDisplay composable - displays the time counter with auto-scaling text.
  * 
- * Structure:
- * - Left side: 3 horizontal lines (responsive width) + vertical line on right (48dp height, touching)
- * - Right side: vertical line on left (48dp height) + 3 horizontal lines (responsive width, touching)
+ * The number and "m" will scale down if they exceed the available width, maintaining
+ * the relative sizes (56sp for number, 40sp for "m").
  * 
- * Lines:
- * - Horizontal lines: 1px stroke width, 4dp vertical spacing between them
- * - Vertical line: 1px width, 48dp height
- * - Lines touch each other (0px distance)
- * 
- * @param isLeft Whether this is the left side element (true) or right side element (false)
- * @param modifier Modifier for the element
+ * @param totalMinutes The total number of minutes
+ * @param maxWidth Maximum available width for the content
+ * @param density Density for unit conversion
  */
 @Composable
-private fun DecorativeSideElement(
-    isLeft: Boolean,
-    modifier: Modifier = Modifier
+private fun AutoSizingTimeDisplay(
+    totalMinutes: Int,
+    maxWidth: androidx.compose.ui.unit.Dp,
+    density: Density
 ) {
-    Box(modifier = modifier) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp) // Height matches vertical line height
-        ) {
-            val strokeWidth = 1.dp.toPx()
-            val lineSpacing = 8.dp.toPx()
-            val verticalLineHeight = 64.dp.toPx()
-            
-            // Calculate positions for 3 horizontal lines
-            // They should be centered vertically in the 48dp container
-            val totalHorizontalLinesHeight = 2 * lineSpacing // Space between 3 lines
-            val startY = (size.height - totalHorizontalLinesHeight) / 2
-            
-            val line1Y = startY
-            val line2Y = startY + lineSpacing
-            val line3Y = startY + 2 * lineSpacing
-            
-            if (isLeft) {
-                // Left side: 3 horizontal lines + vertical line on right
-                // Horizontal lines expand to fill available width (responsive)
-                val horizontalLineEndX = size.width - strokeWidth // Leave space for vertical line
+    val numberText = totalMinutes.toString()
+    val mText = "m"
+    val spacingDp = 6.dp
+    
+    // Base font sizes
+    val baseNumberSize = 56.sp
+    val baseMSize = 40.sp
+    
+    val textMeasurer = rememberTextMeasurer()
+    
+    // Calculate scale factor based on available width
+    val scaleFactor = remember(maxWidth, numberText) {
+        if (maxWidth <= 0.dp) {
+            1f
+        } else {
+            with(density) {
+                val maxWidthPx = maxWidth.toPx()
+                val spacingPx = spacingDp.toPx()
                 
-                // Draw 3 horizontal lines
-                drawLine(
-                    color = Color(0xFFFFFFFF),
-                    start = Offset(0f, line1Y),
-                    end = Offset(horizontalLineEndX, line1Y),
-                    strokeWidth = strokeWidth
-                )
-                drawLine(
-                    color = Color(0xFFFFFFFF),
-                    start = Offset(0f, line2Y),
-                    end = Offset(horizontalLineEndX, line2Y),
-                    strokeWidth = strokeWidth
-                )
-                drawLine(
-                    color = Color(0xFFFFFFFF),
-                    start = Offset(0f, line3Y),
-                    end = Offset(horizontalLineEndX, line3Y),
-                    strokeWidth = strokeWidth
-                )
+                // Measure text at base size
+                val numberWidth = textMeasurer.measure(
+                    text = numberText,
+                    style = TextStyle(
+                        fontFamily = Exo2,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = baseNumberSize
+                    )
+                ).size.width
                 
-                // Vertical line on right, touching the horizontal lines (0px distance)
-                val verticalLineX = size.width - strokeWidth / 2
-                val verticalLineTopY = (size.height - verticalLineHeight) / 2
-                drawLine(
-                    color = Color(0xFFFFFFFF),
-                    start = Offset(verticalLineX, verticalLineTopY),
-                    end = Offset(verticalLineX, verticalLineTopY + verticalLineHeight),
-                    strokeWidth = strokeWidth
-                )
-            } else {
-                // Right side: vertical line on left + 3 horizontal lines
-                // Vertical line on left, touching the horizontal lines (0px distance)
-                val verticalLineX = strokeWidth / 2
-                val verticalLineTopY = (size.height - verticalLineHeight) / 2
-                drawLine(
-                    color = Color(0xFFFFFFFF),
-                    start = Offset(verticalLineX, verticalLineTopY),
-                    end = Offset(verticalLineX, verticalLineTopY + verticalLineHeight),
-                    strokeWidth = strokeWidth
-                )
+                val mWidth = textMeasurer.measure(
+                    text = mText,
+                    style = TextStyle(
+                        fontFamily = Exo2,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = baseMSize
+                    )
+                ).size.width
                 
-                // Horizontal lines expand to fill available width (responsive)
-                val horizontalLineStartX = strokeWidth // Start after vertical line
+                val totalWidth = numberWidth + mWidth + spacingPx
                 
-                // Draw 3 horizontal lines
-                drawLine(
-                    color = Color(0xFFFFFFFF),
-                    start = Offset(horizontalLineStartX, line1Y),
-                    end = Offset(size.width, line1Y),
-                    strokeWidth = strokeWidth
-                )
-                drawLine(
-                    color = Color(0xFFFFFFFF),
-                    start = Offset(horizontalLineStartX, line2Y),
-                    end = Offset(size.width, line2Y),
-                    strokeWidth = strokeWidth
-                )
-                drawLine(
-                    color = Color(0xFFFFFFFF),
-                    start = Offset(horizontalLineStartX, line3Y),
-                    end = Offset(size.width, line3Y),
-                    strokeWidth = strokeWidth
-                )
+                if (totalWidth <= maxWidthPx) {
+                    1f
+                } else {
+                    // Calculate scale to fit
+                    val scale = (maxWidthPx / totalWidth).coerceAtLeast(0.3f) // Minimum 30% scale
+                    scale
+                }
             }
         }
     }
+    
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(0.dp) // 4px spacing between number/m and label
+    ) {
+        // Number and "m" in a Row with spacing
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(spacingDp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            // Number: scaled font size, bold
+            Text(
+                text = numberText,
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold,
+                fontSize = baseNumberSize * scaleFactor,
+                color = Color(0xFFFFFFFF)
+            )
+            // "m": scaled font size, bold
+            Text(
+                text = mText,
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold,
+                fontSize = baseMSize * scaleFactor,
+                color = Color(0xFFFFFFFF)
+            )
+        }
+        
+        // "Total time traveling" label: 14sp, regular (doesn't scale)
+        Text(
+            text = "Total time traveling",
+            fontFamily = Exo2,
+            fontSize = 14.sp,
+            color = Color(0xFFFFFFFF)
+        )
+    }
 }
+
 
 /**
  * HorizontalDivider composable - displays a horizontal white line with side padding.
