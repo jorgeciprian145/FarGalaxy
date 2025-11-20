@@ -1,5 +1,6 @@
 package com.example.fargalaxy.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -49,12 +51,14 @@ import com.example.fargalaxy.model.Ship
  * 
  * @param currentShip The currently selected ship
  * @param onViewShipClick Callback when the "view" button next to ship name is clicked
+ * @param totalTravelMinutes The total number of minutes the user has been in travel
  * @param modifier Modifier for the screen
  */
 @Composable
 fun CareerScreen(
     currentShip: Ship,
     onViewShipClick: () -> Unit = {},
+    totalTravelMinutes: Int = 45, // TODO: Connect to actual data source
     modifier: Modifier = Modifier
 ) {
     // Scroll state to track when content is being clipped
@@ -163,7 +167,16 @@ fun CareerScreen(
                 verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control for 20.dp between elements
             ) {
                 // Initial spacer: Push content down 8dp from clip line (so it starts at 123dp visually)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(0git .dp))
+                
+                // Total Time Traveling Counter - NEW COMPONENT
+                TotalTimeTravelingCounter(
+                    totalMinutes = totalTravelMinutes,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // 20.dp spacing between time counter and level card
+                Spacer(modifier = Modifier.height(20.dp))
                 
                 // LevelStatusCard: combines the badge and SpaceLicenseCard into a single component
                 // Card has 8px left margin and 16px right margin, full width otherwise
@@ -363,6 +376,201 @@ fun CareerScreen(
                         value = "50%"
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * TotalTimeTravelingCounter composable - displays the total time traveling with decorative side elements.
+ * 
+ * Layout:
+ * - Row with decorative elements on left, center content, and decorative elements on right
+ * - Left decorative: 3 horizontal lines + vertical line on right (touching)
+ * - Right decorative: vertical line on left + 3 horizontal lines (touching)
+ * - Center: Large number (56sp bold) + "m" (40sp bold) with 0px spacing, and label below (14sp regular)
+ * 
+ * Spacing:
+ * - 16dp padding from screen edges
+ * - 16dp internal padding between decorative elements and center content
+ * 
+ * @param totalMinutes The total number of minutes traveled
+ * @param modifier Modifier for the component
+ */
+@Composable
+private fun TotalTimeTravelingCounter(
+    totalMinutes: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp), // 16dp padding from screen edges
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left decorative element: 3 horizontal lines + vertical line on right
+        DecorativeSideElement(
+            isLeft = true,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .padding(end = 16.dp) // 16dp internal padding from center content
+        )
+        
+        // Center content: Number + "m" + label
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(0.dp) // 4px spacing between number/m and label
+        ) {
+            // Number and "m" in a Row with 0px spacing (marked for manual adjustment)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp), // TODO: Adjust spacing manually if needed
+                verticalAlignment = Alignment.Bottom
+            ) {
+                // Number: 56sp, bold
+                Text(
+                    text = totalMinutes.toString(),
+                    fontFamily = Exo2,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 56.sp,
+                    color = Color(0xFFFFFFFF)
+                )
+                // "m": 40sp, bold
+                Text(
+                    text = "m",
+                    fontFamily = Exo2,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 40.sp,
+                    color = Color(0xFFFFFFFF)
+                )
+            }
+            
+            // "Total time traveling" label: 14sp, regular
+            Text(
+                text = "Total time traveling",
+                fontFamily = Exo2,
+                fontSize = 14.sp,
+                color = Color(0xFFFFFFFF)
+            )
+        }
+        
+        // Right decorative element: vertical line on left + 3 horizontal lines
+        DecorativeSideElement(
+            isLeft = false,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .padding(start = 16.dp) // 16dp internal padding from center content
+        )
+    }
+}
+
+/**
+ * DecorativeSideElement composable - displays decorative lines on the sides of the time counter.
+ * 
+ * Structure:
+ * - Left side: 3 horizontal lines (responsive width) + vertical line on right (48dp height, touching)
+ * - Right side: vertical line on left (48dp height) + 3 horizontal lines (responsive width, touching)
+ * 
+ * Lines:
+ * - Horizontal lines: 1px stroke width, 4dp vertical spacing between them
+ * - Vertical line: 1px width, 48dp height
+ * - Lines touch each other (0px distance)
+ * 
+ * @param isLeft Whether this is the left side element (true) or right side element (false)
+ * @param modifier Modifier for the element
+ */
+@Composable
+private fun DecorativeSideElement(
+    isLeft: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp) // Height matches vertical line height
+        ) {
+            val strokeWidth = 1.dp.toPx()
+            val lineSpacing = 8.dp.toPx()
+            val verticalLineHeight = 64.dp.toPx()
+            
+            // Calculate positions for 3 horizontal lines
+            // They should be centered vertically in the 48dp container
+            val totalHorizontalLinesHeight = 2 * lineSpacing // Space between 3 lines
+            val startY = (size.height - totalHorizontalLinesHeight) / 2
+            
+            val line1Y = startY
+            val line2Y = startY + lineSpacing
+            val line3Y = startY + 2 * lineSpacing
+            
+            if (isLeft) {
+                // Left side: 3 horizontal lines + vertical line on right
+                // Horizontal lines expand to fill available width (responsive)
+                val horizontalLineEndX = size.width - strokeWidth // Leave space for vertical line
+                
+                // Draw 3 horizontal lines
+                drawLine(
+                    color = Color(0xFFFFFFFF),
+                    start = Offset(0f, line1Y),
+                    end = Offset(horizontalLineEndX, line1Y),
+                    strokeWidth = strokeWidth
+                )
+                drawLine(
+                    color = Color(0xFFFFFFFF),
+                    start = Offset(0f, line2Y),
+                    end = Offset(horizontalLineEndX, line2Y),
+                    strokeWidth = strokeWidth
+                )
+                drawLine(
+                    color = Color(0xFFFFFFFF),
+                    start = Offset(0f, line3Y),
+                    end = Offset(horizontalLineEndX, line3Y),
+                    strokeWidth = strokeWidth
+                )
+                
+                // Vertical line on right, touching the horizontal lines (0px distance)
+                val verticalLineX = size.width - strokeWidth / 2
+                val verticalLineTopY = (size.height - verticalLineHeight) / 2
+                drawLine(
+                    color = Color(0xFFFFFFFF),
+                    start = Offset(verticalLineX, verticalLineTopY),
+                    end = Offset(verticalLineX, verticalLineTopY + verticalLineHeight),
+                    strokeWidth = strokeWidth
+                )
+            } else {
+                // Right side: vertical line on left + 3 horizontal lines
+                // Vertical line on left, touching the horizontal lines (0px distance)
+                val verticalLineX = strokeWidth / 2
+                val verticalLineTopY = (size.height - verticalLineHeight) / 2
+                drawLine(
+                    color = Color(0xFFFFFFFF),
+                    start = Offset(verticalLineX, verticalLineTopY),
+                    end = Offset(verticalLineX, verticalLineTopY + verticalLineHeight),
+                    strokeWidth = strokeWidth
+                )
+                
+                // Horizontal lines expand to fill available width (responsive)
+                val horizontalLineStartX = strokeWidth // Start after vertical line
+                
+                // Draw 3 horizontal lines
+                drawLine(
+                    color = Color(0xFFFFFFFF),
+                    start = Offset(horizontalLineStartX, line1Y),
+                    end = Offset(size.width, line1Y),
+                    strokeWidth = strokeWidth
+                )
+                drawLine(
+                    color = Color(0xFFFFFFFF),
+                    start = Offset(horizontalLineStartX, line2Y),
+                    end = Offset(size.width, line2Y),
+                    strokeWidth = strokeWidth
+                )
+                drawLine(
+                    color = Color(0xFFFFFFFF),
+                    start = Offset(horizontalLineStartX, line3Y),
+                    end = Offset(size.width, line3Y),
+                    strokeWidth = strokeWidth
+                )
             }
         }
     }

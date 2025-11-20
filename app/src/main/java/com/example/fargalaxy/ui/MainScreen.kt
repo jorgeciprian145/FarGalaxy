@@ -127,7 +127,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     // CareerScreen - content only (no background/noise/indicator)
                     CareerScreen(
                         currentShip = currentShip,
-                        onViewShipClick = onViewShipClick
+                        onViewShipClick = onViewShipClick,
+                        totalTravelMinutes = 45 // TODO: Connect to actual data source
                     )
                 }
                 1 -> {

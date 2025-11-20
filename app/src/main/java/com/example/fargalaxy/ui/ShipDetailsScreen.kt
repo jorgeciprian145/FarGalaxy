@@ -545,6 +545,94 @@ fun ShipDetailsScreen(
                 }
             }
         }
+        
+        // Bottom fixed container: Contains gradient and button container
+        // Both stay fixed at bottom when scrolling
+        // navigationBarsPadding() ensures button container sits right above navigation bar with 0 spacing
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .navigationBarsPadding() // Positions content above navigation bar (0 spacing between them)
+        ) {
+            // Gradient overlay container: 48dp height, full width
+            // Gradient from 100% opacity black at bottom to 0% opacity black at top
+            // Positioned right above the button container
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0x00000000), // 0% opacity at top
+                                Color(0xFF000000)  // 100% opacity at bottom
+                            )
+                        )
+                    )
+            )
+            
+            // Button container: Full width, black background
+            // Contains two buttons with 16dp padding on all sides, 8dp spacing between buttons
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF000000)) // Black background at 100% opacity
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+            ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Left button: "CHANGE SHIP" - no fill, white stroke, white text
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFFFFFFF),
+                            shape = RoundedCornerShape(40.dp)
+                        )
+                        .clickable { /* TODO: Add onClick handler */ },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "CHANGE SHIP",
+                        fontFamily = Exo2,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.W400,
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.offset(y = (-1).dp)
+                    )
+                }
+                
+                // Right button: "UPGRADE" - white fill, black text
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                        .background(
+                            color = Color(0xFFFFFFFF),
+                            shape = RoundedCornerShape(40.dp)
+                        )
+                        .clickable { /* TODO: Add onClick handler */ },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "UPGRADE",
+                        fontFamily = Exo2,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.W400,
+                        color = Color(0xFF010102),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.offset(y = (-1).dp)
+                    )
+                }
+            }
+            }
+        }
     }
 }
 

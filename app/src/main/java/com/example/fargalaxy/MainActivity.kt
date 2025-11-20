@@ -1,5 +1,6 @@
 package com.example.fargalaxy
 
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,6 +15,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Set navigation bar to solid black
+        window.navigationBarColor = Color.BLACK // 0xFF000000
         
         // Enable blur effect for navigation bar (Android 12+)
         // enableEdgeToEdge() already handles edge-to-edge mode
