@@ -58,6 +58,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track if ShipDetailsScreen should be shown
     var showShipDetails by remember { mutableStateOf(false) }
     
+    // Track if ShipSelectionScreen should be shown
+    var showShipSelection by remember { mutableStateOf(false) }
+    
     // Track the current ship
     var currentShip by remember { mutableStateOf<Ship>(ShipRepository.getCurrentShip()) }
     
@@ -104,6 +107,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
         showShipDetails = false
     }
     
+    // Handle ship selection navigation
+    val onShipSelectionClick: () -> Unit = {
+        showShipSelection = true
+    }
+    
+    // Handle back from ship selection
+    val onBackFromShipSelection: () -> Unit = {
+        showShipSelection = false
+    }
+    
     // Disable user scrolling when not idle
     val userScrollEnabled = isGalaxyIdle
     
@@ -128,6 +141,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     CareerScreen(
                         currentShip = currentShip,
                         onViewShipClick = onViewShipClick,
+                        onShipSelectionClick = onShipSelectionClick,
                         totalTravelMinutes = 45 // TODO: Connect to actual data source
                     )
                 }
@@ -148,8 +162,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
-        // Hide noise when ShipDetailsScreen is shown (it has its own background)
-        if (!showShipDetails) {
+        // Hide noise when ShipDetailsScreen or ShipSelectionScreen is shown (they have their own backgrounds)
+        if (!showShipDetails && !showShipSelection) {
             Image(
                 painter = painterResource(id = R.drawable.noise_8bit),
                 contentDescription = null,
@@ -162,8 +176,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen is shown
-        if (!showShipDetails && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen or ShipSelectionScreen is shown
+        if (!showShipDetails && !showShipSelection && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -182,6 +196,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
             ShipDetailsScreen(
                 ship = currentShip,
                 onBackClick = onBackFromShipDetails
+            )
+        }
+        
+        // ShipSelectionScreen overlay - shown on top of everything when showShipSelection is true
+        if (showShipSelection) {
+            ShipSelectionScreen(
+                onBackClick = onBackFromShipSelection
             )
         }
     }

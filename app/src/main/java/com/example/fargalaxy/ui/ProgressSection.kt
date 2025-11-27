@@ -2,6 +2,7 @@ package com.example.fargalaxy.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,7 @@ import com.example.fargalaxy.R
  * @param locationsCount Current count of locations (e.g., "1/30")
  * @param collectiblesCount Current count of collectibles (e.g., "1/30")
  * @param showTitle Whether to show the "Discoveries" title (default true, set to false if title is handled externally)
+ * @param onStarshipsClick Callback when the starships item is clicked
  * @param modifier Modifier for the entire ProgressSection
  */
 @Composable
@@ -66,6 +68,7 @@ fun ProgressSection(
     locationsCount: String = "1/30",
     collectiblesCount: String = "1/30",
     showTitle: Boolean = true,
+    onStarshipsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -104,7 +107,8 @@ fun ProgressSection(
             ProgressItem(
                 badgeResId = R.drawable.starshipsbadge,
                 title = "Starships",
-                count = starshipsCount
+                count = starshipsCount,
+                onClick = onStarshipsClick
             )
             
             // ProgressConnector 1: Horizontally responsive connector with centered horizontal line
@@ -157,6 +161,7 @@ fun ProgressSection(
  * @param badgeResId Resource ID for the badge SVG
  * @param title Static title text (e.g., "Starships")
  * @param count Dynamic count text (e.g., "1/10") - numbers only, no category name
+ * @param onClick Callback when the item is clicked (optional)
  * @param modifier Modifier for the item
  */
 @Composable
@@ -164,10 +169,12 @@ private fun ProgressItem(
     badgeResId: Int,
     title: String,
     count: String,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier
+            .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control
     ) {

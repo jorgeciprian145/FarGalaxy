@@ -26,6 +26,7 @@ data class Ship(
  */
 enum class ShipRarity {
     COMMON,
+    UNCOMMON,
     RARE,
     EPIC,
     LEGENDARY

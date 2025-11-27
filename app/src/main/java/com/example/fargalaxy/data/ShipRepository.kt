@@ -37,7 +37,102 @@ object ShipRepository {
             warpConverters = 75f,
             uniqueTrait = null // No unique trait for this ship
         ),
-        // Add more ships here as needed
+        Ship(
+            id = "common_ship_2",
+            name = "Common Ship 2",
+            manufacturer = "Valketh Industries",
+            type = "Light Hypertravel Starcraft",
+            rarity = ShipRarity.COMMON,
+            imageResId = R.drawable.ship1,
+            renderImageResId = R.drawable.ship1render,
+            dimensions = ShipDimensions(
+                lengthMeters = 32f,
+                lengthFeet = 104f,
+                widthMeters = 12f,
+                widthFeet = 39f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 2,
+                crewMembers = 4
+            ),
+            lore = "A common ship for testing.",
+            speed = 100f,
+            acceleration = 50f,
+            warpConverters = 75f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "uncommon_ship_1",
+            name = "Uncommon Ship 1",
+            manufacturer = "Valketh Industries",
+            type = "Medium Hypertravel Starcraft",
+            rarity = ShipRarity.UNCOMMON,
+            imageResId = R.drawable.ship1,
+            renderImageResId = R.drawable.ship1render,
+            dimensions = ShipDimensions(
+                lengthMeters = 40f,
+                lengthFeet = 130f,
+                widthMeters = 15f,
+                widthFeet = 49f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 2,
+                crewMembers = 6
+            ),
+            lore = "An uncommon ship for testing.",
+            speed = 120f,
+            acceleration = 60f,
+            warpConverters = 85f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "uncommon_ship_2",
+            name = "Uncommon Ship 2",
+            manufacturer = "Valketh Industries",
+            type = "Medium Hypertravel Starcraft",
+            rarity = ShipRarity.UNCOMMON,
+            imageResId = R.drawable.ship1,
+            renderImageResId = R.drawable.ship1render,
+            dimensions = ShipDimensions(
+                lengthMeters = 40f,
+                lengthFeet = 130f,
+                widthMeters = 15f,
+                widthFeet = 49f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 2,
+                crewMembers = 6
+            ),
+            lore = "Another uncommon ship for testing.",
+            speed = 120f,
+            acceleration = 60f,
+            warpConverters = 85f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "legendary_ship",
+            name = "Legendary Ship",
+            manufacturer = "Valketh Industries",
+            type = "Heavy Hypertravel Starcraft",
+            rarity = ShipRarity.LEGENDARY,
+            imageResId = R.drawable.ship1,
+            renderImageResId = R.drawable.ship1render,
+            dimensions = ShipDimensions(
+                lengthMeters = 60f,
+                lengthFeet = 197f,
+                widthMeters = 20f,
+                widthFeet = 66f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 4,
+                crewMembers = 12
+            ),
+            lore = "A legendary ship for testing.",
+            speed = 200f,
+            acceleration = 100f,
+            warpConverters = 150f,
+            uniqueTrait = null
+        )
     )
     
     /**

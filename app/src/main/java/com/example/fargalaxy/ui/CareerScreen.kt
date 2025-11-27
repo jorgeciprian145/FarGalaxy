@@ -59,6 +59,7 @@ import com.example.fargalaxy.model.Ship
  * 
  * @param currentShip The currently selected ship
  * @param onViewShipClick Callback when the "view" button next to ship name is clicked
+ * @param onShipSelectionClick Callback when the starships item in ProgressSection is clicked
  * @param totalTravelMinutes The total number of minutes the user has been in travel
  * @param modifier Modifier for the screen
  */
@@ -66,6 +67,7 @@ import com.example.fargalaxy.model.Ship
 fun CareerScreen(
     currentShip: Ship,
     onViewShipClick: () -> Unit = {},
+    onShipSelectionClick: () -> Unit = {},
     totalTravelMinutes: Int = 45, // TODO: Connect to actual data source
     modifier: Modifier = Modifier
 ) {
@@ -239,6 +241,7 @@ fun CareerScreen(
                     locationsCount = "1/30",
                     collectiblesCount = "1/30",
                     showTitle = false, // Don't show title, it's handled separately above
+                    onStarshipsClick = onShipSelectionClick,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
