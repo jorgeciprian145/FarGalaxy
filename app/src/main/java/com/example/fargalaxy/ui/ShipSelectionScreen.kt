@@ -64,6 +64,7 @@ import com.example.fargalaxy.model.ShipRarity
 @Composable
 fun ShipSelectionScreen(
     onBackClick: () -> Unit = {},
+    onShipClick: (Ship) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Get list of available ships (for now, using all ships from repository)
@@ -284,6 +285,7 @@ fun ShipSelectionScreen(
                                         ship = ship,
                                         isCurrentShip = isCurrentShip,
                                         containerWidth = containerWidth,
+                                        onShipClick = { onShipClick(ship) },
                                         modifier = Modifier.width(containerWidth)
                                     )
                                 }
@@ -391,9 +393,10 @@ private fun getSelectionBackgroundResId(rarity: ShipRarity, isActive: Boolean): 
 private fun getSelectionScreenImageResId(shipId: String): Int {
     return when (shipId) {
         "b14_phantom" -> R.drawable.ship1selectionscreen
-        "common_ship_2" -> R.drawable.ship2selectionscreen
-        "uncommon_ship_1" -> R.drawable.ship4selectionscreen
-        "uncommon_ship_2" -> R.drawable.ship5selectionscreen
+        "type45c_shooting_star" -> R.drawable.ship2selectionscreen
+        "a300_albatross" -> R.drawable.ship4selectionscreen
+        "b7f_starforce" -> R.drawable.ship5selectionscreen
+        "h98_valkyrie" -> R.drawable.ship10selectionscreen
         "legendary_ship" -> R.drawable.ship13selectionscreen
         else -> R.drawable.ship1selectionscreen // Fallback
     }
@@ -418,6 +421,7 @@ private fun ShipContainer(
     ship: Ship,
     isCurrentShip: Boolean,
     containerWidth: androidx.compose.ui.unit.Dp,
+    onShipClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val backgroundResId = getSelectionBackgroundResId(ship.rarity, isCurrentShip)
@@ -427,6 +431,7 @@ private fun ShipContainer(
         modifier = modifier
             .width(containerWidth)
             .aspectRatio(1f) // Maintain 1:1 aspect ratio
+            .clickable(onClick = onShipClick)
     ) {
         // Background SVG: Full width and height, grows proportionally
         Image(
@@ -445,6 +450,56 @@ private fun ShipContainer(
             modifier = Modifier
                 .fillMaxSize(),
             contentScale = ContentScale.FillBounds // Fill the entire container
+        )
+        
+        // "CURRENT SHIP" badge: Only shown for the currently active ship
+        // Positioned at bottom center with 16dp bottom padding
+        if (isCurrentShip) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp)
+            ) {
+                CurrentShipBadge()
+            }
+        }
+    }
+}
+
+/**
+ * CurrentShipBadge composable - displays the "CURRENT SHIP" badge.
+ * 
+ * Badge specifications:
+ * - Fixed height: 16dp
+ * - Label: "CURRENT SHIP", 10sp, Medium weight, color #010102
+ * - Width: Adjusts to label + 16dp internal padding (8dp each side)
+ * - Corner radius: 80dp
+ * - Background: #FFFFFF (white)
+ * - Label vertical offset: -1dp
+ * 
+ * @param modifier Modifier for the badge
+ */
+@Composable
+private fun CurrentShipBadge(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .height(16.dp)
+            .wrapContentWidth()
+            .clip(RoundedCornerShape(80.dp))
+            .background(Color(0xFFFFFFFF)) // White background
+            .padding(horizontal = 8.dp), // 8dp padding on each side (16dp total)
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "CURRENT SHIP",
+            fontFamily = Exo2,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF010102), // Very dark color
+            textAlign = TextAlign.Center,
+            modifier = Modifier.offset(y = (-4).dp) // -1dp vertical offset
         )
     }
 }

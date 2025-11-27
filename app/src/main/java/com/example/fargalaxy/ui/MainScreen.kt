@@ -64,6 +64,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track the current ship
     var currentShip by remember { mutableStateOf<Ship>(ShipRepository.getCurrentShip()) }
     
+    // Track the selected ship for details (separate from currentShip)
+    var selectedShipForDetails by remember { mutableStateOf<Ship?>(null) }
+    
     // Update active screen when page changes
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
@@ -115,6 +118,23 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back from ship selection
     val onBackFromShipSelection: () -> Unit = {
         showShipSelection = false
+    }
+    
+    // Handle ship click from ShipSelectionScreen
+    val onShipClick: (Ship) -> Unit = { ship ->
+        selectedShipForDetails = ship
+        showShipDetails = true
+        showShipSelection = false // Hide selection screen when showing details
+    }
+    
+    // Handle back from ship details - return to previous screen
+    val onBackFromShipDetailsUpdated: () -> Unit = {
+        showShipDetails = false
+        // If we came from ShipSelectionScreen, return there; otherwise just hide details (returns to CareerScreen)
+        if (selectedShipForDetails != null) {
+            selectedShipForDetails = null
+            showShipSelection = true // Return to selection screen
+        }
     }
     
     // Disable user scrolling when not idle
@@ -191,18 +211,20 @@ fun MainScreen(modifier: Modifier = Modifier) {
             }
         }
         
-        // ShipDetailsScreen overlay - shown on top of everything when showShipDetails is true
-        if (showShipDetails) {
-            ShipDetailsScreen(
-                ship = currentShip,
-                onBackClick = onBackFromShipDetails
-            )
-        }
-        
         // ShipSelectionScreen overlay - shown on top of everything when showShipSelection is true
         if (showShipSelection) {
             ShipSelectionScreen(
-                onBackClick = onBackFromShipSelection
+                onBackClick = onBackFromShipSelection,
+                onShipClick = onShipClick
+            )
+        }
+        
+        // ShipDetailsScreen overlay - shown on top of everything when showShipDetails is true
+        if (showShipDetails) {
+            ShipDetailsScreen(
+                ship = selectedShipForDetails ?: currentShip,
+                currentShip = currentShip,
+                onBackClick = onBackFromShipDetailsUpdated
             )
         }
     }

@@ -66,19 +66,83 @@ fun getRarityDisplayText(rarity: ShipRarity): String {
 }
 
 /**
- * ShipDetailsScreen composable - displays details about the user's current ship.
- * This screen opens when the user taps "view" next to the ship name on the career screen.
+ * Helper function to get the manufacturer logo drawable resource ID based on manufacturer name.
+ * 
+ * @param manufacturer The manufacturer name
+ * @return The drawable resource ID for the manufacturer logo
+ */
+private fun getManufacturerLogoResId(manufacturer: String): Int {
+    return when (manufacturer.lowercase()) {
+        "soren shipworks", "soren" -> R.drawable.sorenlogo
+        "valketh industries", "valketh" -> R.drawable.valkethlogo
+        "marakeshi space technologies", "marakeshi" -> R.drawable.marakeshilogo
+        "karnyx armory division", "karnyx" -> R.drawable.karnyxlogo
+        else -> R.drawable.valkethlogo // Fallback to Valketh logo
+    }
+}
+
+/**
+ * Helper function to get the gradient color based on ship rarity.
+ * 
+ * @param rarity The ship's rarity
+ * @return The gradient color (with 32% opacity for top of gradient)
+ */
+private fun getGradientColor(rarity: ShipRarity): Color {
+    return when (rarity) {
+        ShipRarity.UNCOMMON -> Color(0x5245E031) // #45E031 at 32% opacity (0x52 = ~32%)
+        ShipRarity.EPIC -> Color(0x52E06BEA) // #E06BEA at 32% opacity (0x52 = ~32%)
+        else -> Color(0x52FFFFFF) // White at 32% opacity (default for COMMON and others)
+    }
+}
+
+/**
+ * Helper function to get the badge text color based on ship rarity.
+ * 
+ * @param rarity The ship's rarity
+ * @return The badge text color
+ */
+private fun getBadgeTextColor(rarity: ShipRarity): Color {
+    return when (rarity) {
+        ShipRarity.UNCOMMON -> Color(0xFF45E031) // #45E031 at 100% opacity
+        ShipRarity.EPIC -> Color(0xFFE06BEA) // #E06BEA at 100% opacity
+        else -> Color(0xFFFFFFFF) // White (default for COMMON and others)
+    }
+}
+
+/**
+ * Helper function to get the badge container color based on ship rarity.
+ * 
+ * @param rarity The ship's rarity
+ * @return The badge container color (with 16% opacity)
+ */
+private fun getBadgeContainerColor(rarity: ShipRarity): Color {
+    return when (rarity) {
+        ShipRarity.UNCOMMON -> Color(0x2945E031) // #45E031 at 16% opacity (0x29 = ~16%)
+        ShipRarity.EPIC -> Color(0x29E06BEA) // #E06BEA at 16% opacity (0x29 = ~16%)
+        else -> Color(0x29FFFFFF) // White at 16% opacity (default for COMMON and others)
+    }
+}
+
+/**
+ * ShipDetailsScreen composable - displays details about a ship.
+ * This screen opens when the user taps "view" next to the ship name on the career screen,
+ * or when tapping a ship in the ship selection screen.
  * 
  * @param ship The ship to display details for
+ * @param currentShip The currently active ship (used to determine if title should be "Your current ship" or "Ship details")
  * @param onBackClick Callback when the back button is clicked
  * @param modifier Modifier for the screen
  */
 @Composable
 fun ShipDetailsScreen(
     ship: Ship,
+    currentShip: Ship,
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Determine if the ship being viewed is the current ship
+    val isCurrentShip = ship.id == currentShip.id
+    val titleText = if (isCurrentShip) "Your current ship" else "Ship details"
     // Scroll state to track when content is being clipped
     val scrollState = rememberScrollState()
     
@@ -118,19 +182,19 @@ fun ShipDetailsScreen(
             contentScale = ContentScale.Crop
         )
         
-        // Top gradient overlay: Covers 40% of screen height, creating a fade effect at the top.
-        // Gradient transitions from 32% opacity white at the top to transparent at the bottom.
+        // Top gradient overlay: Covers 30% of screen height, creating a fade effect at the top.
+        // Gradient transitions from 32% opacity color (based on rarity) at the top to transparent at the bottom.
         // Positioned behind all elements but on top of the background image.
-        // TODO: Make gradient color dynamic based on ship.rarity (currently set for COMMON)
+        // Color is dynamic based on ship.rarity (UNCOMMON uses #45E031, others use white)
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(0.40f)
+                .fillMaxHeight(0.30f)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0x52FFFFFF),
+                            getGradientColor(ship.rarity),
                             Color(0x00000000)
                         )
                     )
@@ -163,11 +227,11 @@ fun ShipDetailsScreen(
                 contentScale = ContentScale.Fit
             )
             
-            // Title: "Your current ship"
+            // Title: "Your current ship" or "Ship details" based on whether this is the current ship
             // Same font style as "Your career" in CareerScreen
             // Horizontally centered on the screen
             Text(
-                text = "Your current ship",
+                text = titleText,
                 fontFamily = Exo2,
                 fontSize = 18.sp,
                 color = Color(0xFFFFFFFF),
@@ -222,10 +286,9 @@ fun ShipDetailsScreen(
                     
                     // Logo layer - behind ship image but in front of backship animation
                     // 48% of screen width, vertically and horizontally aligned with ship
-                    // For now, using valkethlogo for Valketh Industries ships
-                    // TODO: Make logo selection dynamic based on ship.manufacturer
+                    // Logo selection is dynamic based on ship.manufacturer
                     Image(
-                        painter = painterResource(id = R.drawable.valkethlogo),
+                        painter = painterResource(id = getManufacturerLogoResId(ship.manufacturer)),
                         contentDescription = "Manufacturer logo",
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -266,16 +329,16 @@ fun ShipDetailsScreen(
                 // Spacing between ship image and badge
                 Spacer(modifier = Modifier.height(0.dp))
                 
-                // Rarity badge: Container with "COMMON SHIP" text
+                // Rarity badge: Container with rarity text (e.g., "COMMON SHIP", "UNCOMMON SHIP")
                 // 16px height, width adjusts to content, 4px padding inside
-                // Text: 10px, Medium weight, white color
-                // Container: white background with 16% opacity
+                // Text: 10px, Medium weight, color based on rarity
+                // Container: color based on rarity with 16% opacity
                 Box(
                     modifier = Modifier
                         .height(16.dp)
                         .wrapContentWidth()
                         .background(
-                            color = Color(0xFFFFFFFF).copy(alpha = 0.16f)
+                            color = getBadgeContainerColor(ship.rarity)
                         )
                         .padding(horizontal = 4.dp),
                     contentAlignment = Alignment.Center
@@ -285,7 +348,7 @@ fun ShipDetailsScreen(
                         fontFamily = Exo2,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFFFFFFFF),
+                        color = getBadgeTextColor(ship.rarity),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.offset(y = (-4).dp) // Adjust this value to move text up (negative) or down (positive)
                     )
@@ -491,7 +554,7 @@ fun ShipDetailsScreen(
                             color = Color(0xFFFFFFFF)
                         )
                         Text(
-                            text = "After countless prototypes and more failures than the engineers cared to admit, Valketh Industries finally released a ship that changed the way new pilots entered the galaxy. The Phantom was never designed to be the fastest or the strongest. It was built to endure, to forgive mistakes, and to carry beginners through their first uncertain steps into deep space.\n\nIts frame is simple, its systems modest, and its performance unremarkable when compared to the elite vessels flown by veteran crews. Yet the Phantom earned its reputation through grit rather than glory. It survives rough landings, unstable jump routes, and long stretches of travel where more advanced ships would demand repairs. For generations of cadets, its hum has been the first sound they heard before taking off into the void.\n\nMost pilots eventually outgrow the Phantom once they gain skill and confidence, trading it for ships that push the limits of speed, firepower, or exploration range. But the Phantom stays with them. It becomes the memory of their first real flight, the craft that caught their mistakes and carried their victories, the starting point of every career that ever reached the stars.",
+                            text = ship.lore,
                             fontFamily = Exo2,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.W400,

@@ -38,75 +38,99 @@ object ShipRepository {
             uniqueTrait = null // No unique trait for this ship
         ),
         Ship(
-            id = "common_ship_2",
-            name = "Common Ship 2",
-            manufacturer = "Valketh Industries",
-            type = "Light Hypertravel Starcraft",
+            id = "type45c_shooting_star",
+            name = "Type 45C Shooting Star",
+            manufacturer = "Soren Shipworks",
+            type = "Interceptor Starcraft",
             rarity = ShipRarity.COMMON,
-            imageResId = R.drawable.ship1,
-            renderImageResId = R.drawable.ship1render,
+            imageResId = R.drawable.ship2,
+            renderImageResId = R.drawable.ship2render,
             dimensions = ShipDimensions(
-                lengthMeters = 32f,
-                lengthFeet = 104f,
-                widthMeters = 12f,
-                widthFeet = 39f
+                lengthMeters = 34f,
+                lengthFeet = 111f,
+                widthMeters = 30f,
+                widthFeet = 98f
             ),
             crewCapacity = CrewCapacity(
-                pilots = 2,
-                crewMembers = 4
+                pilots = 1,
+                crewMembers = 2
             ),
-            lore = "A common ship for testing.",
+            lore = "Not every mission calls for long stretches in deep space. Some require beds, rations and days of quiet travel. Others simply demand speed. The Shooting Star was built for the second kind.\n\nThis agile, lightweight craft excels at quick planetary hops and rapid interception runs, especially when suspicious vessels drop out of hyperspace without warning. Its compact frame may suggest a single-pilot fighter, yet the cockpit is cleverly engineered to hold a three-person crew: a pilot at the helm, a navigator charting optimal routes, and a communications specialist who stays linked to central command, feeding real-time intel as the situation unfolds.\n\nThe Shooting Star isn't a ship you live in. It's a ship you launch when time matters and hesitation isn't an option.",
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
             uniqueTrait = null
         ),
         Ship(
-            id = "uncommon_ship_1",
-            name = "Uncommon Ship 1",
+            id = "a300_albatross",
+            name = "A-300 Albatross",
             manufacturer = "Valketh Industries",
-            type = "Medium Hypertravel Starcraft",
+            type = "Multi-purpose Hypertravel Starcraft",
             rarity = ShipRarity.UNCOMMON,
-            imageResId = R.drawable.ship1,
-            renderImageResId = R.drawable.ship1render,
+            imageResId = R.drawable.ship4,
+            renderImageResId = R.drawable.ship4render,
             dimensions = ShipDimensions(
-                lengthMeters = 40f,
-                lengthFeet = 130f,
-                widthMeters = 15f,
-                widthFeet = 49f
+                lengthMeters = 34f,
+                lengthFeet = 104f,
+                widthMeters = 36f,
+                widthFeet = 118f
             ),
             crewCapacity = CrewCapacity(
                 pilots = 2,
-                crewMembers = 6
+                crewMembers = 4
             ),
-            lore = "An uncommon ship for testing.",
+            lore = "The Albatross is a reliable, well-rounded craft built for almost any assignment the Alliance can throw at it. Pilots trust it for its steady handling and sturdy frame, and it has become a common sight on missions that span a few days. Its interior isn't luxurious, but it's surprisingly comfortable, letting crews stay out in the field longer than the mission log originally intended.\n\nAmong pilots, there's an old joke that the Albatross mechanic is usually the most relaxed member of the team. The ship rarely complains, rarely needs emergency fixes, and often returns from long routes without a single warning light. It may not be the flashiest vessel in the hangar, but it has proven time and time again that dependability is its greatest weapon.",
             speed = 120f,
             acceleration = 60f,
             warpConverters = 85f,
             uniqueTrait = null
         ),
         Ship(
-            id = "uncommon_ship_2",
-            name = "Uncommon Ship 2",
-            manufacturer = "Valketh Industries",
+            id = "b7f_starforce",
+            name = "B7F Starforce",
+            manufacturer = "Marakeshi Space Technologies",
             type = "Medium Hypertravel Starcraft",
             rarity = ShipRarity.UNCOMMON,
-            imageResId = R.drawable.ship1,
-            renderImageResId = R.drawable.ship1render,
+            imageResId = R.drawable.ship5,
+            renderImageResId = R.drawable.ship5render,
             dimensions = ShipDimensions(
-                lengthMeters = 40f,
-                lengthFeet = 130f,
-                widthMeters = 15f,
-                widthFeet = 49f
+                lengthMeters = 32f,
+                lengthFeet = 104f,
+                widthMeters = 36f,
+                widthFeet = 118f
             ),
             crewCapacity = CrewCapacity(
-                pilots = 2,
-                crewMembers = 6
+                pilots = 1,
+                crewMembers = 3
             ),
-            lore = "Another uncommon ship for testing.",
+            lore = "The Starforce is the sports car of hyperspace travel. Sleek lines, smooth handling and a punchy performance made it an instant icon from the moment Marakeshi unveiled their first mid-size model. It didn't take long for thrill-seeking civilian pilots to fall in love with it.\n\nIt does demand more maintenance than the simpler ships in its class, but anyone who has pushed its twin double-engines to full throttle knows the trade-off is worth it. The Starforce was built for pilots who enjoy the ride as much as the destination.\n\nJust remember to ease off the drive when passing through regulated lanes. Hyperspace patrols have very little patience for speed enthusiasts.",
             speed = 120f,
             acceleration = 60f,
             warpConverters = 85f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "h98_valkyrie",
+            name = "H-98 Valkyrie",
+            manufacturer = "Karnyx Armory Division",
+            type = "Multi-purpose Hypertravel Starcraft",
+            rarity = ShipRarity.EPIC,
+            imageResId = R.drawable.ship10,
+            renderImageResId = R.drawable.ship10render,
+            dimensions = ShipDimensions(
+                lengthMeters = 40f,
+                lengthFeet = 131f,
+                widthMeters = 36f,
+                widthFeet = 118f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 3
+            ),
+            lore = "If toughness is what you're after, few ships embody it as completely as the Valkyrie. Originally built as a military starcraft, it was designed to launch from cruisers and carry out orbital patrols and strike missions. Its armor proved so durable that, after years of service, engineers eventually refitted the model with hypertravel capabilities and released a civilian-approved variant.\n\nEven without its cannons and missile racks, the Valkyrie still looks unmistakably intimidating. Many pilots embrace that legacy and repaint their vessels in the original military scheme, keeping the ship's combat heritage alive in spirit.\n\nJust remember to announce your peaceful intentions when approaching populated zones. For some of the outer colonies, the sight of a Valkyrie blazing down through orbit still carries memories of darker times.",
+            speed = 200f,
+            acceleration = 100f,
+            warpConverters = 150f,
             uniqueTrait = null
         ),
         Ship(

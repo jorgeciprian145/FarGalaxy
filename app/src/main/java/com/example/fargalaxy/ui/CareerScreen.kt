@@ -49,6 +49,12 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import com.example.fargalaxy.model.Ship
 
@@ -71,6 +77,21 @@ fun CareerScreen(
     totalTravelMinutes: Int = 45, // TODO: Connect to actual data source
     modifier: Modifier = Modifier
 ) {
+    // State to trigger animation playback when screen becomes visible
+    var animationKey by remember { mutableStateOf(0) }
+    
+    // Reset animation trigger when screen becomes visible (when composable is created)
+    LaunchedEffect(Unit) {
+        animationKey++
+    }
+    
+    // Reset animation when composable is disposed (user leaves screen)
+    DisposableEffect(Unit) {
+        onDispose {
+            // Animation will replay when composable is recreated
+        }
+    }
+    
     // Scroll state to track when content is being clipped
     val scrollState = rememberScrollState()
     
@@ -438,7 +459,7 @@ private fun TotalTimeTravelingCounter(
             horizontalArrangement = Arrangement.Center, // Center the entire group
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left decorative element: SVG image
+            // Left decorative element: Lottie animation
             Box(
                 modifier = Modifier
                     .onSizeChanged { size ->
@@ -448,9 +469,10 @@ private fun TotalTimeTravelingCounter(
                     }
                     .padding(end = internalPadding) // 8dp internal padding to center content
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.sidedecoration),
-                    contentDescription = null,
+                val leftComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration))
+                LottieAnimation(
+                    composition = leftComposition,
+                    iterations = 1, // Play once
                     modifier = Modifier.height(88.dp), // Fixed height of 88px
                     contentScale = ContentScale.Fit // Maintain original aspect ratio
                 )
@@ -469,7 +491,7 @@ private fun TotalTimeTravelingCounter(
                 )
             }
             
-            // Right decorative element: SVG image (mirrored)
+            // Right decorative element: Lottie animation (mirrored)
             Box(
                 modifier = Modifier
                     .onSizeChanged { size ->
@@ -479,9 +501,10 @@ private fun TotalTimeTravelingCounter(
                     }
                     .padding(start = internalPadding) // 8dp internal padding to center content
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.sidedecoration),
-                    contentDescription = null,
+                val rightComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration))
+                LottieAnimation(
+                    composition = rightComposition,
+                    iterations = 1, // Play once
                     modifier = Modifier
                         .height(88.dp) // Fixed height of 88px
                         .scale(scaleX = -1f, scaleY = 1f), // Mirror horizontally
