@@ -194,7 +194,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         currentShip = currentShip,
                         onViewShipClick = onViewShipClick,
                         onShipSelectionClick = onShipSelectionClick,
-                        totalTravelMinutes = 45 // TODO: Connect to actual data source
+                        totalTravelMinutes = 45, // TODO: Connect to actual data source
+                        isPageActive = pagerState.currentPage == 0 && !showShipDetails && !showShipSelection // Track when page is active and overlays are closed
                     )
                 }
                 1 -> {

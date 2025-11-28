@@ -51,6 +51,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.alpha
+import kotlinx.coroutines.delay
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -67,6 +73,7 @@ import com.example.fargalaxy.model.Ship
  * @param onViewShipClick Callback when the "view" button next to ship name is clicked
  * @param onShipSelectionClick Callback when the starships item in ProgressSection is clicked
  * @param totalTravelMinutes The total number of minutes the user has been in travel
+ * @param isPageActive Boolean flag indicating if this page is currently active and visible (used to reset scroll when returning)
  * @param modifier Modifier for the screen
  */
 @Composable
@@ -75,6 +82,7 @@ fun CareerScreen(
     onViewShipClick: () -> Unit = {},
     onShipSelectionClick: () -> Unit = {},
     totalTravelMinutes: Int = 45, // TODO: Connect to actual data source
+    isPageActive: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     // State to trigger animation playback when screen becomes visible
@@ -94,6 +102,27 @@ fun CareerScreen(
     
     // Scroll state to track when content is being clipped
     val scrollState = rememberScrollState()
+    
+    // Track previous active state to detect when we return to this page
+    var wasActive by remember { mutableStateOf(isPageActive) }
+    
+    // Reset scroll position when CareerScreen becomes visible again
+    // This triggers when:
+    // 1. Navigating back to this page from another page (GalaxyScreen, VaultScreen)
+    // 2. Returning from overlays (ShipSelectionScreen, ShipDetailsScreen)
+    LaunchedEffect(isPageActive) {
+        if (isPageActive && !wasActive) {
+            // Page just became active (returned from overlay or another page)
+            scrollState.animateScrollTo(0)
+        }
+        wasActive = isPageActive
+    }
+    
+    // Also reset on initial composition
+    LaunchedEffect(Unit) {
+        scrollState.animateScrollTo(0)
+        wasActive = isPageActive
+    }
     
     // Get density to convert dp to pixels
     val density = LocalDensity.current
@@ -230,11 +259,15 @@ fun CareerScreen(
                 
                 // Current ship row: Contains ship name labels on left and "VIEW" button on right
                 // Row has 20dp vertical padding, so no additional spacer needed
-                CurrentShipRow(
-                    shipName = currentShip.name,
-                    onViewClick = onViewShipClick,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Use key() to force recomposition when ship changes
+                androidx.compose.runtime.key(currentShip.id) {
+                    CurrentShipRow(
+                        shipName = currentShip.name,
+                        shipId = currentShip.id,
+                        onViewClick = onViewShipClick,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
                 
                 // Horizontal line 1: 1dp height white line with 16dp side padding
                 // Row has 20dp vertical padding, so no additional spacer needed
@@ -692,23 +725,57 @@ private fun AchievementColumn(
  * 
  * Contains:
  * - Left side: Two labels stacked vertically
- *   - Top: Dynamic ship name (16sp, bold)
+ *   - Top: Dynamic ship name (16sp, bold) - animates when ship changes
  *   - Bottom: Static "Current ship" label (14sp, regular)
  *   - 4dp vertical spacing between labels
  * - Right side: "view" button (88dp width, same style as ViewAllButton)
  * 
  * The row has 16dp horizontal padding and 20dp vertical padding.
  * 
+ * When the ship changes, the ship name animates sliding in from the left while fading in.
+ * Animation duration: 1 second with smooth easing.
+ * 
  * @param shipName The name of the currently selected ship
+ * @param shipId The ID of the currently selected ship (used to detect changes)
  * @param onViewClick Callback when the view button is clicked
  * @param modifier Modifier for the row
  */
 @Composable
 private fun CurrentShipRow(
     shipName: String,
+    shipId: String,
     onViewClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val density = LocalDensity.current
+    
+    // When using key(), the composable is recreated each time ship changes
+    // So we can just animate from 0 to 1 on first composition
+    var animationTarget by remember { mutableStateOf(0f) }
+    
+    // Start animation on first composition (when key changes, composable is recreated)
+    LaunchedEffect(Unit) {
+        animationTarget = 0f // Start from left, invisible
+        delay(50) // Small delay to ensure state is set
+        animationTarget = 1f // Animate to center, visible
+    }
+    
+    // Animate progress from 0 to 1
+    val animationProgress by animateFloatAsState(
+        targetValue = animationTarget,
+        animationSpec = tween(
+            durationMillis = 1000,
+            easing = FastOutSlowInEasing
+        ),
+        label = "ship_name_animation"
+    )
+    
+    // Calculate final values: map progress (0-1) to actual offset and alpha ranges
+    // Offset: 0 = -50dp (off-screen left), 1 = 0dp (normal position)
+    // Alpha: 0 = 0 (invisible), 1 = 1 (fully visible)
+    val finalOffsetX = (-50f + (animationProgress * 50f))
+    val finalAlpha = animationProgress
+    
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -720,13 +787,16 @@ private fun CurrentShipRow(
         Column(
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            // Dynamic ship name: 16sp, bold
+            // Dynamic ship name: 16sp, bold - with animation
             Text(
                 text = shipName,
                 fontFamily = Exo2,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = Color(0xFFFFFFFF)
+                color = Color(0xFFFFFFFF),
+                modifier = Modifier
+                    .offset(x = with(density) { finalOffsetX.dp })
+                    .alpha(finalAlpha)
             )
             
             // Static "Current ship" label: 14sp, regular

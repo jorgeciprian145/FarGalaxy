@@ -704,6 +704,7 @@ fun SpeedEffectLayer(
  * @param selectedMinutes The total selected time duration in minutes (5-60 range)
  * @param remainingSeconds The current remaining time in seconds (decreases every second during countdown)
  * @param isInitialAppearance Boolean flag indicating if this is the first time the ring appears
+ * @param isVisible Boolean flag controlling ring visibility (can be toggled during travel)
  * @param modifier Modifier for positioning and sizing the ring
  * 
  * The ring:
@@ -714,12 +715,14 @@ fun SpeedEffectLayer(
  * - Animates its initial appearance over 5 seconds when first shown
  * - Uses smooth animation via animateFloatAsState for visual transitions
  * - Decreases smoothly every second for continuous visual feedback
+ * - Can fade in/out when isVisible changes (1.5 second animation)
  */
 @Composable
 fun CountdownRing(
     selectedMinutes: Int,
     remainingSeconds: Int,
     isInitialAppearance: Boolean = false,
+    isVisible: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     // Calculate the target sweep angle based on remaining time proportion
@@ -787,6 +790,13 @@ fun CountdownRing(
         animationSpec = tween(durationMillis = 500),
         label = "countdown_ring_animation"
     )
+    
+    // Animate visibility (fade in/out) when isVisible changes
+    val ringAlpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(durationMillis = 1500), // 1.5 seconds fade
+        label = "ring_visibility_fade"
+    )
 
     // Don't render the ring if countdown has reached 0 or if selectedMinutes is invalid
     if (remainingSeconds <= 0 || selectedMinutes <= 0) {
@@ -795,7 +805,9 @@ fun CountdownRing(
 
     // Canvas composable to draw the circular arc
     Canvas(
-        modifier = modifier.size(274.dp)
+        modifier = modifier
+            .size(274.dp)
+            .alpha(ringAlpha) // Apply fade animation
     ) {
         // Calculate the center point and radius of the circle
         // Account for stroke width to ensure the full circle fits within the canvas
@@ -875,6 +887,10 @@ fun GalaxyScreen(
     // showSpeedEffect: Controls visibility of the speed effect Lottie animation
     // Appears 3 seconds after travel starts and disappears immediately when travel stops
     var showSpeedEffect by remember { mutableStateOf(false) }
+    
+    // isRingVisible: Controls visibility of the countdown ring
+    // Can be toggled by tapping the ship during travel
+    var isRingVisible by remember { mutableStateOf(true) }
     
     // isPreparingLaunch: Boolean flag that indicates if the launch preparation countdown is active
     // When true, shows 3-second countdown before actual travel begins
@@ -993,6 +1009,9 @@ fun GalaxyScreen(
         speedEffectJob = null
 
         if (isTraveling) {
+            // Reset ring visibility when travel starts
+            isRingVisible = true
+            
             // Increment session ID for this travel session
             val currentSessionId = System.currentTimeMillis()
             travelSessionId = currentSessionId
@@ -1011,6 +1030,8 @@ fun GalaxyScreen(
             // Immediately hide when travel stops and invalidate session
             showSpeedEffect = false
             travelSessionId = 0L // Invalidate session
+            // Reset ring visibility when travel stops
+            isRingVisible = true
         }
     }
     
@@ -1051,11 +1072,13 @@ fun GalaxyScreen(
         // Decreases smoothly every second for continuous visual feedback.
         // On first appearance, animates from 0° to full circle over 5 seconds.
         // Disappears completely when countdown reaches 0.
+        // Can be hidden/shown by tapping the ship during travel (with fade animation).
         if (isTraveling) {
             CountdownRing(
                 selectedMinutes = selectedMinutes,
                 remainingSeconds = remainingSeconds,
                 isInitialAppearance = isInitialRingAppearance,
+                isVisible = isRingVisible,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(y = (-1).dp)  // Negative value moves upward
@@ -1084,13 +1107,24 @@ fun GalaxyScreen(
         // Positioned at the vertical center to align with the radar animation and countdown ring.
         // Appears above the countdown ring and impulse layer.
         // Uses the ship image corresponding to the current ship with ship-specific height.
+        // Tappable during travel to toggle countdown ring visibility.
         Image(
             painter = painterResource(id = getGalaxyShipImageResId(currentShip.id)),
             contentDescription = null,
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth()
-                .height(getGalaxyShipHeight(currentShip.id)),
+                .height(getGalaxyShipHeight(currentShip.id))
+                .then(
+                    if (isTraveling) {
+                        Modifier.clickable { 
+                            // Toggle ring visibility when tapping ship during travel
+                            isRingVisible = !isRingVisible
+                        }
+                    } else {
+                        Modifier
+                    }
+                ),
             contentScale = ContentScale.Fit
         )
 
