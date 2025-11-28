@@ -63,6 +63,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
+import com.example.fargalaxy.model.Ship
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -468,23 +469,122 @@ fun LaunchButton(
 }
 
 /**
+ * Helper function to get the ship image resource ID for GalaxyScreen based on ship ID.
+ * Maps ship IDs to their corresponding ship images (ship1, ship2, etc.).
+ */
+private fun getGalaxyShipImageResId(shipId: String): Int {
+    return when (shipId) {
+        "b14_phantom" -> R.drawable.ship1
+        "type45c_shooting_star" -> R.drawable.ship2
+        "a300_albatross" -> R.drawable.ship4
+        "b7f_starforce" -> R.drawable.ship5
+        "h98_valkyrie" -> R.drawable.ship10
+        "legendary_ship" -> R.drawable.ship1 // Fallback
+        else -> R.drawable.ship1 // Default fallback
+    }
+}
+
+/**
+ * Helper function to get the ship image height for GalaxyScreen based on ship ID.
+ * Returns ship-specific height, or default 113.dp if not specified.
+ */
+private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
+    return when (shipId) {
+        "type45c_shooting_star" -> 174.dp // Ship2: 10% bigger than 158.dp (158 * 1.1 = 173.8)
+        "a300_albatross" -> 249.dp // Ship4: 120% bigger than 113.dp (113 * 2.2 = 248.6)
+        "b7f_starforce" -> 249.dp // Ship5: Same height as ship4 (249.dp)
+        "h98_valkyrie" -> 237.dp // Ship10: 110% bigger than 113.dp (113 * 2.1 = 237.3)
+        else -> 113.dp // Default height
+    }
+}
+
+/**
+ * Helper function to get the impulse image resource ID based on ship ID.
+ * Maps ship IDs to their corresponding impulse images (impulse1, impulse2, etc.).
+ */
+private fun getImpulseImageResId(shipId: String): Int {
+    return when (shipId) {
+        "b14_phantom" -> R.drawable.impulse1
+        "type45c_shooting_star" -> R.drawable.impulse2
+        "a300_albatross" -> R.drawable.impulse4
+        "b7f_starforce" -> R.drawable.impulse5
+        "h98_valkyrie" -> R.drawable.impulse10
+        "legendary_ship" -> R.drawable.impulse1 // Fallback
+        else -> R.drawable.impulse1 // Default fallback
+    }
+}
+
+/**
+ * Helper function to get the impulse image width based on ship ID.
+ * Returns ship-specific width, or default 600.dp if not specified.
+ */
+private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
+    return when (shipId) {
+        "type45c_shooting_star" -> 924.dp // Impulse2: 10% bigger than 840.dp (840 * 1.1 = 924)
+        "a300_albatross" -> 1452.dp // Impulse4: 10% bigger than 1320.dp (1320 * 1.1 = 1452)
+        "b7f_starforce" -> 1320.dp // Impulse5: 120% bigger than 600.dp (600 * 2.2 = 1320), same % as ship5
+        "h98_valkyrie" -> 1386.dp // Impulse10: 10% bigger than 1260.dp (1260 * 1.1 = 1386)
+        else -> 600.dp // Default width
+    }
+}
+
+/**
+ * Helper function to get the impulse image height based on ship ID.
+ * Returns ship-specific height, or default 100.dp if not specified.
+ */
+private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
+    return when (shipId) {
+        "type45c_shooting_star" -> 154.dp // Impulse2: 10% bigger than 140.dp (140 * 1.1 = 154)
+        "a300_albatross" -> 242.dp // Impulse4: 10% bigger than 220.dp (220 * 1.1 = 242)
+        "b7f_starforce" -> 220.dp // Impulse5: 120% bigger than 100.dp (100 * 2.2 = 220), same % as ship5
+        "h98_valkyrie" -> 231.dp // Impulse10: 10% bigger than 210.dp (210 * 1.1 = 231)
+        else -> 100.dp // Default height
+    }
+}
+
+/**
+ * Helper function to get the impulse horizontal offset based on ship ID.
+ * Returns ship-specific horizontal offset, or default -120.dp if not specified.
+ * Negative values move left, positive values move right.
+ */
+private fun getImpulseHorizontalOffset(shipId: String): androidx.compose.ui.unit.Dp {
+    return when (shipId) {
+        "b14_phantom" -> (-120).dp // Ship1: B14 Phantom
+        "type45c_shooting_star" -> (-120).dp // Ship2: Type 45C Shooting Star
+        "a300_albatross" -> (-80).dp // Ship4: A-300 Albatross
+        "b7f_starforce" -> (-120).dp // Ship5: B7F Starforce
+        "h98_valkyrie" -> (-120).dp // Ship10: H-98 Valkyrie
+        "legendary_ship" -> (-120).dp // Legendary ship fallback
+        else -> (-120).dp // Default offset
+    }
+}
+
+/**
  * ImpulseLayer composable - displays the ship's engine thrust/impulse effect.
  * The image fades in from 0% to 100% opacity over 4 seconds when travel starts.
  * 
  * @param isTraveling Boolean flag indicating if travel is active
+ * @param impulseResId The drawable resource ID for the impulse image
+ * @param impulseWidth The width of the impulse image
+ * @param impulseHeight The height of the impulse image
+ * @param horizontalOffset The horizontal offset from center (negative = left, positive = right)
  * @param modifier Modifier for positioning and sizing
  * 
  * The impulse effect:
- * - Uses impulse1.png from drawable-nodpi
- * - Fixed width of 600.dp and height of 100.dp
+ * - Uses the provided impulse image from drawable-nodpi
+ * - Ship-specific width and height
  * - Starts at 0% opacity and fades to 100% over 4 seconds when travel begins
  * - Vertically centered
- * - Offset 120.dp to the left from center
+ * - Horizontally offset from center based on ship
  * - Only visible when isTraveling is true
  */
 @Composable
 fun ImpulseLayer(
     isTraveling: Boolean = false,
+    impulseResId: Int = R.drawable.impulse1,
+    impulseWidth: androidx.compose.ui.unit.Dp = 600.dp,
+    impulseHeight: androidx.compose.ui.unit.Dp = 100.dp,
+    horizontalOffset: androidx.compose.ui.unit.Dp = (-120).dp,
     modifier: Modifier = Modifier
 ) {
     // Return early if not traveling
@@ -515,15 +615,15 @@ fun ImpulseLayer(
 
     Box(
         modifier = modifier
-            .offset(x = (-120).dp), // Debug background
+            .offset(x = horizontalOffset), // Horizontal offset (negative = left, positive = right)
         contentAlignment = Alignment.CenterEnd
     ) {
         Image(
-            painter = painterResource(id = R.drawable.impulse1),
+            painter = painterResource(id = impulseResId),
             contentDescription = "Engine thrust effect",
             modifier = Modifier
-                .width(600.dp)
-                .height(100.dp)
+                .width(impulseWidth)
+                .height(impulseHeight)
                 .alpha(opacity), // Apply fade-in animation
             contentScale = ContentScale.Fit
         )
@@ -735,6 +835,7 @@ fun CountdownRing(
  * 
  * All state is preserved across configuration changes using rememberSaveable.
  * 
+ * @param currentShip The currently selected ship (used to display correct ship and impulse images)
  * @param modifier Modifier for the screen
  * @param isIdleCallback Callback to notify parent when idle state changes (true when idle, false when preparing/traveling)
  * @param activeScreen The currently active screen for indicator display
@@ -743,6 +844,7 @@ fun CountdownRing(
  */
 @Composable
 fun GalaxyScreen(
+    currentShip: Ship,
     modifier: Modifier = Modifier,
     isIdleCallback: (Boolean) -> Unit = {},
     activeScreen: ActiveScreen = ActiveScreen.CENTER,
@@ -959,25 +1061,31 @@ fun GalaxyScreen(
         // Impulse/thrust effect layer: Engine thrust effect that appears when traveling.
         // Positioned above the countdown ring but below the ship image.
         // Animates from 0% to 100% width over 3 seconds when travel starts.
-        // Vertically centered and offset 40.dp to the left from center.
+        // Vertically centered and offset horizontally based on ship.
+        // Uses the impulse image corresponding to the current ship with ship-specific sizes and offset.
         if (isTraveling) {
             ImpulseLayer(
                 isTraveling = isTraveling,
+                impulseResId = getImpulseImageResId(currentShip.id),
+                impulseWidth = getImpulseWidth(currentShip.id),
+                impulseHeight = getImpulseHeight(currentShip.id),
+                horizontalOffset = getImpulseHorizontalOffset(currentShip.id),
                 modifier = Modifier
                     .align(Alignment.Center)
             )
         }
 
-        // Spaceship layer: Centered spaceship image with fixed height of 170.dp.
+        // Spaceship layer: Centered spaceship image with ship-specific height.
         // Positioned at the vertical center to align with the radar animation and countdown ring.
         // Appears above the countdown ring and impulse layer.
+        // Uses the ship image corresponding to the current ship with ship-specific height.
         Image(
-            painter = painterResource(id = R.drawable.ship1),
+            painter = painterResource(id = getGalaxyShipImageResId(currentShip.id)),
             contentDescription = null,
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth()
-                .height(113.dp),
+                .height(getGalaxyShipHeight(currentShip.id)),
             contentScale = ContentScale.Fit
         )
 
@@ -1117,6 +1225,8 @@ fun GalaxyScreen(
 @Preview(showBackground = true)
 @Composable
 private fun GalaxyScreenPreview() {
-    GalaxyScreen()
+    GalaxyScreen(
+        currentShip = com.example.fargalaxy.data.ShipRepository.getCurrentShip()
+    )
 }
 

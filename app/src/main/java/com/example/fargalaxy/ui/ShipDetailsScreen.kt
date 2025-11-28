@@ -131,6 +131,8 @@ private fun getBadgeContainerColor(rarity: ShipRarity): Color {
  * @param ship The ship to display details for
  * @param currentShip The currently active ship (used to determine if title should be "Your current ship" or "Ship details")
  * @param onBackClick Callback when the back button is clicked
+ * @param onSelectShip Callback when the "SELECT SHIP" button is clicked (only shown when ship is not current ship)
+ * @param onChangeShip Callback when the "CHANGE SHIP" button is clicked (only shown when ship is current ship and this callback is provided, null by default)
  * @param modifier Modifier for the screen
  */
 @Composable
@@ -138,6 +140,8 @@ fun ShipDetailsScreen(
     ship: Ship,
     currentShip: Ship,
     onBackClick: () -> Unit = {},
+    onSelectShip: () -> Unit = {},
+    onChangeShip: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     // Determine if the ship being viewed is the current ship
@@ -598,34 +602,69 @@ fun ShipDetailsScreen(
                 
                 // Button container: Full width, black background
                 // Contains single full-width button with 16dp padding on all sides
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF000000)) // Black background at 100% opacity
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
-                ) {
-                    // Single full-width button: "CHANGE SHIP" - no fill, white stroke, white text
+                // Show "SELECT SHIP" button when ship is not the current ship
+                // Show "CHANGE SHIP" button when ship is the current ship and onChangeShip callback is provided
+                if (!isCurrentShip) {
+                    // "SELECT SHIP" button - shown when viewing a ship that is not the current ship
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(40.dp)
-                            .border(
-                                width = 1.dp,
-                                color = Color(0xFFFFFFFF),
-                                shape = RoundedCornerShape(40.dp)
-                            )
-                            .clickable { /* TODO: Add onClick handler */ },
-                        contentAlignment = Alignment.Center
+                            .background(Color(0xFF000000)) // Black background at 100% opacity
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
                     ) {
-                        Text(
-                            text = "CHANGE SHIP",
-                            fontFamily = Exo2,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.W400,
-                            color = Color(0xFFFFFFFF),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.offset(y = (-1).dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFFFFFFFF),
+                                    shape = RoundedCornerShape(40.dp)
+                                )
+                                .clickable(onClick = onSelectShip),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "SELECT SHIP",
+                                fontFamily = Exo2,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W400,
+                                color = Color(0xFFFFFFFF),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.offset(y = (-1).dp)
+                            )
+                        }
+                    }
+                } else if (onChangeShip != null) {
+                    // "CHANGE SHIP" button - shown when viewing the current ship from CareerScreen
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF000000)) // Black background at 100% opacity
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFFFFFFFF),
+                                    shape = RoundedCornerShape(40.dp)
+                                )
+                                .clickable(onClick = onChangeShip),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "CHANGE SHIP",
+                                fontFamily = Exo2,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W400,
+                                color = Color(0xFFFFFFFF),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.offset(y = (-1).dp)
+                            )
+                        }
                     }
                 }
             }

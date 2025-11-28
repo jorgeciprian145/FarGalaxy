@@ -27,6 +27,7 @@ import com.example.fargalaxy.R
 import com.example.fargalaxy.data.ShipRepository
 import com.example.fargalaxy.model.Ship
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
 
 /**
  * MainScreen composable - manages navigation between CareerScreen, GalaxyScreen, and VaultScreen.
@@ -100,8 +101,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
     }
     
-    // Handle ship details navigation
+    // Track if ShipDetailsScreen was opened from CareerScreen (for "CHANGE SHIP" button)
+    var isFromCareerScreen by remember { mutableStateOf(false) }
+    
+    // Handle ship details navigation from CareerScreen
     val onViewShipClick: () -> Unit = {
+        isFromCareerScreen = true
+        selectedShipForDetails = null // Clear any previous selection
         showShipDetails = true
     }
     
@@ -122,6 +128,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle ship click from ShipSelectionScreen
     val onShipClick: (Ship) -> Unit = { ship ->
+        isFromCareerScreen = false // Not from CareerScreen
         selectedShipForDetails = ship
         showShipDetails = true
         showShipSelection = false // Hide selection screen when showing details
@@ -130,10 +137,33 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back from ship details - return to previous screen
     val onBackFromShipDetailsUpdated: () -> Unit = {
         showShipDetails = false
+        isFromCareerScreen = false
         // If we came from ShipSelectionScreen, return there; otherwise just hide details (returns to CareerScreen)
         if (selectedShipForDetails != null) {
             selectedShipForDetails = null
             showShipSelection = true // Return to selection screen
+        }
+    }
+    
+    // Handle "CHANGE SHIP" button click - navigate to ship selection screen
+    val onChangeShip: () -> Unit = {
+        showShipDetails = false
+        isFromCareerScreen = false
+        showShipSelection = true
+    }
+    
+    // Handle ship selection - set the ship as current and navigate back to selection screen
+    val onSelectShip: () -> Unit = {
+        val shipToSelect = selectedShipForDetails
+        if (shipToSelect != null) {
+            // Update the current ship in repository
+            ShipRepository.setCurrentShip(shipToSelect.id)
+            // Update local state
+            currentShip = shipToSelect
+            // Close details screen and return to selection screen
+            showShipDetails = false
+            selectedShipForDetails = null
+            showShipSelection = true
         }
     }
     
@@ -168,6 +198,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 1 -> {
                     // GalaxyScreen - content only (no background/noise/indicator)
                     GalaxyScreen(
+                        currentShip = currentShip,
                         isIdleCallback = { idle -> isGalaxyIdle = idle },
                         activeScreen = activeScreen,
                         onCareerClick = onCareerClick,
@@ -224,7 +255,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
             ShipDetailsScreen(
                 ship = selectedShipForDetails ?: currentShip,
                 currentShip = currentShip,
-                onBackClick = onBackFromShipDetailsUpdated
+                onBackClick = onBackFromShipDetailsUpdated,
+                onSelectShip = onSelectShip,
+                onChangeShip = if (isFromCareerScreen) onChangeShip else null
             )
         }
     }

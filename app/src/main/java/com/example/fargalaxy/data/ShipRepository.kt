@@ -23,14 +23,14 @@ object ShipRepository {
             dimensions = ShipDimensions(
                 lengthMeters = 32f,
                 lengthFeet = 104f,
-                widthMeters = 12f,
-                widthFeet = 39f
+                widthMeters = 17f,
+                widthFeet = 56f
             ),
             crewCapacity = CrewCapacity(
                 pilots = 2,
                 crewMembers = 4
             ),
-            lore = "After countless prototypes and more failures than the engineers cared to admit, Valketh Industries finally released a ship that changed the way new pilots entered the galaxy. The B14 Phantom became the standard entry-level vessel, combining reliability with just enough performance to make interstellar travel accessible to the masses.",
+            lore = "After countless prototypes and more failures than the engineers cared to admit, Valketh Industries finally released a ship that changed the way new pilots entered the galaxy. The Phantom was never designed to be the fastest or the strongest. It was built to endure, to forgive mistakes, and to carry beginners through their first uncertain steps into deep space.\n\nIts frame is simple, its systems modest, and its performance unremarkable when compared to the elite vessels flown by veteran crews. Yet the Phantom earned its reputation through grit rather than glory. It survives rough landings, unstable jump routes, and long stretches of travel where more advanced ships would demand repairs. For generations of cadets, its hum has been the first sound they heard before taking off into the void.\n\nMost pilots eventually outgrow the Phantom once they gain skill and confidence, trading it for ships that push the limits of speed, firepower, or exploration range. But the Phantom stays with them. It becomes the memory of their first real flight, the craft that caught their mistakes and carried their victories, the starting point of every career that ever reached the stars.",
             // Gameplay properties
             speed = 100f,
             acceleration = 50f,
@@ -46,10 +46,10 @@ object ShipRepository {
             imageResId = R.drawable.ship2,
             renderImageResId = R.drawable.ship2render,
             dimensions = ShipDimensions(
-                lengthMeters = 34f,
-                lengthFeet = 111f,
-                widthMeters = 30f,
-                widthFeet = 98f
+                lengthMeters = 32f,
+                lengthFeet = 105f,
+                widthMeters = 31f,
+                widthFeet = 102f
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
@@ -70,10 +70,10 @@ object ShipRepository {
             imageResId = R.drawable.ship4,
             renderImageResId = R.drawable.ship4render,
             dimensions = ShipDimensions(
-                lengthMeters = 34f,
-                lengthFeet = 104f,
-                widthMeters = 36f,
-                widthFeet = 118f
+                lengthMeters = 33f,
+                lengthFeet = 108f,
+                widthMeters = 45f,
+                widthFeet = 148f
             ),
             crewCapacity = CrewCapacity(
                 pilots = 2,
@@ -94,10 +94,10 @@ object ShipRepository {
             imageResId = R.drawable.ship5,
             renderImageResId = R.drawable.ship5render,
             dimensions = ShipDimensions(
-                lengthMeters = 32f,
-                lengthFeet = 104f,
-                widthMeters = 36f,
-                widthFeet = 118f
+                lengthMeters = 38f,
+                lengthFeet = 125f,
+                widthMeters = 45f,
+                widthFeet = 148f
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
@@ -118,10 +118,10 @@ object ShipRepository {
             imageResId = R.drawable.ship10,
             renderImageResId = R.drawable.ship10render,
             dimensions = ShipDimensions(
-                lengthMeters = 40f,
-                lengthFeet = 131f,
-                widthMeters = 36f,
-                widthFeet = 118f
+                lengthMeters = 43f,
+                lengthFeet = 141f,
+                widthMeters = 41f,
+                widthFeet = 135f
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
@@ -169,10 +169,21 @@ object ShipRepository {
      */
     fun getShipById(id: String): Ship? = ships.find { it.id == id }
     
+    // Store the current ship ID (defaults to first ship)
+    private var currentShipId: String = ships.first().id
+    
     /**
      * Get the currently selected ship.
-     * TODO: Replace with actual current ship logic (e.g., from SharedPreferences or DataStore)
      */
-    fun getCurrentShip(): Ship = ships.first()
+    fun getCurrentShip(): Ship = ships.find { it.id == currentShipId } ?: ships.first()
+    
+    /**
+     * Set the currently selected ship by ID.
+     */
+    fun setCurrentShip(shipId: String) {
+        if (ships.any { it.id == shipId }) {
+            currentShipId = shipId
+        }
+    }
 }
 
