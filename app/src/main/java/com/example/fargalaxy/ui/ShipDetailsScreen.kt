@@ -77,6 +77,7 @@ private fun getManufacturerLogoResId(manufacturer: String): Int {
         "valketh industries", "valketh" -> R.drawable.valkethlogo
         "marakeshi space technologies", "marakeshi" -> R.drawable.marakeshilogo
         "karnyx armory division", "karnyx" -> R.drawable.karnyxlogo
+        "tiona", "tiona spaceworks" -> R.drawable.tionalogo
         else -> R.drawable.valkethlogo // Fallback to Valketh logo
     }
 }
@@ -91,6 +92,7 @@ private fun getGradientColor(rarity: ShipRarity): Color {
     return when (rarity) {
         ShipRarity.UNCOMMON -> Color(0x5245E031) // #45E031 at 32% opacity (0x52 = ~32%)
         ShipRarity.EPIC -> Color(0x52E06BEA) // #E06BEA at 32% opacity (0x52 = ~32%)
+        ShipRarity.LEGENDARY -> Color(0x52E7CC52) // #E7CC52 at 32% opacity (0x52 = ~32%)
         else -> Color(0x52FFFFFF) // White at 32% opacity (default for COMMON and others)
     }
 }
@@ -105,6 +107,7 @@ private fun getBadgeTextColor(rarity: ShipRarity): Color {
     return when (rarity) {
         ShipRarity.UNCOMMON -> Color(0xFF45E031) // #45E031 at 100% opacity
         ShipRarity.EPIC -> Color(0xFFE06BEA) // #E06BEA at 100% opacity
+        ShipRarity.LEGENDARY -> Color(0xFFE7CC52) // #E7CC52 at 100% opacity
         else -> Color(0xFFFFFFFF) // White (default for COMMON and others)
     }
 }
@@ -119,6 +122,7 @@ private fun getBadgeContainerColor(rarity: ShipRarity): Color {
     return when (rarity) {
         ShipRarity.UNCOMMON -> Color(0x2945E031) // #45E031 at 16% opacity (0x29 = ~16%)
         ShipRarity.EPIC -> Color(0x29E06BEA) // #E06BEA at 16% opacity (0x29 = ~16%)
+        ShipRarity.LEGENDARY -> Color(0x29E7CC52) // #E7CC52 at 16% opacity (0x29 = ~16%)
         else -> Color(0x29FFFFFF) // White at 16% opacity (default for COMMON and others)
     }
 }

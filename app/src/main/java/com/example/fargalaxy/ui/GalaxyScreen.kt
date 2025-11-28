@@ -479,6 +479,7 @@ private fun getGalaxyShipImageResId(shipId: String): Int {
         "a300_albatross" -> R.drawable.ship4
         "b7f_starforce" -> R.drawable.ship5
         "h98_valkyrie" -> R.drawable.ship10
+        "silver_lightning" -> R.drawable.ship13
         "legendary_ship" -> R.drawable.ship1 // Fallback
         else -> R.drawable.ship1 // Default fallback
     }
@@ -494,6 +495,7 @@ private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "a300_albatross" -> 249.dp // Ship4: 120% bigger than 113.dp (113 * 2.2 = 248.6)
         "b7f_starforce" -> 249.dp // Ship5: Same height as ship4 (249.dp)
         "h98_valkyrie" -> 237.dp // Ship10: 110% bigger than 113.dp (113 * 2.1 = 237.3)
+        "silver_lightning" -> 191.dp // Ship13: 10% bigger than 174.dp (174 * 1.1 = 191.4)
         else -> 113.dp // Default height
     }
 }
@@ -509,6 +511,7 @@ private fun getImpulseImageResId(shipId: String): Int {
         "a300_albatross" -> R.drawable.impulse4
         "b7f_starforce" -> R.drawable.impulse5
         "h98_valkyrie" -> R.drawable.impulse10
+        "silver_lightning" -> R.drawable.impulse13
         "legendary_ship" -> R.drawable.impulse1 // Fallback
         else -> R.drawable.impulse1 // Default fallback
     }
@@ -524,6 +527,7 @@ private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
         "a300_albatross" -> 1452.dp // Impulse4: 10% bigger than 1320.dp (1320 * 1.1 = 1452)
         "b7f_starforce" -> 1320.dp // Impulse5: 120% bigger than 600.dp (600 * 2.2 = 1320), same % as ship5
         "h98_valkyrie" -> 1386.dp // Impulse10: 10% bigger than 1260.dp (1260 * 1.1 = 1386)
+        "silver_lightning" -> 1118.dp // Impulse13: 10% bigger than 1016.dp (1016 * 1.1 = 1117.6)
         else -> 600.dp // Default width
     }
 }
@@ -538,6 +542,7 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "a300_albatross" -> 242.dp // Impulse4: 10% bigger than 220.dp (220 * 1.1 = 242)
         "b7f_starforce" -> 220.dp // Impulse5: 120% bigger than 100.dp (100 * 2.2 = 220), same % as ship5
         "h98_valkyrie" -> 231.dp // Impulse10: 10% bigger than 210.dp (210 * 1.1 = 231)
+        "silver_lightning" -> 186.dp // Impulse13: 10% bigger than 169.dp (169 * 1.1 = 185.9)
         else -> 100.dp // Default height
     }
 }

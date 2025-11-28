@@ -152,7 +152,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         showShipSelection = true
     }
     
-    // Handle ship selection - set the ship as current and navigate back to selection screen
+    // Handle ship selection - set the ship as current and navigate to CareerScreen
     val onSelectShip: () -> Unit = {
         val shipToSelect = selectedShipForDetails
         if (shipToSelect != null) {
@@ -160,10 +160,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
             ShipRepository.setCurrentShip(shipToSelect.id)
             // Update local state
             currentShip = shipToSelect
-            // Close details screen and return to selection screen
+            // Close details screen and selection screen
             showShipDetails = false
+            showShipSelection = false
             selectedShipForDetails = null
-            showShipSelection = true
+            // Navigate to CareerScreen
+            navigateToPage(0) // Navigate to CareerScreen (page 0)
         }
     }
     

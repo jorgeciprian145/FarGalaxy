@@ -134,24 +134,24 @@ object ShipRepository {
             uniqueTrait = null
         ),
         Ship(
-            id = "legendary_ship",
-            name = "Legendary Ship",
-            manufacturer = "Valketh Industries",
-            type = "Heavy Hypertravel Starcraft",
+            id = "silver_lightning",
+            name = "Silver Lightning",
+            manufacturer = "Tiona",
+            type = "Custom built",
             rarity = ShipRarity.LEGENDARY,
-            imageResId = R.drawable.ship1,
-            renderImageResId = R.drawable.ship1render,
+            imageResId = R.drawable.ship13,
+            renderImageResId = R.drawable.ship13render,
             dimensions = ShipDimensions(
-                lengthMeters = 60f,
-                lengthFeet = 197f,
-                widthMeters = 20f,
-                widthFeet = 66f
+                lengthMeters = 50f,
+                lengthFeet = 164f,
+                widthMeters = 32f,
+                widthFeet = 105f
             ),
             crewCapacity = CrewCapacity(
-                pilots = 4,
-                crewMembers = 12
+                pilots = 1,
+                crewMembers = 5
             ),
-            lore = "A legendary ship for testing.",
+            lore = "If you've made it this far, you're standing before one of the rarest sights in the entire sector. Few pilots ever get the chance to lay eyes on the Silver Lightning, let alone fly it. Hand-built by a small circle of master engineers and designers, this vessel is truly one of a kind.\n\nDespite its graceful silhouette, the Silver Lightning handles with a precision that feels almost unreal. It boasts far more power than any civilian ship of comparable size, and its interior is nothing short of luxurious. The cabin comfortably accommodates a crew of six, complete with private quarters reserved for the captain.\n\nIts iconic silver sheen comes from a mysterious alloy used in the fuselage, a material whose origin is still debated among collectors and enthusiasts. Beyond the rumors and the craftsmanship, one thing is certain: if you ever find yourself sitting behind the controls of the Silver Lightning, consider yourself among the very fortunate few.",
             speed = 200f,
             acceleration = 100f,
             warpConverters = 150f,
