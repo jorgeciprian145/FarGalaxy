@@ -40,8 +40,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -77,7 +79,10 @@ private fun getManufacturerLogoResId(manufacturer: String): Int {
         "valketh industries", "valketh" -> R.drawable.valkethlogo
         "marakeshi space technologies", "marakeshi" -> R.drawable.marakeshilogo
         "karnyx armory division", "karnyx" -> R.drawable.karnyxlogo
-        "tiona", "tiona spaceworks" -> R.drawable.tionalogo
+        "tiona", "tiona spaceworks", "tiona starworks" -> R.drawable.tionalogo
+        "aurellian atelier works", "aurellian", "aurelian atelier works", "aurelian" -> R.drawable.aurelianlogo
+        "kel'varra star systems", "kel'varra", "kelvarra star systems", "kelvarra" -> R.drawable.kelvarralogo
+        "eternal infinitum (according to what was deciphered)", "eternal infinitum", "infinitum" -> R.drawable.infinitumlogo
         else -> R.drawable.valkethlogo // Fallback to Valketh logo
     }
 }
@@ -93,6 +98,7 @@ private fun getGradientColor(rarity: ShipRarity): Color {
         ShipRarity.UNCOMMON -> Color(0x5245E031) // #45E031 at 32% opacity (0x52 = ~32%)
         ShipRarity.EPIC -> Color(0x52E06BEA) // #E06BEA at 32% opacity (0x52 = ~32%)
         ShipRarity.LEGENDARY -> Color(0x52E7CC52) // #E7CC52 at 32% opacity (0x52 = ~32%)
+        ShipRarity.MYTHICAL -> Color(0x52F6823A) // #F6823A at 32% opacity (0x52 = ~32%)
         else -> Color(0x52FFFFFF) // White at 32% opacity (default for COMMON and others)
     }
 }
@@ -108,6 +114,7 @@ private fun getBadgeTextColor(rarity: ShipRarity): Color {
         ShipRarity.UNCOMMON -> Color(0xFF45E031) // #45E031 at 100% opacity
         ShipRarity.EPIC -> Color(0xFFE06BEA) // #E06BEA at 100% opacity
         ShipRarity.LEGENDARY -> Color(0xFFE7CC52) // #E7CC52 at 100% opacity
+        ShipRarity.MYTHICAL -> Color(0xFFF6823A) // #F6823A at 100% opacity
         else -> Color(0xFFFFFFFF) // White (default for COMMON and others)
     }
 }
@@ -123,6 +130,7 @@ private fun getBadgeContainerColor(rarity: ShipRarity): Color {
         ShipRarity.UNCOMMON -> Color(0x2945E031) // #45E031 at 16% opacity (0x29 = ~16%)
         ShipRarity.EPIC -> Color(0x29E06BEA) // #E06BEA at 16% opacity (0x29 = ~16%)
         ShipRarity.LEGENDARY -> Color(0x29E7CC52) // #E7CC52 at 16% opacity (0x29 = ~16%)
+        ShipRarity.MYTHICAL -> Color(0x29F6823A) // #F6823A at 16% opacity (0x29 = ~16%)
         else -> Color(0x29FFFFFF) // White at 16% opacity (default for COMMON and others)
     }
 }
@@ -189,6 +197,20 @@ fun ShipDetailsScreen(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+        
+        // Backlines layer: Only for legendary and mythical ships
+        // Full width, aligned to top, maintains aspect ratio
+        // Positioned behind everything except the background
+        if (ship.rarity == ShipRarity.LEGENDARY || ship.rarity == ShipRarity.MYTHICAL) {
+            Image(
+                painter = painterResource(id = R.drawable.backlines),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth(),
+                contentScale = ContentScale.FillWidth
+            )
+        }
         
         // Top gradient overlay: Covers 30% of screen height, creating a fade effect at the top.
         // Gradient transitions from 32% opacity color (based on rarity) at the top to transparent at the bottom.
@@ -318,6 +340,21 @@ fun ShipDetailsScreen(
                             },
                         contentScale = ContentScale.Fit
                     )
+                    
+                    // Lightning effect layer: Only for ship15 (Force of nature)
+                    // Same dimensions, positioning, and scaling behavior as ship render image
+                    // Positioned on top of the ship image
+                    if (ship.id == "force_of_nature") {
+                        val lightningComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ship15lightningeffect))
+                        LottieAnimation(
+                            composition = lightningComposition,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
             }
             

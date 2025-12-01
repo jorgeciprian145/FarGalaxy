@@ -476,10 +476,13 @@ private fun getGalaxyShipImageResId(shipId: String): Int {
     return when (shipId) {
         "b14_phantom" -> R.drawable.ship1
         "type45c_shooting_star" -> R.drawable.ship2
+        "navakeshi_star_pouncer" -> R.drawable.ship3
         "a300_albatross" -> R.drawable.ship4
         "b7f_starforce" -> R.drawable.ship5
         "h98_valkyrie" -> R.drawable.ship10
         "silver_lightning" -> R.drawable.ship13
+        "vulcani_legenda_f1" -> R.drawable.ship14
+        "force_of_nature" -> R.drawable.ship15
         "legendary_ship" -> R.drawable.ship1 // Fallback
         else -> R.drawable.ship1 // Default fallback
     }
@@ -496,6 +499,8 @@ private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "b7f_starforce" -> 249.dp // Ship5: Same height as ship4 (249.dp)
         "h98_valkyrie" -> 237.dp // Ship10: 110% bigger than 113.dp (113 * 2.1 = 237.3)
         "silver_lightning" -> 191.dp // Ship13: 10% bigger than 174.dp (174 * 1.1 = 191.4)
+        "vulcani_legenda_f1" -> 136.dp // Ship14: 20% bigger than 113.dp (113 * 1.2 = 135.6)
+        "force_of_nature" -> 130.dp // Ship15: 15% bigger than 113.dp (113 * 1.15 = 129.95)
         else -> 113.dp // Default height
     }
 }
@@ -508,10 +513,13 @@ private fun getImpulseImageResId(shipId: String): Int {
     return when (shipId) {
         "b14_phantom" -> R.drawable.impulse1
         "type45c_shooting_star" -> R.drawable.impulse2
+        "navakeshi_star_pouncer" -> R.drawable.impulse3
         "a300_albatross" -> R.drawable.impulse4
         "b7f_starforce" -> R.drawable.impulse5
         "h98_valkyrie" -> R.drawable.impulse10
         "silver_lightning" -> R.drawable.impulse13
+        "vulcani_legenda_f1" -> R.drawable.impulse14
+        "force_of_nature" -> R.drawable.impulse15
         "legendary_ship" -> R.drawable.impulse1 // Fallback
         else -> R.drawable.impulse1 // Default fallback
     }
@@ -524,10 +532,13 @@ private fun getImpulseImageResId(shipId: String): Int {
 private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
     return when (shipId) {
         "type45c_shooting_star" -> 924.dp // Impulse2: 10% bigger than 840.dp (840 * 1.1 = 924)
+        "navakeshi_star_pouncer" -> 660.dp // Impulse3: 10% bigger than 600.dp (600 * 1.1 = 660)
         "a300_albatross" -> 1452.dp // Impulse4: 10% bigger than 1320.dp (1320 * 1.1 = 1452)
         "b7f_starforce" -> 1320.dp // Impulse5: 120% bigger than 600.dp (600 * 2.2 = 1320), same % as ship5
         "h98_valkyrie" -> 1386.dp // Impulse10: 10% bigger than 1260.dp (1260 * 1.1 = 1386)
         "silver_lightning" -> 1118.dp // Impulse13: 10% bigger than 1016.dp (1016 * 1.1 = 1117.6)
+        "vulcani_legenda_f1" -> 726.dp // Impulse14: 20% bigger than 600.dp (600 * 1.2 = 720, or 660 * 1.1 = 726)
+        "force_of_nature" -> 690.dp // Impulse15: 15% bigger than 600.dp (600 * 1.15 = 690)
         else -> 600.dp // Default width
     }
 }
@@ -539,10 +550,13 @@ private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
 private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
     return when (shipId) {
         "type45c_shooting_star" -> 154.dp // Impulse2: 10% bigger than 140.dp (140 * 1.1 = 154)
+        "navakeshi_star_pouncer" -> 110.dp // Impulse3: 10% bigger than 100.dp (100 * 1.1 = 110)
         "a300_albatross" -> 242.dp // Impulse4: 10% bigger than 220.dp (220 * 1.1 = 242)
         "b7f_starforce" -> 220.dp // Impulse5: 120% bigger than 100.dp (100 * 2.2 = 220), same % as ship5
         "h98_valkyrie" -> 231.dp // Impulse10: 10% bigger than 210.dp (210 * 1.1 = 231)
         "silver_lightning" -> 186.dp // Impulse13: 10% bigger than 169.dp (169 * 1.1 = 185.9)
+        "vulcani_legenda_f1" -> 121.dp // Impulse14: 20% bigger than 100.dp (100 * 1.2 = 120, or 110 * 1.1 = 121)
+        "force_of_nature" -> 115.dp // Impulse15: 15% bigger than 100.dp (100 * 1.15 = 115)
         else -> 100.dp // Default height
     }
 }
@@ -1108,9 +1122,8 @@ fun GalaxyScreen(
         // Appears above the countdown ring and impulse layer.
         // Uses the ship image corresponding to the current ship with ship-specific height.
         // Tappable during travel to toggle countdown ring visibility.
-        Image(
-            painter = painterResource(id = getGalaxyShipImageResId(currentShip.id)),
-            contentDescription = null,
+        // For ship15, includes a lightning effect animation on top of the ship.
+        Box(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth()
@@ -1124,9 +1137,33 @@ fun GalaxyScreen(
                     } else {
                         Modifier
                     }
-                ),
-            contentScale = ContentScale.Fit
-        )
+                )
+        ) {
+            Image(
+                painter = painterResource(id = getGalaxyShipImageResId(currentShip.id)),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(getGalaxyShipHeight(currentShip.id)),
+                contentScale = ContentScale.Fit
+            )
+            
+            // Lightning effect layer: Only for ship15 (Force of nature)
+            // Same dimensions, positioning, and scaling behavior as ship image
+            // Positioned on top of the ship image
+            // Works for both idle and traveling states
+            if (currentShip.id == "force_of_nature") {
+                val lightningComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ship15lightningmainscreen))
+                LottieAnimation(
+                    composition = lightningComposition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(getGalaxyShipHeight(currentShip.id)),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
 
         // Top gradient overlay: Covers 20% of screen height, creating a fade effect at the top.
         // Gradient transitions from solid black at the top to transparent at the bottom.

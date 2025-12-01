@@ -88,11 +88,11 @@ fun ShipSelectionScreen(
     // Get density to convert dp to pixels
     val density = LocalDensity.current
     
-    // Calculate if content is being clipped (scroll position >= 8dp means content moved up past initial spacer)
-    // When scrolled 8dp or more, content reaches the clip boundary at 115dp
+    // Calculate if content is being clipped (scroll position >= 16dp means content moved up past initial spacer)
+    // When scrolled 16dp or more, content reaches the clip boundary at 147dp
     val isContentClipped = derivedStateOf {
         with(density) {
-            scrollState.value >= 8.dp.toPx().toInt()
+            scrollState.value >= 16.dp.toPx().toInt()
         }
     }
     
@@ -215,33 +215,22 @@ fun ShipSelectionScreen(
             }
         }
         
-        // Clip boundary container: Box positioned at 115dp to define clipping boundary
-        // Same calculation as CareerScreen:
-        // Indicator bottom is at: statusBarPadding + 48dp + 51dp = statusBarPadding + 99dp
-        // Clip line is at: statusBarPadding + 99dp + 16dp = statusBarPadding + 115dp
+        // Clip boundary container: Box positioned 16dp below the counter/button container
+        // Counter/button container top: statusBarsPadding + 99.dp
+        // Counter/button container height: 32.dp (SortButton height)
+        // Counter/button container bottom: statusBarsPadding + 99.dp + 32.dp = statusBarsPadding + 131.dp
+        // Clip line is at: statusBarsPadding + 131.dp + 16.dp = statusBarsPadding + 147.dp
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .statusBarsPadding()
-                .padding(top = 115.dp) // Clip boundary position
+                .padding(top = 147.dp) // Clip boundary position: 16dp below counter/button container
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .clipToBounds() // Clip content that goes above this boundary
         ) {
-            // White divider line: Only visible when content is being clipped
-            // Positioned behind the Column so it doesn't block touch events
-            if (isContentClipped.value) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(Color(0xFFFFFFFF)) // White line, full width, 1px
-                )
-            }
-            
             // Scrollable content column: Content can scroll up and get clipped at the boundary
-            // Initially, content starts 8dp below clip line (via spacer)
+            // Initially, content starts 16dp below clip line (via spacer)
             // Column fills available height to enable proper scrolling
             Column(
                 modifier = Modifier
@@ -252,11 +241,8 @@ fun ShipSelectionScreen(
                     .padding(bottom = 32.dp), // Allow last row to be 32dp above bottom bar
                 verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control
             ) {
-                // Initial spacer: Push content down 8dp from clip line (so it starts at 123dp visually)
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Spacing from counter/button container: 32px
-                Spacer(modifier = Modifier.height(32.dp))
+                // Initial spacer: Push content down 16dp from clip line
+                Spacer(modifier = Modifier.height(16.dp))
                 
                 // Ship grid: Rows of 1:1 containers, 2 per row, 8px gap between containers
                 // 16px side padding, containers maintain 1:1 ratio even when alone in a row
@@ -293,6 +279,18 @@ fun ShipSelectionScreen(
                         }
                     }
                 }
+            }
+            
+            // White divider line: Only visible when content is being clipped
+            // Positioned on top of the Column so it appears above clipped content
+            if (isContentClipped.value) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Color(0xFFFFFFFF)) // White line, full width, 1px
+                )
             }
         }
     }
@@ -358,6 +356,7 @@ private fun getSelectionBackgroundResId(rarity: ShipRarity, isActive: Boolean): 
         ShipRarity.RARE -> "rare"
         ShipRarity.EPIC -> "epic"
         ShipRarity.LEGENDARY -> "legendary"
+        ShipRarity.MYTHICAL -> "mythical"
     }
     val stateName = if (isActive) "active" else "default"
     val drawableName = "selectionbackground${rarityName}${stateName}"
@@ -373,6 +372,8 @@ private fun getSelectionBackgroundResId(rarity: ShipRarity, isActive: Boolean): 
         "selectionbackgroundepicdefault" -> R.drawable.selectionbackgroundepicdefault
         "selectionbackgroundlegendaryactive" -> R.drawable.selectionbackgroundlegendaryactive
         "selectionbackgroundlegendarydefault" -> R.drawable.selectionbackgroundlegendarydefault
+        "selectionbackgroundmythicalactive" -> R.drawable.selectionbackgroundmythicalactive
+        "selectionbackgroundmythicaldefault" -> R.drawable.selectionbackgroundmythicaldefault
         else -> R.drawable.selectionbackgroundcommondefault // Fallback
     }
 }
@@ -394,10 +395,13 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
     return when (shipId) {
         "b14_phantom" -> R.drawable.ship1selectionscreen
         "type45c_shooting_star" -> R.drawable.ship2selectionscreen
+        "navakeshi_star_pouncer" -> R.drawable.ship3selectionscreen
         "a300_albatross" -> R.drawable.ship4selectionscreen
         "b7f_starforce" -> R.drawable.ship5selectionscreen
         "h98_valkyrie" -> R.drawable.ship10selectionscreen
         "silver_lightning" -> R.drawable.ship13selectionscreen
+        "vulcani_legenda_f1" -> R.drawable.ship14selectionscreen
+        "force_of_nature" -> R.drawable.ship15selectionscreen
         "legendary_ship" -> R.drawable.ship13selectionscreen
         else -> R.drawable.ship1selectionscreen // Fallback
     }

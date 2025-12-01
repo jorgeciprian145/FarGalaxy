@@ -29,7 +29,8 @@ enum class ShipRarity {
     UNCOMMON,
     RARE,
     EPIC,
-    LEGENDARY
+    LEGENDARY,
+    MYTHICAL
 }
 
 /**

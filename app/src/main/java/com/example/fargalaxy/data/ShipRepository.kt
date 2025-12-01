@@ -27,8 +27,8 @@ object ShipRepository {
                 widthFeet = 56f
             ),
             crewCapacity = CrewCapacity(
-                pilots = 2,
-                crewMembers = 4
+                pilots = 1,
+                crewMembers = 3
             ),
             lore = "After countless prototypes and more failures than the engineers cared to admit, Valketh Industries finally released a ship that changed the way new pilots entered the galaxy. The Phantom was never designed to be the fastest or the strongest. It was built to endure, to forgive mistakes, and to carry beginners through their first uncertain steps into deep space.\n\nIts frame is simple, its systems modest, and its performance unremarkable when compared to the elite vessels flown by veteran crews. Yet the Phantom earned its reputation through grit rather than glory. It survives rough landings, unstable jump routes, and long stretches of travel where more advanced ships would demand repairs. For generations of cadets, its hum has been the first sound they heard before taking off into the void.\n\nMost pilots eventually outgrow the Phantom once they gain skill and confidence, trading it for ships that push the limits of speed, firepower, or exploration range. But the Phantom stays with them. It becomes the memory of their first real flight, the craft that caught their mistakes and carried their victories, the starting point of every career that ever reached the stars.",
             // Gameplay properties
@@ -56,6 +56,30 @@ object ShipRepository {
                 crewMembers = 2
             ),
             lore = "Not every mission calls for long stretches in deep space. Some require beds, rations and days of quiet travel. Others simply demand speed. The Shooting Star was built for the second kind.\n\nThis agile, lightweight craft excels at quick planetary hops and rapid interception runs, especially when suspicious vessels drop out of hyperspace without warning. Its compact frame may suggest a single-pilot fighter, yet the cockpit is cleverly engineered to hold a three-person crew: a pilot at the helm, a navigator charting optimal routes, and a communications specialist who stays linked to central command, feeding real-time intel as the situation unfolds.\n\nThe Shooting Star isn't a ship you live in. It's a ship you launch when time matters and hesitation isn't an option.",
+            speed = 100f,
+            acceleration = 50f,
+            warpConverters = 75f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "navakeshi_star_pouncer",
+            name = "Navakeshi Star Pouncer",
+            manufacturer = "Kel'Varra Star Systems",
+            type = "Interceptor Starcraft",
+            rarity = ShipRarity.COMMON,
+            imageResId = R.drawable.ship3,
+            renderImageResId = R.drawable.ship3render,
+            dimensions = ShipDimensions(
+                lengthMeters = 36f,
+                lengthFeet = 104f,
+                widthMeters = 18f,
+                widthFeet = 39f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 1
+            ),
+            lore = "A fairly common sight whenever you enter Navakeshi controlled space. This light vessel forms the lowest tier of their space fleet and has been a constant presence on near planetary patrol routes for generations. Most units lack hyperspace capability entirely, though a limited number are equipped with basic hypertravel engines and assigned to short interplanetary duties when required.\n\nFor many young Navakeshi pilots, this interceptor marks the beginning of their service. It is not impressive in speed or firepower, but its mass produced design has trained generations of recruits and helped safeguard local worlds with quiet consistency. A basic interceptor that has proven its worth over time and a respectable force when encountered in numbers.",
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
@@ -136,7 +160,7 @@ object ShipRepository {
         Ship(
             id = "silver_lightning",
             name = "Silver Lightning",
-            manufacturer = "Tiona",
+            manufacturer = "Tiona Starworks",
             type = "Custom built",
             rarity = ShipRarity.LEGENDARY,
             imageResId = R.drawable.ship13,
@@ -155,6 +179,54 @@ object ShipRepository {
             speed = 200f,
             acceleration = 100f,
             warpConverters = 150f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "vulcani_legenda_f1",
+            name = "Vulcani Legenda F-1",
+            manufacturer = "Aurellian Atelier Works",
+            type = "Custom built",
+            rarity = ShipRarity.LEGENDARY,
+            imageResId = R.drawable.ship14,
+            renderImageResId = R.drawable.ship14render,
+            dimensions = ShipDimensions(
+                lengthMeters = 52f,
+                lengthFeet = 104f,
+                widthMeters = 24f,
+                widthFeet = 39f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 3
+            ),
+            lore = "Probably one of the most exquisite and desired starships in the entire sector, and by far one of the best high-performing vessels ever built. The Vulcani Legenda was assembled almost entirely by hand, crafted by a small circle of builders whose dedication borders on obsession. Every line of its frame evokes a sense of motion, a tribute to an old Earth motorsport tradition that faded long ago but was never forgotten.\n\nPowered by an engine that is almost absurd for a ship of its size, the Legenda delivers a level of performance that truly matches its appearance. It is not a vessel for casual pilots. Only those who have mastered the finer instincts of spaceflight can hope to control it at full output, and even then it demands constant precision.\n\nAs a sign of respect for their craft, Aurelian imposes a strict selection process before granting ownership of a Legenda. The ship is not sold to the highest bidder, but entrusted to pilots who can appreciate the discipline, skill and heritage required to command it. Those who pass the trials and earn the privilege join a lineage of captains who treat the Vulcani Legenda not merely as a starship, but as a masterpiece.",
+            speed = 200f,
+            acceleration = 100f,
+            warpConverters = 150f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "force_of_nature",
+            name = "Force of nature",
+            manufacturer = "Eternal Infinitum (according to what was deciphered)",
+            type = "Unknown",
+            rarity = ShipRarity.MYTHICAL,
+            imageResId = R.drawable.ship15,
+            renderImageResId = R.drawable.ship15render,
+            dimensions = ShipDimensions(
+                lengthMeters = 52f,
+                lengthFeet = 104f,
+                widthMeters = 34f,
+                widthFeet = 39f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 3
+            ),
+            lore = "Even the brightest minds in the galaxy have yet to understand how this vessel is possible. Its origins and inner workings remain almost entirely unknown. What little has been uncovered points to a power core capable of generating enough output to sustain an entire colony on a small planet. The energy it produces is so overwhelming that the ship must constantly discharge the excess simply to remain stable.\n\nThe craft feels ancient in presence, yet its construction relies on a form of technology that has never been documented. Engineers admit they are centuries away from even beginning to replicate it. Every panel and conduit suggests a level of sophistication that defies anything currently built in the known systems.\n\nOnly the most skilled and disciplined pilots can be trusted with a vessel like this. Before stepping into the cockpit, make sure you understand what you are getting into. This is a vessel that feels alive, a ship that seems unwilling to be held back and always ready to leap into hyperspace the moment you loosen your grip.",
+            speed = 250f,
+            acceleration = 125f,
+            warpConverters = 200f,
             uniqueTrait = null
         )
     )
