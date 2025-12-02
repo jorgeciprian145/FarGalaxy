@@ -1,5 +1,7 @@
 package com.example.fargalaxy.ui
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,13 +23,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.ShipRepository
 import com.example.fargalaxy.model.Ship
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.LaunchedEffect
 
 /**
  * MainScreen composable - manages navigation between CareerScreen, GalaxyScreen, and VaultScreen.
@@ -67,6 +70,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Track the selected ship for details (separate from currentShip)
     var selectedShipForDetails by remember { mutableStateOf<Ship?>(null) }
+    
+    // Track scroll to top trigger for CareerScreen (incremented to trigger scroll)
+    var scrollToTopTrigger by remember { mutableStateOf(0) }
+    
+    // Get activity context for exiting app
+    val context = LocalContext.current
+    val activity = context as? Activity
     
     // Update active screen when page changes
     LaunchedEffect(pagerState) {
@@ -172,6 +182,39 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Disable user scrolling when not idle
     val userScrollEnabled = isGalaxyIdle
     
+    // Handle back button press
+    BackHandler(enabled = true) {
+        when {
+            // If ShipSelectionScreen is shown, close it
+            showShipSelection -> {
+                onBackFromShipSelection()
+            }
+            // If ShipDetailsScreen is shown, close it
+            showShipDetails -> {
+                onBackFromShipDetailsUpdated()
+            }
+            // If on CareerScreen (page 0), scroll to top then navigate to GalaxyScreen
+            pagerState.currentPage == 0 -> {
+                coroutineScope.launch {
+                    // Trigger scroll to top
+                    scrollToTopTrigger++
+                    // Wait a bit for scroll animation to complete
+                    delay(300)
+                    // Navigate to GalaxyScreen (page 1)
+                    navigateToPage(1)
+                }
+            }
+            // If on VaultScreen (page 2), navigate to GalaxyScreen
+            pagerState.currentPage == 2 -> {
+                navigateToPage(1)
+            }
+            // If on GalaxyScreen (page 1), exit the app
+            pagerState.currentPage == 1 -> {
+                activity?.finish()
+            }
+        }
+    }
+    
     Box(modifier = modifier.fillMaxSize()) {
         // Static background layer - doesn't move when swiping (bottom layer)
         Image(
@@ -195,7 +238,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onViewShipClick = onViewShipClick,
                         onShipSelectionClick = onShipSelectionClick,
                         totalTravelMinutes = 45, // TODO: Connect to actual data source
-                        isPageActive = pagerState.currentPage == 0 && !showShipDetails && !showShipSelection // Track when page is active and overlays are closed
+                        isPageActive = pagerState.currentPage == 0 && !showShipDetails && !showShipSelection, // Track when page is active and overlays are closed
+                        scrollToTopTrigger = scrollToTopTrigger
                     )
                 }
                 1 -> {

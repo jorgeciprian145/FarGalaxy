@@ -398,6 +398,7 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "navakeshi_star_pouncer" -> R.drawable.ship3selectionscreen
         "a300_albatross" -> R.drawable.ship4selectionscreen
         "b7f_starforce" -> R.drawable.ship5selectionscreen
+        "navakeshi_star_crusher" -> R.drawable.ship6selectionscreen
         "h98_valkyrie" -> R.drawable.ship10selectionscreen
         "silver_lightning" -> R.drawable.ship13selectionscreen
         "vulcani_legenda_f1" -> R.drawable.ship14selectionscreen
@@ -490,21 +491,21 @@ private fun CurrentShipBadge(
 ) {
     Box(
         modifier = modifier
-            .height(16.dp)
+            .wrapContentHeight()
             .wrapContentWidth()
             .clip(RoundedCornerShape(80.dp))
             .background(Color(0xFFFFFFFF)) // White background
-            .padding(horizontal = 8.dp), // 8dp padding on each side (16dp total)
+            .padding(start = 8.dp, top = 2.dp, end = 8.dp, bottom = 3.dp), // 8dp padding on each side, 2dp top, 3dp bottom
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "CURRENT SHIP",
             fontFamily = Exo2,
             fontSize = 10.sp,
+            lineHeight = 10.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF010102), // Very dark color
-            textAlign = TextAlign.Center,
-            modifier = Modifier.offset(y = (-4).dp) // -1dp vertical offset
+            textAlign = TextAlign.Center
         )
     }
 }

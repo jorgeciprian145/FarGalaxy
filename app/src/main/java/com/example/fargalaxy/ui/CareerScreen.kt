@@ -74,6 +74,7 @@ import com.example.fargalaxy.model.Ship
  * @param onShipSelectionClick Callback when the starships item in ProgressSection is clicked
  * @param totalTravelMinutes The total number of minutes the user has been in travel
  * @param isPageActive Boolean flag indicating if this page is currently active and visible (used to reset scroll when returning)
+ * @param scrollToTopTrigger State key that when changed triggers scrolling to top (used for back button handling)
  * @param modifier Modifier for the screen
  */
 @Composable
@@ -83,6 +84,7 @@ fun CareerScreen(
     onShipSelectionClick: () -> Unit = {},
     totalTravelMinutes: Int = 45, // TODO: Connect to actual data source
     isPageActive: Boolean = true,
+    scrollToTopTrigger: Int = 0,
     modifier: Modifier = Modifier
 ) {
     // State to trigger animation playback when screen becomes visible
@@ -102,6 +104,13 @@ fun CareerScreen(
     
     // Scroll state to track when content is being clipped
     val scrollState = rememberScrollState()
+    
+    // Handle scroll to top trigger (used for back button)
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            scrollState.animateScrollTo(0)
+        }
+    }
     
     // Track previous active state to detect when we return to this page
     var wasActive by remember { mutableStateOf(isPageActive) }

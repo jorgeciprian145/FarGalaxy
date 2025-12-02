@@ -479,6 +479,7 @@ private fun getGalaxyShipImageResId(shipId: String): Int {
         "navakeshi_star_pouncer" -> R.drawable.ship3
         "a300_albatross" -> R.drawable.ship4
         "b7f_starforce" -> R.drawable.ship5
+        "navakeshi_star_crusher" -> R.drawable.ship6
         "h98_valkyrie" -> R.drawable.ship10
         "silver_lightning" -> R.drawable.ship13
         "vulcani_legenda_f1" -> R.drawable.ship14
@@ -497,6 +498,7 @@ private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "type45c_shooting_star" -> 174.dp // Ship2: 10% bigger than 158.dp (158 * 1.1 = 173.8)
         "a300_albatross" -> 249.dp // Ship4: 120% bigger than 113.dp (113 * 2.2 = 248.6)
         "b7f_starforce" -> 249.dp // Ship5: Same height as ship4 (249.dp)
+        "navakeshi_star_crusher" -> 196.dp // Ship6: 73% bigger than default 113.dp (163 * 1.2 = 195.6, or 113 * 1.728 = 195.26)
         "h98_valkyrie" -> 237.dp // Ship10: 110% bigger than 113.dp (113 * 2.1 = 237.3)
         "silver_lightning" -> 191.dp // Ship13: 10% bigger than 174.dp (174 * 1.1 = 191.4)
         "vulcani_legenda_f1" -> 136.dp // Ship14: 20% bigger than 113.dp (113 * 1.2 = 135.6)
@@ -516,6 +518,7 @@ private fun getImpulseImageResId(shipId: String): Int {
         "navakeshi_star_pouncer" -> R.drawable.impulse3
         "a300_albatross" -> R.drawable.impulse4
         "b7f_starforce" -> R.drawable.impulse5
+        "navakeshi_star_crusher" -> R.drawable.impulse6
         "h98_valkyrie" -> R.drawable.impulse10
         "silver_lightning" -> R.drawable.impulse13
         "vulcani_legenda_f1" -> R.drawable.impulse14
@@ -535,6 +538,7 @@ private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
         "navakeshi_star_pouncer" -> 660.dp // Impulse3: 10% bigger than 600.dp (600 * 1.1 = 660)
         "a300_albatross" -> 1452.dp // Impulse4: 10% bigger than 1320.dp (1320 * 1.1 = 1452)
         "b7f_starforce" -> 1320.dp // Impulse5: 120% bigger than 600.dp (600 * 2.2 = 1320), same % as ship5
+        "navakeshi_star_crusher" -> 1083.dp // Impulse6: 64% bigger than Impulse3 660.dp (1140 * 0.95 = 1083)
         "h98_valkyrie" -> 1386.dp // Impulse10: 10% bigger than 1260.dp (1260 * 1.1 = 1386)
         "silver_lightning" -> 1118.dp // Impulse13: 10% bigger than 1016.dp (1016 * 1.1 = 1117.6)
         "vulcani_legenda_f1" -> 726.dp // Impulse14: 20% bigger than 600.dp (600 * 1.2 = 720, or 660 * 1.1 = 726)
@@ -553,6 +557,7 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "navakeshi_star_pouncer" -> 110.dp // Impulse3: 10% bigger than 100.dp (100 * 1.1 = 110)
         "a300_albatross" -> 242.dp // Impulse4: 10% bigger than 220.dp (220 * 1.1 = 242)
         "b7f_starforce" -> 220.dp // Impulse5: 120% bigger than 100.dp (100 * 2.2 = 220), same % as ship5
+        "navakeshi_star_crusher" -> 181.dp // Impulse6: 64% bigger than Impulse3 110.dp (190 * 0.95 = 180.5)
         "h98_valkyrie" -> 231.dp // Impulse10: 10% bigger than 210.dp (210 * 1.1 = 231)
         "silver_lightning" -> 186.dp // Impulse13: 10% bigger than 169.dp (169 * 1.1 = 185.9)
         "vulcani_legenda_f1" -> 121.dp // Impulse14: 20% bigger than 100.dp (100 * 1.2 = 120, or 110 * 1.1 = 121)
@@ -572,6 +577,7 @@ private fun getImpulseHorizontalOffset(shipId: String): androidx.compose.ui.unit
         "type45c_shooting_star" -> (-120).dp // Ship2: Type 45C Shooting Star
         "a300_albatross" -> (-80).dp // Ship4: A-300 Albatross
         "b7f_starforce" -> (-120).dp // Ship5: B7F Starforce
+        "navakeshi_star_crusher" -> (-102).dp // Ship6: Navakeshi Star Crusher - moved 15% to the right from default (-120 + 18 = -102)
         "h98_valkyrie" -> (-120).dp // Ship10: H-98 Valkyrie
         "legendary_ship" -> (-120).dp // Legendary ship fallback
         else -> (-120).dp // Default offset

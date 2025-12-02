@@ -134,6 +134,30 @@ object ShipRepository {
             uniqueTrait = null
         ),
         Ship(
+            id = "navakeshi_star_crusher",
+            name = "Navakeshi Star Crusher",
+            manufacturer = "Kel'Varra Star Systems",
+            type = "Medium Interceptor, Hypertravel Starcraft",
+            rarity = ShipRarity.UNCOMMON,
+            imageResId = R.drawable.ship6,
+            renderImageResId = R.drawable.ship6render,
+            dimensions = ShipDimensions(
+                lengthMeters = 36f,
+                lengthFeet = 104f,
+                widthMeters = 33f,
+                widthFeet = 39f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 1
+            ),
+            lore = "The natural evolution of the Pouncer, the Crusher improves in almost every way. This ship is reserved for advanced pilots who have proven themselves capable. It is equipped with larger engines, reinforced fuselage armor, expanded weapon hardpoints and, unlike its predecessor, every unit comes with full hypertravel capability.\n\nThe Crusher is built to reach conflict zones no matter where they arise. It can respond to distress calls across distant systems, push through hostile territory and hold its ground long enough for heavier Navakeshi forces to arrive. It is still a light interceptor at its core, but its versatility and reach make it one of the most relied upon ships in the mid-tier ranks of the Navakeshi fleet.",
+            speed = 120f,
+            acceleration = 60f,
+            warpConverters = 85f,
+            uniqueTrait = null
+        ),
+        Ship(
             id = "h98_valkyrie",
             name = "H-98 Valkyrie",
             manufacturer = "Karnyx Armory Division",

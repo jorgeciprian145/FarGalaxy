@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -375,27 +376,27 @@ fun ShipDetailsScreen(
                 Spacer(modifier = Modifier.height(0.dp))
                 
                 // Rarity badge: Container with rarity text (e.g., "COMMON SHIP", "UNCOMMON SHIP")
-                // 16px height, width adjusts to content, 4px padding inside
+                // Height hugs content, width adjusts to content, 4px padding inside (horizontal and vertical)
                 // Text: 10px, Medium weight, color based on rarity
                 // Container: color based on rarity with 16% opacity
                 Box(
                     modifier = Modifier
-                        .height(16.dp)
+                        .wrapContentHeight()
                         .wrapContentWidth()
                         .background(
                             color = getBadgeContainerColor(ship.rarity)
                         )
-                        .padding(horizontal = 4.dp),
+                        .padding(start = 4.dp, top = 2.dp, end = 4.dp, bottom = 3.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = getRarityDisplayText(ship.rarity),
                         fontFamily = Exo2,
                         fontSize = 10.sp,
+                        lineHeight = 10.sp,
                         fontWeight = FontWeight.Medium,
                         color = getBadgeTextColor(ship.rarity),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.offset(y = (-4).dp) // Adjust this value to move text up (negative) or down (positive)
+                        textAlign = TextAlign.Center
                     )
                 }
                 
