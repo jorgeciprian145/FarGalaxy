@@ -158,6 +158,30 @@ object ShipRepository {
             uniqueTrait = null
         ),
         Ship(
+            id = "navakeshi_star_ravager",
+            name = "Navakeshi Star Ravager",
+            manufacturer = "Kel'Varra Star Systems",
+            type = "Assault Hypertravel Starcraft",
+            rarity = ShipRarity.EPIC,
+            imageResId = R.drawable.ship11,
+            renderImageResId = R.drawable.ship11render,
+            dimensions = ShipDimensions(
+                lengthMeters = 36f,
+                lengthFeet = 104f,
+                widthMeters = 35f,
+                widthFeet = 39f
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 1
+            ),
+            lore = "When a situation calls for a more serious response, you'll probably see an attack formation of these blazing toward their target. The Ravager is the most complete starfighter in the Navakeshi fleet, combining high speed, sharp maneuverability and formidable offensive capabilities.\n\nThis vessel is reserved for veteran pilots who have proven themselves through years of service. Flying a Ravager is considered a significant honor, since controlling the immense output of its four engines requires discipline and absolute confidence. Only the most skilled pilots among the fleet are trusted with a ship of this caliber.\n\nTo many rival factions, the appearance of a Ravager wing is reason enough to reconsider an attack and probably make turn at full burn.",
+            speed = 150f,
+            acceleration = 75f,
+            warpConverters = 100f,
+            uniqueTrait = null
+        ),
+        Ship(
             id = "h98_valkyrie",
             name = "H-98 Valkyrie",
             manufacturer = "Karnyx Armory Division",

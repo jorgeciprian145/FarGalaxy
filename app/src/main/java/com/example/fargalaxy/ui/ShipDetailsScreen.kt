@@ -97,6 +97,7 @@ private fun getManufacturerLogoResId(manufacturer: String): Int {
 private fun getGradientColor(rarity: ShipRarity): Color {
     return when (rarity) {
         ShipRarity.UNCOMMON -> Color(0x5245E031) // #45E031 at 32% opacity (0x52 = ~32%)
+        ShipRarity.RARE -> Color(0x5235D9F6) // #35D9F6 at 32% opacity (0x52 = ~32%)
         ShipRarity.EPIC -> Color(0x52E06BEA) // #E06BEA at 32% opacity (0x52 = ~32%)
         ShipRarity.LEGENDARY -> Color(0x52E7CC52) // #E7CC52 at 32% opacity (0x52 = ~32%)
         ShipRarity.MYTHICAL -> Color(0x52F6823A) // #F6823A at 32% opacity (0x52 = ~32%)
@@ -113,6 +114,7 @@ private fun getGradientColor(rarity: ShipRarity): Color {
 private fun getBadgeTextColor(rarity: ShipRarity): Color {
     return when (rarity) {
         ShipRarity.UNCOMMON -> Color(0xFF45E031) // #45E031 at 100% opacity
+        ShipRarity.RARE -> Color(0xFF35D9F6) // #35D9F6 at 100% opacity
         ShipRarity.EPIC -> Color(0xFFE06BEA) // #E06BEA at 100% opacity
         ShipRarity.LEGENDARY -> Color(0xFFE7CC52) // #E7CC52 at 100% opacity
         ShipRarity.MYTHICAL -> Color(0xFFF6823A) // #F6823A at 100% opacity
@@ -129,6 +131,7 @@ private fun getBadgeTextColor(rarity: ShipRarity): Color {
 private fun getBadgeContainerColor(rarity: ShipRarity): Color {
     return when (rarity) {
         ShipRarity.UNCOMMON -> Color(0x2945E031) // #45E031 at 16% opacity (0x29 = ~16%)
+        ShipRarity.RARE -> Color(0x2935D9F6) // #35D9F6 at 16% opacity (0x29 = ~16%)
         ShipRarity.EPIC -> Color(0x29E06BEA) // #E06BEA at 16% opacity (0x29 = ~16%)
         ShipRarity.LEGENDARY -> Color(0x29E7CC52) // #E7CC52 at 16% opacity (0x29 = ~16%)
         ShipRarity.MYTHICAL -> Color(0x29F6823A) // #F6823A at 16% opacity (0x29 = ~16%)
