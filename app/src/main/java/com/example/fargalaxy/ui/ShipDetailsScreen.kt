@@ -140,6 +140,32 @@ private fun getBadgeContainerColor(rarity: ShipRarity): Color {
 }
 
 /**
+ * Helper function to format ship name for display, with line break for ship9 on smaller screens.
+ * 
+ * @param shipId The ship's ID
+ * @param shipName The ship's full name
+ * @param screenWidthDp The screen width in dp
+ * @return Pair of strings (first line, second line) or null if single line
+ */
+private fun formatShipNameForDisplay(shipId: String, shipName: String, screenWidthDp: Float): Pair<String?, String> {
+    // For ship9 on smaller screens (< 400dp), split the name after "Compact"
+    if (shipId == "model3_tortoise_ccp" && screenWidthDp < 400f) {
+        // Split "Model 3 "Tortoise" Compact cargo platform" after "Compact "
+        // Result: Line 1: "Model 3 "Tortoise" Compact", Line 2: "cargo platform"
+        val splitPoint = shipName.indexOf("Compact ")
+        if (splitPoint > 0) {
+            val afterCompact = splitPoint + "Compact ".length
+            return Pair(
+                shipName.substring(0, afterCompact).trim(), // "Model 3 "Tortoise" Compact"
+                shipName.substring(afterCompact).trim()     // "cargo platform"
+            )
+        }
+    }
+    // Return single line for other cases
+    return Pair(null, shipName)
+}
+
+/**
  * ShipDetailsScreen composable - displays details about a ship.
  * This screen opens when the user taps "view" next to the ship name on the career screen,
  * or when tapping a ship in the ship selection screen.
@@ -342,11 +368,11 @@ fun ShipDetailsScreen(
                         contentScale = ContentScale.Fit
                     )
                     
-                    // Lightning effect layer: Only for ship15 (Force of nature)
+                    // Lightning effect layer: Only for ship14 (Force of nature)
                     // Same dimensions, positioning, and scaling behavior as ship render image
                     // Positioned on top of the ship image
                     if (ship.id == "force_of_nature") {
-                        val lightningComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ship15lightningeffect))
+                        val lightningComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ship14lightningeffect))
                         LottieAnimation(
                             composition = lightningComposition,
                             iterations = LottieConstants.IterateForever,
@@ -400,16 +426,49 @@ fun ShipDetailsScreen(
                     )
                 }
                 
-                // Ship name: 18px, Bold, positioned 8px below badge
+                // Ship name: 21sp, Bold, positioned 4dp below badge
+                // For ship9 on smaller screens, display with line break
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = ship.name,
-                    fontFamily = Exo2,
-                    fontSize = 21.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFFFFFFFF),
-                    textAlign = TextAlign.Center
-                )
+                
+                // Get screen width for responsive formatting
+                val configuration = LocalConfiguration.current
+                val screenWidthDp = configuration.screenWidthDp.toFloat()
+                val (firstLine, secondLine) = formatShipNameForDisplay(ship.id, ship.name, screenWidthDp)
+                
+                // Display ship name with conditional line break for smaller screens
+                if (firstLine != null) {
+                    // Two-line display for ship9 on smaller screens
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = firstLine,
+                            fontFamily = Exo2,
+                            fontSize = 21.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = secondLine,
+                            fontFamily = Exo2,
+                            fontSize = 21.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    // Single-line display for normal cases
+                    Text(
+                        text = secondLine,
+                        fontFamily = Exo2,
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
             
             // Spacing from ship name to divider line: 24px

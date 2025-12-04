@@ -278,9 +278,15 @@ fun CareerScreen(
                 // Current ship row: Contains ship name labels on left and "VIEW" button on right
                 // Row has 20dp vertical padding, so no additional spacer needed
                 // Use key() to force recomposition when ship changes
+                // Display shortened name for Tortoise ship on CareerScreen
                 androidx.compose.runtime.key(currentShip.id) {
+                    val displayName = if (currentShip.id == "model3_tortoise_ccp") {
+                        "Model 3 \"Tortoise\" CCP"
+                    } else {
+                        currentShip.name
+                    }
                     CurrentShipRow(
-                        shipName = currentShip.name,
+                        shipName = displayName,
                         shipId = currentShip.id,
                         onViewClick = onViewShipClick,
                         modifier = Modifier.fillMaxWidth()

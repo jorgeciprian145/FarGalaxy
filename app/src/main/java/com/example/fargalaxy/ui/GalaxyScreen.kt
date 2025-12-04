@@ -482,11 +482,12 @@ private fun getGalaxyShipImageResId(shipId: String): Int {
         "navakeshi_star_crusher" -> R.drawable.ship6
         "b15_specter" -> R.drawable.ship7
         "n6_98_melina" -> R.drawable.ship8
+        "model3_tortoise_ccp" -> R.drawable.ship9
         "navakeshi_star_ravager" -> R.drawable.ship11
         "h98_valkyrie" -> R.drawable.ship10
-        "silver_lightning" -> R.drawable.ship13
-        "vulcani_legenda_f1" -> R.drawable.ship14
-        "force_of_nature" -> R.drawable.ship15
+        "silver_lightning" -> R.drawable.ship12
+        "vulcani_legenda_f1" -> R.drawable.ship13
+        "force_of_nature" -> R.drawable.ship14
         "legendary_ship" -> R.drawable.ship1 // Fallback
         else -> R.drawable.ship1 // Default fallback
     }
@@ -504,11 +505,12 @@ private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "navakeshi_star_crusher" -> 196.dp // Ship6: 73% bigger than default 113.dp (163 * 1.2 = 195.6, or 113 * 1.728 = 195.26)
         "b15_specter" -> 236.dp // Ship7: 5% bigger than 225.dp (225 * 1.05 = 236.25)
         "n6_98_melina" -> 249.dp // Ship8: Similar to ship4/ship5, multi-purpose ship
+        "model3_tortoise_ccp" -> 234.dp // Ship9: 10% smaller (260.dp * 0.9 = 234.dp)
         "navakeshi_star_ravager" -> 210.dp // Ship11: EPIC assault ship, larger than ship6
         "h98_valkyrie" -> 237.dp // Ship10: 110% bigger than 113.dp (113 * 2.1 = 237.3)
-        "silver_lightning" -> 191.dp // Ship13: 10% bigger than 174.dp (174 * 1.1 = 191.4)
-        "vulcani_legenda_f1" -> 136.dp // Ship14: 20% bigger than 113.dp (113 * 1.2 = 135.6)
-        "force_of_nature" -> 130.dp // Ship15: 15% bigger than 113.dp (113 * 1.15 = 129.95)
+        "silver_lightning" -> 191.dp // Ship12: 10% bigger than 174.dp (174 * 1.1 = 191.4)
+        "vulcani_legenda_f1" -> 136.dp // Ship13: 20% bigger than 113.dp (113 * 1.2 = 135.6)
+        "force_of_nature" -> 130.dp // Ship14: 15% bigger than 113.dp (113 * 1.15 = 129.95)
         else -> 113.dp // Default height
     }
 }
@@ -527,11 +529,12 @@ private fun getImpulseImageResId(shipId: String): Int {
         "navakeshi_star_crusher" -> R.drawable.impulse6
         "b15_specter" -> R.drawable.impulse7
         "n6_98_melina" -> R.drawable.impulse8
+        "model3_tortoise_ccp" -> R.drawable.impulse9
         "navakeshi_star_ravager" -> R.drawable.impulse11
         "h98_valkyrie" -> R.drawable.impulse10
-        "silver_lightning" -> R.drawable.impulse13
-        "vulcani_legenda_f1" -> R.drawable.impulse14
-        "force_of_nature" -> R.drawable.impulse15
+        "silver_lightning" -> R.drawable.impulse12
+        "vulcani_legenda_f1" -> R.drawable.impulse13
+        "force_of_nature" -> R.drawable.impulse14
         "legendary_ship" -> R.drawable.impulse1 // Fallback
         else -> R.drawable.impulse1 // Default fallback
     }
@@ -550,6 +553,7 @@ private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
         "navakeshi_star_crusher" -> 1083.dp // Impulse6: 64% bigger than Impulse3 660.dp (1140 * 0.95 = 1083)
         "b15_specter" -> 1307.dp // Impulse7: 5% bigger than 1245.dp (1245 * 1.05 = 1307.25)
         "n6_98_melina" -> 1452.dp // Impulse8: Similar to ship4, multi-purpose ship
+        "model3_tortoise_ccp" -> 1307.dp // Impulse9: 10% smaller than similar cargo ships (1452.dp * 0.9 = 1306.8)
         "navakeshi_star_ravager" -> 1200.dp // Impulse11: Larger than ship6, similar to mid-tier EPIC ships
         "h98_valkyrie" -> 1386.dp // Impulse10: 10% bigger than 1260.dp (1260 * 1.1 = 1386)
         "silver_lightning" -> 1118.dp // Impulse13: 10% bigger than 1016.dp (1016 * 1.1 = 1117.6)
@@ -572,6 +576,7 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "navakeshi_star_crusher" -> 181.dp // Impulse6: 64% bigger than Impulse3 110.dp (190 * 0.95 = 180.5)
         "b15_specter" -> 218.dp // Impulse7: 5% bigger than 208.dp (208 * 1.05 = 218.4)
         "n6_98_melina" -> 242.dp // Impulse8: Similar to ship4, multi-purpose ship
+        "model3_tortoise_ccp" -> 218.dp // Impulse9: 10% smaller than similar cargo ships (242.dp * 0.9 = 217.8)
         "navakeshi_star_ravager" -> 200.dp // Impulse11: Larger than ship6, similar to mid-tier EPIC ships
         "h98_valkyrie" -> 231.dp // Impulse10: 10% bigger than 210.dp (210 * 1.1 = 231)
         "silver_lightning" -> 186.dp // Impulse13: 10% bigger than 169.dp (169 * 1.1 = 185.9)
@@ -595,6 +600,7 @@ private fun getImpulseHorizontalOffset(shipId: String): androidx.compose.ui.unit
         "navakeshi_star_crusher" -> (-102).dp // Ship6: Navakeshi Star Crusher - moved 15% to the right from default (-120 + 18 = -102)
         "b15_specter" -> (-102).dp // Ship7: B15 Specter - moved 15% to the right from default (-120 + 18 = -102)
         "n6_98_melina" -> (-92).dp // Ship8: N6-98 Melina - moved 15% to the left from -80.dp (-80 - 12 = -92)
+        "model3_tortoise_ccp" -> (-72).dp // Ship9: Model 3 "Tortoise" CCP - moved 40% to the right from default (-120 + 48 = -72)
         "navakeshi_star_ravager" -> (-102).dp // Ship11: Navakeshi Star Ravager - moved 15% to the right from default (-120 + 18 = -102)
         "h98_valkyrie" -> (-120).dp // Ship10: H-98 Valkyrie
         "legendary_ship" -> (-120).dp // Legendary ship fallback
@@ -1146,7 +1152,7 @@ fun GalaxyScreen(
         // Appears above the countdown ring and impulse layer.
         // Uses the ship image corresponding to the current ship with ship-specific height.
         // Tappable during travel to toggle countdown ring visibility.
-        // For ship15, includes a lightning effect animation on top of the ship.
+        // For ship14, includes a lightning effect animation on top of the ship.
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -1172,12 +1178,12 @@ fun GalaxyScreen(
                 contentScale = ContentScale.Fit
             )
             
-            // Lightning effect layer: Only for ship15 (Force of nature)
+            // Lightning effect layer: Only for ship14 (Force of nature)
             // Same dimensions, positioning, and scaling behavior as ship image
             // Positioned on top of the ship image
             // Works for both idle and traveling states
             if (currentShip.id == "force_of_nature") {
-                val lightningComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ship15lightningmainscreen))
+                val lightningComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ship14lightningmainscreen))
                 LottieAnimation(
                     composition = lightningComposition,
                     iterations = LottieConstants.IterateForever,

@@ -17,7 +17,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         // Set navigation bar to solid black
-        window.navigationBarColor = Color.BLACK // 0xFF000000
+        // Note: navigationBarColor is deprecated but still functional and needed for solid black background
+        window.navigationBarColor = Color.BLACK
         
         // Enable blur effect for navigation bar (Android 12+)
         // enableEdgeToEdge() already handles edge-to-edge mode

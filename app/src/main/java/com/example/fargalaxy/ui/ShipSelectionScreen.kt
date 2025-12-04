@@ -428,7 +428,7 @@ private fun getSelectionBackgroundResId(rarity: ShipRarity, isActive: Boolean): 
  * - common_ship_2 -> ship2selectionscreen
  * - uncommon_ship_1 -> ship4selectionscreen
  * - uncommon_ship_2 -> ship5selectionscreen
- * - legendary_ship -> ship13selectionscreen
+ * - legendary_ship -> ship12selectionscreen
  * 
  * @param shipId The ship's ID
  * @return The drawable resource ID for the selection screen image
@@ -443,12 +443,13 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "navakeshi_star_crusher" -> R.drawable.ship6selectionscreen
         "b15_specter" -> R.drawable.ship7selectionscreen
         "n6_98_melina" -> R.drawable.ship8selectionscreen
+        "model3_tortoise_ccp" -> R.drawable.ship9selectionscreen
         "navakeshi_star_ravager" -> R.drawable.ship11selectionscreen
         "h98_valkyrie" -> R.drawable.ship10selectionscreen
-        "silver_lightning" -> R.drawable.ship13selectionscreen
-        "vulcani_legenda_f1" -> R.drawable.ship14selectionscreen
-        "force_of_nature" -> R.drawable.ship15selectionscreen
-        "legendary_ship" -> R.drawable.ship13selectionscreen
+        "silver_lightning" -> R.drawable.ship12selectionscreen
+        "vulcani_legenda_f1" -> R.drawable.ship13selectionscreen
+        "force_of_nature" -> R.drawable.ship14selectionscreen
+        "legendary_ship" -> R.drawable.ship12selectionscreen
         else -> R.drawable.ship1selectionscreen // Fallback
     }
 }

@@ -206,6 +206,30 @@ object ShipRepository {
             uniqueTrait = null
         ),
         Ship(
+            id = "model3_tortoise_ccp",
+            name = "Model 3 \"Tortoise\" Compact cargo platform",
+            manufacturer = "Karnyx Armory Division",
+            type = "Compact Cargo Platform, Hypertravel Starcraft",
+            rarity = ShipRarity.RARE,
+            imageResId = R.drawable.ship9,
+            renderImageResId = R.drawable.ship9render,
+            dimensions = ShipDimensions(
+                lengthMeters = 54f,
+                lengthFeet = 177f, // 54m * 3.28084 = 177.17ft ≈ 177ft
+                widthMeters = 40f,
+                widthFeet = 131f // 40m * 3.28084 = 131.23ft ≈ 131ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 1
+            ),
+            lore = "Both in life and in space travel, looks are not everything, especially if your goal is to move cargo through hyperspace lanes. That is exactly what this heavy cargo starcraft was designed to do. Affectionately called \"Tortoise\" by Alliance Fleet pilots, this quadruple-engined workhorse does not waste a single inch of interior space on anything that is not part of its cargo hold.\n\nIt can only seat two crew members in its cockpit, and that is the only section with room for seating at all. The nickname comes not only from the way it looks from above, but also as a reminder of the old fable \"The Tortoise and the Hare,\" where slow and steady carries the day. And aboard this ship, you will definitely be going slow and steady.\n\nDespite its bulky appearance, the Tortoise can land almost anywhere, from cramped colony pads to improvised dirt clearings. Pilots often praise it for its stubborn determination to complete a run, even when conditions turn unpredictable or outright hostile.",
+            speed = 130f,
+            acceleration = 65f,
+            warpConverters = 90f,
+            uniqueTrait = null
+        ),
+        Ship(
             id = "navakeshi_star_ravager",
             name = "Navakeshi Star Ravager",
             manufacturer = "Kel'Varra Star Systems",
@@ -259,8 +283,8 @@ object ShipRepository {
             manufacturer = "Tiona Starworks",
             type = "Custom built",
             rarity = ShipRarity.LEGENDARY,
-            imageResId = R.drawable.ship13,
-            renderImageResId = R.drawable.ship13render,
+            imageResId = R.drawable.ship12,
+            renderImageResId = R.drawable.ship12render,
             dimensions = ShipDimensions(
                 lengthMeters = 50f,
                 lengthFeet = 164f,
@@ -283,8 +307,8 @@ object ShipRepository {
             manufacturer = "Aurellian Atelier Works",
             type = "Custom built",
             rarity = ShipRarity.LEGENDARY,
-            imageResId = R.drawable.ship14,
-            renderImageResId = R.drawable.ship14render,
+            imageResId = R.drawable.ship13,
+            renderImageResId = R.drawable.ship13render,
             dimensions = ShipDimensions(
                 lengthMeters = 52f,
                 lengthFeet = 171f, // 52m * 3.28084 = 170.60ft ≈ 171ft
@@ -307,8 +331,8 @@ object ShipRepository {
             manufacturer = "Eternal Infinitum (according to what was deciphered)",
             type = "Unknown",
             rarity = ShipRarity.MYTHICAL,
-            imageResId = R.drawable.ship15,
-            renderImageResId = R.drawable.ship15render,
+            imageResId = R.drawable.ship14,
+            renderImageResId = R.drawable.ship14render,
             dimensions = ShipDimensions(
                 lengthMeters = 52f,
                 lengthFeet = 171f, // 52m * 3.28084 = 170.60ft ≈ 171ft
