@@ -480,6 +480,8 @@ private fun getGalaxyShipImageResId(shipId: String): Int {
         "a300_albatross" -> R.drawable.ship4
         "b7f_starforce" -> R.drawable.ship5
         "navakeshi_star_crusher" -> R.drawable.ship6
+        "b15_specter" -> R.drawable.ship7
+        "n6_98_melina" -> R.drawable.ship8
         "navakeshi_star_ravager" -> R.drawable.ship11
         "h98_valkyrie" -> R.drawable.ship10
         "silver_lightning" -> R.drawable.ship13
@@ -500,6 +502,8 @@ private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "a300_albatross" -> 249.dp // Ship4: 120% bigger than 113.dp (113 * 2.2 = 248.6)
         "b7f_starforce" -> 249.dp // Ship5: Same height as ship4 (249.dp)
         "navakeshi_star_crusher" -> 196.dp // Ship6: 73% bigger than default 113.dp (163 * 1.2 = 195.6, or 113 * 1.728 = 195.26)
+        "b15_specter" -> 236.dp // Ship7: 5% bigger than 225.dp (225 * 1.05 = 236.25)
+        "n6_98_melina" -> 249.dp // Ship8: Similar to ship4/ship5, multi-purpose ship
         "navakeshi_star_ravager" -> 210.dp // Ship11: EPIC assault ship, larger than ship6
         "h98_valkyrie" -> 237.dp // Ship10: 110% bigger than 113.dp (113 * 2.1 = 237.3)
         "silver_lightning" -> 191.dp // Ship13: 10% bigger than 174.dp (174 * 1.1 = 191.4)
@@ -521,6 +525,8 @@ private fun getImpulseImageResId(shipId: String): Int {
         "a300_albatross" -> R.drawable.impulse4
         "b7f_starforce" -> R.drawable.impulse5
         "navakeshi_star_crusher" -> R.drawable.impulse6
+        "b15_specter" -> R.drawable.impulse7
+        "n6_98_melina" -> R.drawable.impulse8
         "navakeshi_star_ravager" -> R.drawable.impulse11
         "h98_valkyrie" -> R.drawable.impulse10
         "silver_lightning" -> R.drawable.impulse13
@@ -542,6 +548,8 @@ private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
         "a300_albatross" -> 1452.dp // Impulse4: 10% bigger than 1320.dp (1320 * 1.1 = 1452)
         "b7f_starforce" -> 1320.dp // Impulse5: 120% bigger than 600.dp (600 * 2.2 = 1320), same % as ship5
         "navakeshi_star_crusher" -> 1083.dp // Impulse6: 64% bigger than Impulse3 660.dp (1140 * 0.95 = 1083)
+        "b15_specter" -> 1307.dp // Impulse7: 5% bigger than 1245.dp (1245 * 1.05 = 1307.25)
+        "n6_98_melina" -> 1452.dp // Impulse8: Similar to ship4, multi-purpose ship
         "navakeshi_star_ravager" -> 1200.dp // Impulse11: Larger than ship6, similar to mid-tier EPIC ships
         "h98_valkyrie" -> 1386.dp // Impulse10: 10% bigger than 1260.dp (1260 * 1.1 = 1386)
         "silver_lightning" -> 1118.dp // Impulse13: 10% bigger than 1016.dp (1016 * 1.1 = 1117.6)
@@ -562,6 +570,8 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "a300_albatross" -> 242.dp // Impulse4: 10% bigger than 220.dp (220 * 1.1 = 242)
         "b7f_starforce" -> 220.dp // Impulse5: 120% bigger than 100.dp (100 * 2.2 = 220), same % as ship5
         "navakeshi_star_crusher" -> 181.dp // Impulse6: 64% bigger than Impulse3 110.dp (190 * 0.95 = 180.5)
+        "b15_specter" -> 218.dp // Impulse7: 5% bigger than 208.dp (208 * 1.05 = 218.4)
+        "n6_98_melina" -> 242.dp // Impulse8: Similar to ship4, multi-purpose ship
         "navakeshi_star_ravager" -> 200.dp // Impulse11: Larger than ship6, similar to mid-tier EPIC ships
         "h98_valkyrie" -> 231.dp // Impulse10: 10% bigger than 210.dp (210 * 1.1 = 231)
         "silver_lightning" -> 186.dp // Impulse13: 10% bigger than 169.dp (169 * 1.1 = 185.9)
@@ -583,6 +593,8 @@ private fun getImpulseHorizontalOffset(shipId: String): androidx.compose.ui.unit
         "a300_albatross" -> (-80).dp // Ship4: A-300 Albatross
         "b7f_starforce" -> (-120).dp // Ship5: B7F Starforce
         "navakeshi_star_crusher" -> (-102).dp // Ship6: Navakeshi Star Crusher - moved 15% to the right from default (-120 + 18 = -102)
+        "b15_specter" -> (-102).dp // Ship7: B15 Specter - moved 15% to the right from default (-120 + 18 = -102)
+        "n6_98_melina" -> (-92).dp // Ship8: N6-98 Melina - moved 15% to the left from -80.dp (-80 - 12 = -92)
         "navakeshi_star_ravager" -> (-102).dp // Ship11: Navakeshi Star Ravager - moved 15% to the right from default (-120 + 18 = -102)
         "h98_valkyrie" -> (-120).dp // Ship10: H-98 Valkyrie
         "legendary_ship" -> (-120).dp // Legendary ship fallback

@@ -3,15 +3,21 @@ package com.example.fargalaxy.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.fargalaxy.R
 
@@ -19,22 +25,21 @@ import com.example.fargalaxy.R
  * LevelStatusCard composable - displays the complete level card with badge and license information.
  * 
  * This composable combines two main elements:
- * 1. A fixed-size SVG badge on the left (level1badge) - displays the level number in a diamond shape
+ * 1. A responsive SVG badge on the left (level1badge) - displays the level number in a diamond shape
  * 2. The SpaceLicenseCard on the right - displays XP, progress, and level information
  * 
  * Layout behavior:
- * - The badge is fixed-size (124.dp height) and does not scale with screen width
- *   This ensures the badge remains visually consistent regardless of screen size
- * - The SpaceLicenseCard expands horizontally to fill available space using weight(1f)
- *   This makes the card responsive to different screen widths
- * - Both elements have the same height (124.dp) to ensure perfect vertical alignment
- * - The badge overlaps the card by -8.dp (badge extends 8.dp over the card's left edge)
+ * - The SpaceLicenseCard sizes itself vertically based on its content (padding + text + spacing)
+ * - The badge height automatically matches the exact height of the SpaceLicenseCard
+ * - The badge width maintains its aspect ratio based on the height
+ * - Both elements have the same height to ensure perfect vertical alignment
+ * - The badge overlaps the card by -12.dp (badge extends 12.dp over the card's left edge)
  *   This creates a visual connection between the badge and card, making them appear as a single component
  * 
  * Visual design:
  * - The badge sits partially on top of the card, creating a layered effect
  * - The card has no left border because that edge is visually "covered" by the badge
- * - The overlap creates a seamless integration between the fixed badge and responsive card
+ * - The overlap creates a seamless integration between the responsive badge and responsive card
  * 
  * @param title The title text for the license (e.g., "Space license")
  * @param xpCurrent Current experience points
@@ -52,46 +57,41 @@ fun LevelStatusCard(
     progress: Float,
     modifier: Modifier = Modifier
 ) {
-    // Fixed height for both badge and card to ensure perfect alignment
-    // Set to exactly match content + padding with explicit line heights:
-    // - Title text (14.sp, lineHeight 16.sp) = 16.dp
-    // - XP text (20.sp, lineHeight 24.sp) = 24.dp
-    // - Progress bar = 8.dp
-    // - Bottom row text (max lineHeight 20.sp) = 20.dp
-    // - Spacing between items (3 × 8.dp) = 24.dp
-    // - Padding (16.dp top + 16.dp bottom) = 32.dp
-    // Total: 16 + 24 + 8 + 20 + 24 + 32 = 124.dp
-    val cardHeight = 124.dp
-    val badgeHeight = 125.dp // Badge height - can be adjusted independently from card
-    // Calculate badge width based on aspect ratio (105dp width / 118dp height)
-    val badgeWidth = badgeHeight * (105f / 118f)
+    val density = LocalDensity.current
+    
+    // State to track the actual height of the SpaceLicenseCard
+    var cardHeight by remember { mutableStateOf<Dp?>(null) }
+    
+    // Badge aspect ratio: 105dp width / 118dp height
+    val badgeAspectRatio = 105f / 118f
     
     // Row containing the badge (left) and SpaceLicenseCard (right)
-    // Negative spacing of -8.dp creates overlap: badge extends 8.dp over card's left edge
+    // Negative spacing of -12.dp creates overlap: badge extends 12.dp over card's left edge
     Row(
         modifier = modifier
-            .fillMaxWidth(), // Height removed - Row sizes to accommodate the taller element (badge)
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy((-12).dp), // Negative spacing creates overlap
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left section: Fixed-size SVG badge
-        // The badge must match the exact height of the card (cardHeight)
-        // We use height(cardHeight) to set the exact height, and ContentScale.Fit ensures
-        // the badge maintains its intrinsic aspect ratio (105dp x 118dp) without deformation
-        // The width will scale proportionally to maintain the aspect ratio
-        Image(
-            painter = painterResource(id = R.drawable.level1badge),
-            contentDescription = "Level $level badge",
-            modifier = Modifier
-                .width(badgeWidth)
-                .height(badgeHeight), // Badge size - height adjustable, width maintains aspect ratio
-            contentScale = ContentScale.FillBounds // Fill the exact size specified
-        )
+        // Left section: Responsive SVG badge
+        // The badge height is 0.7% taller than the SpaceLicenseCard
+        // Width maintains aspect ratio based on the height
+        if (cardHeight != null) {
+            val badgeHeight = cardHeight!! * 1.007f // 0.7% taller than card
+            Image(
+                painter = painterResource(id = R.drawable.level1badge),
+                contentDescription = "Level $level badge",
+                modifier = Modifier
+                    .width(badgeHeight * badgeAspectRatio)
+                    .height(badgeHeight), // 0.7% taller than the card
+                contentScale = ContentScale.FillBounds // Fill the exact size specified
+            )
+        }
         
         // Right section: Responsive SpaceLicenseCard
         // This card expands horizontally to fill available space using weight(1f)
-        // The card remains responsive to screen width while the badge stays fixed
-        // Both have the same height (cardHeight) to ensure vertical alignment
+        // The card sizes vertically based on its content
+        // We measure its height and apply it to the badge
         SpaceLicenseCard(
             title = title,
             xpCurrent = xpCurrent,
@@ -100,7 +100,10 @@ fun LevelStatusCard(
             progress = progress,
             modifier = Modifier
                 .weight(1f) // Expand to fill remaining horizontal space (responsive)
-                .height(cardHeight) // Fixed card height independent from badge height
+                .onSizeChanged { size ->
+                    // Measure the actual height and convert to dp
+                    cardHeight = with(density) { size.height.toDp() }
+                }
         )
     }
 }

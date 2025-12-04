@@ -202,19 +202,16 @@ fun ShipDetailsScreen(
             contentScale = ContentScale.Crop
         )
         
-        // Backlines layer: Only for legendary and mythical ships
-        // Full width, aligned to top, maintains aspect ratio
+        // Backlines layer: Full width, aligned to top, maintains aspect ratio
         // Positioned behind everything except the background
-        if (ship.rarity == ShipRarity.LEGENDARY || ship.rarity == ShipRarity.MYTHICAL) {
-            Image(
-                painter = painterResource(id = R.drawable.backlines),
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .fillMaxWidth(),
-                contentScale = ContentScale.FillWidth
-            )
-        }
+        Image(
+            painter = painterResource(id = R.drawable.backlines),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth(),
+            contentScale = ContentScale.FillWidth
+        )
         
         // Top gradient overlay: Covers 30% of screen height, creating a fade effect at the top.
         // Gradient transitions from 32% opacity color (based on rarity) at the top to transparent at the bottom.

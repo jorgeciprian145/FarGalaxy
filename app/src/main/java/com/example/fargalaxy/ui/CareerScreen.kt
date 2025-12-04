@@ -62,6 +62,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
+import com.example.fargalaxy.data.ShipRepository
 import com.example.fargalaxy.model.Ship
 
 /**
@@ -135,6 +136,14 @@ fun CareerScreen(
     
     // Get density to convert dp to pixels
     val density = LocalDensity.current
+    
+    // Get ship counts for starships progress display
+    val allShips = ShipRepository.getAllShips()
+    val totalShipsCount = allShips.size
+    // Unlocked ships: Currently all ships are shown in ShipSelectionScreen, so all ships are unlocked
+    // TODO: In the future, filter to only unlocked ships when unlock system is implemented
+    val unlockedShipsCount = allShips.size
+    val starshipsCountText = "$unlockedShipsCount/$totalShipsCount"
     
     // Calculate if content is being clipped (scroll position >= 8dp means content moved up past initial spacer)
     // When scrolled 8dp or more, content reaches the clip boundary at 115dp
@@ -300,7 +309,7 @@ fun CareerScreen(
                 
                 // ProgressSection: Contains the progress items row (no title shown, handled separately above)
                 ProgressSection(
-                    starshipsCount = "1/10",
+                    starshipsCount = starshipsCountText,
                     locationsCount = "1/30",
                     collectiblesCount = "1/30",
                     showTitle = false, // Don't show title, it's handled separately above

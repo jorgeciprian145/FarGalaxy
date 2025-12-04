@@ -22,9 +22,9 @@ object ShipRepository {
             renderImageResId = R.drawable.ship1render,
             dimensions = ShipDimensions(
                 lengthMeters = 32f,
-                lengthFeet = 104f,
+                lengthFeet = 105f, // 32m * 3.28084 = 104.99ft ≈ 105ft
                 widthMeters = 17f,
-                widthFeet = 56f
+                widthFeet = 56f // 17m * 3.28084 = 55.77ft ≈ 56ft
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
@@ -71,9 +71,9 @@ object ShipRepository {
             renderImageResId = R.drawable.ship3render,
             dimensions = ShipDimensions(
                 lengthMeters = 36f,
-                lengthFeet = 104f,
+                lengthFeet = 118f, // 36m * 3.28084 = 118.11ft ≈ 118ft
                 widthMeters = 18f,
-                widthFeet = 39f
+                widthFeet = 59f // 18m * 3.28084 = 59.06ft ≈ 59ft
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
@@ -143,9 +143,9 @@ object ShipRepository {
             renderImageResId = R.drawable.ship6render,
             dimensions = ShipDimensions(
                 lengthMeters = 36f,
-                lengthFeet = 104f,
+                lengthFeet = 118f, // 36m * 3.28084 = 118.11ft ≈ 118ft
                 widthMeters = 33f,
-                widthFeet = 39f
+                widthFeet = 108f // 33m * 3.28084 = 108.27ft ≈ 108ft
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
@@ -158,6 +158,54 @@ object ShipRepository {
             uniqueTrait = null
         ),
         Ship(
+            id = "b15_specter",
+            name = "B15 Specter",
+            manufacturer = "Valketh Industries",
+            type = "Medium Hypertravel Starcraft",
+            rarity = ShipRarity.RARE,
+            imageResId = R.drawable.ship7,
+            renderImageResId = R.drawable.ship7render,
+            dimensions = ShipDimensions(
+                lengthMeters = 38f,
+                lengthFeet = 125f, // 38m * 3.28084 = 124.67ft ≈ 125ft
+                widthMeters = 36f,
+                widthFeet = 118f // 36m * 3.28084 = 118.11ft ≈ 118ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 4
+            ),
+            lore = "After the tremendous success and widespread popularity of the Phantom, Valketh set out to create a more advanced successor. The Specter builds on everything its predecessor did right. It handles well, remains reliable under pressure and is still simple and inexpensive to maintain. It also expands its capabilities with a more powerful engine and significantly improved hyperspace performance.\n\nPilots who trained with the Phantom are naturally drawn to this refined evolution of their first vessel. The Specter keeps the familiar feel of the original while offering a more capable and responsive platform for pilots ready to grow beyond entry level ships.\n\nAmong independent crews, the Specter has already earned a solid place as a dependable workhorse for long range missions and frontier travel. Its balance of power, efficiency and low upkeep costs makes it well suited for those who operate without the support of a formal fleet. Many freelancers regard it as an ideal partner for life between systems, versatile enough to take wherever the next job leads.",
+            speed = 135f,
+            acceleration = 67f,
+            warpConverters = 92f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "n6_98_melina",
+            name = "N6-98 Melina",
+            manufacturer = "Marakeshi Space Technologies",
+            type = "Multi-purpose Hypertravel Starcraft",
+            rarity = ShipRarity.RARE,
+            imageResId = R.drawable.ship8,
+            renderImageResId = R.drawable.ship8render,
+            dimensions = ShipDimensions(
+                lengthMeters = 42f,
+                lengthFeet = 138f, // 42m * 3.28084 = 137.8ft ≈ 138ft
+                widthMeters = 44f,
+                widthFeet = 144f // 44m * 3.28084 = 144.4ft ≈ 144ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 3
+            ),
+            lore = "The Melina is Marakeshi's answer to the competing Albatross. The goal was to create a well rounded starship that would appeal both to pilots seeking a dependable workhorse and to travelers who enjoy a more spirited flying experience.\n\nAlthough it lacks the endurance of its rival and tends to require slightly more maintenance, the Melina has secured a strong following among pilots who value a faster vessel with higher overall performance. It offers a more energetic flight profile without sacrificing the practicality expected from a ship in its class.\n\nOverall, the Melina has proved to be a capable and versatile starship, able to hold its own on day to day travel as well as longer system hops. For many pilots, it strikes the right balance between functionality and enjoyment, making it one of Marakeshi's most appreciated civilian designs.",
+            speed = 140f,
+            acceleration = 70f,
+            warpConverters = 95f,
+            uniqueTrait = null
+        ),
+        Ship(
             id = "navakeshi_star_ravager",
             name = "Navakeshi Star Ravager",
             manufacturer = "Kel'Varra Star Systems",
@@ -167,9 +215,9 @@ object ShipRepository {
             renderImageResId = R.drawable.ship11render,
             dimensions = ShipDimensions(
                 lengthMeters = 36f,
-                lengthFeet = 104f,
+                lengthFeet = 118f, // 36m * 3.28084 = 118.11ft ≈ 118ft
                 widthMeters = 35f,
-                widthFeet = 39f
+                widthFeet = 115f // 35m * 3.28084 = 114.83ft ≈ 115ft
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
@@ -239,9 +287,9 @@ object ShipRepository {
             renderImageResId = R.drawable.ship14render,
             dimensions = ShipDimensions(
                 lengthMeters = 52f,
-                lengthFeet = 104f,
+                lengthFeet = 171f, // 52m * 3.28084 = 170.60ft ≈ 171ft
                 widthMeters = 24f,
-                widthFeet = 39f
+                widthFeet = 79f // 24m * 3.28084 = 78.74ft ≈ 79ft
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
@@ -263,9 +311,9 @@ object ShipRepository {
             renderImageResId = R.drawable.ship15render,
             dimensions = ShipDimensions(
                 lengthMeters = 52f,
-                lengthFeet = 104f,
+                lengthFeet = 171f, // 52m * 3.28084 = 170.60ft ≈ 171ft
                 widthMeters = 34f,
-                widthFeet = 39f
+                widthFeet = 112f // 34m * 3.28084 = 111.55ft ≈ 112ft
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,

@@ -27,8 +27,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,13 +63,20 @@ import com.example.fargalaxy.model.ShipRarity
  * - Scrollable content: Grid of ship containers (to be implemented)
  * - Clipping behavior: Content clips at 115dp from top when scrolling (same as CareerScreen)
  * 
+ * Scroll behavior:
+ * - Scroll position is preserved when navigating to ShipDetailsScreen and back
+ * - Scroll position is reset when opening from CareerScreen (when shouldResetScroll is true)
+ * 
  * @param onBackClick Callback when the back button is clicked
+ * @param onShipClick Callback when a ship is clicked
+ * @param shouldResetScroll Boolean flag to reset scroll position when opening from CareerScreen
  * @param modifier Modifier for the screen
  */
 @Composable
 fun ShipSelectionScreen(
     onBackClick: () -> Unit = {},
     onShipClick: (Ship) -> Unit = {},
+    shouldResetScroll: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     // Get list of available ships (for now, using all ships from repository)
@@ -82,8 +94,38 @@ fun ShipSelectionScreen(
     
     val shipsCount = availableShips.size
     
-    // Scroll state to track when content is being clipped
+    // Save scroll position to persist when navigating to ShipDetailsScreen and back
+    var savedScrollPosition by rememberSaveable {
+        mutableStateOf(0)
+    }
+    
+    // Scroll state: Create new state, will be restored from saved position
     val scrollState = rememberScrollState()
+    
+    // Restore scroll position when composable is first created (if not resetting)
+    var previousResetFlag by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (savedScrollPosition > 0 && !shouldResetScroll) {
+            scrollState.scrollTo(savedScrollPosition)
+        }
+    }
+    
+    // Save scroll position when it changes (but not when resetting)
+    LaunchedEffect(scrollState.value) {
+        if (!shouldResetScroll) {
+            savedScrollPosition = scrollState.value
+        }
+    }
+    
+    // Reset scroll position when shouldResetScroll is true (opening from CareerScreen)
+    LaunchedEffect(shouldResetScroll) {
+        if (shouldResetScroll && !previousResetFlag) {
+            // Only reset when flag changes from false to true (opening from CareerScreen)
+            scrollState.animateScrollTo(0)
+            savedScrollPosition = 0 // Also clear saved position
+        }
+        previousResetFlag = shouldResetScroll
+    }
     
     // Get density to convert dp to pixels
     val density = LocalDensity.current
@@ -399,6 +441,8 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "a300_albatross" -> R.drawable.ship4selectionscreen
         "b7f_starforce" -> R.drawable.ship5selectionscreen
         "navakeshi_star_crusher" -> R.drawable.ship6selectionscreen
+        "b15_specter" -> R.drawable.ship7selectionscreen
+        "n6_98_melina" -> R.drawable.ship8selectionscreen
         "navakeshi_star_ravager" -> R.drawable.ship11selectionscreen
         "h98_valkyrie" -> R.drawable.ship10selectionscreen
         "silver_lightning" -> R.drawable.ship13selectionscreen

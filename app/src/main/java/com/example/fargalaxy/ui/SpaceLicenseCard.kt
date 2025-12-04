@@ -87,12 +87,11 @@ fun SpaceLicenseCard(
     
     // Card with gradient background and custom border (top, right, bottom only)
     // Outer Box: draws background first, then border on top
-    // The modifier from LevelStatusCard includes fillMaxHeight(), so we preserve it
-    // by chaining fillMaxWidth() properly - both constraints will be applied
+    // Removed fillMaxHeight() - let the Box size to its content height
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight() // Ensure Box fills the full height from LevelStatusCard
+            // Removed .fillMaxHeight() - Box will size to content height
             .background(
                 brush = gradientBrush,
                 shape = RoundedCornerShape(0.dp) // No rounded corners for now

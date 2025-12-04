@@ -65,6 +65,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track if ShipSelectionScreen should be shown
     var showShipSelection by remember { mutableStateOf(false) }
     
+    // Track if we should reset scroll in ShipSelectionScreen (true when opening from CareerScreen)
+    var shouldResetShipSelectionScroll by remember { mutableStateOf(false) }
+    
     // Track the current ship
     var currentShip by remember { mutableStateOf<Ship>(ShipRepository.getCurrentShip()) }
     
@@ -128,12 +131,22 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle ship selection navigation
     val onShipSelectionClick: () -> Unit = {
+        shouldResetShipSelectionScroll = true // Reset scroll when opening from CareerScreen
         showShipSelection = true
     }
     
     // Handle back from ship selection
     val onBackFromShipSelection: () -> Unit = {
         showShipSelection = false
+    }
+    
+    // Reset the scroll flag after it's been used
+    LaunchedEffect(shouldResetShipSelectionScroll, showShipSelection) {
+        if (shouldResetShipSelectionScroll && showShipSelection) {
+            // Flag has been passed to ShipSelectionScreen, reset it after a brief delay
+            kotlinx.coroutines.delay(100)
+            shouldResetShipSelectionScroll = false
+        }
     }
     
     // Handle ship click from ShipSelectionScreen
@@ -151,6 +164,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         // If we came from ShipSelectionScreen, return there; otherwise just hide details (returns to CareerScreen)
         if (selectedShipForDetails != null) {
             selectedShipForDetails = null
+            shouldResetShipSelectionScroll = false // Don't reset scroll when returning from ShipDetailsScreen
             showShipSelection = true // Return to selection screen
         }
     }
@@ -159,6 +173,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val onChangeShip: () -> Unit = {
         showShipDetails = false
         isFromCareerScreen = false
+        shouldResetShipSelectionScroll = false // Don't reset scroll when coming from ShipDetailsScreen
         showShipSelection = true
     }
     
@@ -293,7 +308,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         if (showShipSelection) {
             ShipSelectionScreen(
                 onBackClick = onBackFromShipSelection,
-                onShipClick = onShipClick
+                onShipClick = onShipClick,
+                shouldResetScroll = shouldResetShipSelectionScroll
             )
         }
         
