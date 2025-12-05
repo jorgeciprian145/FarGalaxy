@@ -209,7 +209,7 @@ object ShipRepository {
             id = "model3_tortoise_ccp",
             name = "Model 3 \"Tortoise\" Compact cargo platform",
             manufacturer = "Karnyx Armory Division",
-            type = "Compact Cargo Platform, Hypertravel Starcraft",
+            type = "Hypertravel cargo starcraft",
             rarity = ShipRarity.RARE,
             imageResId = R.drawable.ship9,
             renderImageResId = R.drawable.ship9render,
