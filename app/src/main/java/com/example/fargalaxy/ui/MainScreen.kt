@@ -65,8 +65,20 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track if ShipSelectionScreen should be shown
     var showShipSelection by remember { mutableStateOf(false) }
     
+    // Track if LocationsScreen should be shown
+    var showLocations by remember { mutableStateOf(false) }
+    
+    // Track if LocationDetailsScreen should be shown
+    var showLocationDetails by remember { mutableStateOf(false) }
+    
     // Track if we should reset scroll in ShipSelectionScreen (true when opening from CareerScreen)
     var shouldResetShipSelectionScroll by remember { mutableStateOf(false) }
+    
+    // Track if we should reset scroll in LocationsScreen (true when opening from CareerScreen)
+    var shouldResetLocationsScroll by remember { mutableStateOf(false) }
+    
+    // Track the selected location for details
+    var selectedLocationForDetails by remember { mutableStateOf<com.example.fargalaxy.model.Location?>(null) }
     
     // Track the current ship
     var currentShip by remember { mutableStateOf<Ship>(ShipRepository.getCurrentShip()) }
@@ -140,12 +152,46 @@ fun MainScreen(modifier: Modifier = Modifier) {
         showShipSelection = false
     }
     
+    // Handle locations navigation
+    val onLocationsClick: () -> Unit = {
+        shouldResetLocationsScroll = true // Reset scroll when opening from CareerScreen
+        showLocations = true
+    }
+    
+    // Handle back from locations
+    val onBackFromLocations: () -> Unit = {
+        showLocations = false
+    }
+    
+    // Handle location click from LocationsScreen
+    val onLocationClick: (com.example.fargalaxy.model.Location) -> Unit = { location ->
+        selectedLocationForDetails = location
+        showLocationDetails = true
+        showLocations = false // Hide locations screen when showing details
+    }
+    
+    // Handle back from location details
+    val onBackFromLocationDetails: () -> Unit = {
+        showLocationDetails = false
+        selectedLocationForDetails = null
+        showLocations = true // Return to locations screen
+    }
+    
     // Reset the scroll flag after it's been used
     LaunchedEffect(shouldResetShipSelectionScroll, showShipSelection) {
         if (shouldResetShipSelectionScroll && showShipSelection) {
             // Flag has been passed to ShipSelectionScreen, reset it after a brief delay
             kotlinx.coroutines.delay(100)
             shouldResetShipSelectionScroll = false
+        }
+    }
+    
+    // Reset the locations scroll flag after it's been used
+    LaunchedEffect(shouldResetLocationsScroll, showLocations) {
+        if (shouldResetLocationsScroll && showLocations) {
+            // Flag has been passed to LocationsScreen, reset it after a brief delay
+            kotlinx.coroutines.delay(100)
+            shouldResetLocationsScroll = false
         }
     }
     
@@ -200,6 +246,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back button press
     BackHandler(enabled = true) {
         when {
+            // If LocationDetailsScreen is shown, close it
+            showLocationDetails -> {
+                onBackFromLocationDetails()
+            }
+            // If LocationsScreen is shown, close it
+            showLocations -> {
+                onBackFromLocations()
+            }
             // If ShipSelectionScreen is shown, close it
             showShipSelection -> {
                 onBackFromShipSelection()
@@ -252,8 +306,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         currentShip = currentShip,
                         onViewShipClick = onViewShipClick,
                         onShipSelectionClick = onShipSelectionClick,
+                        onLocationsClick = onLocationsClick,
                         totalTravelMinutes = 45, // TODO: Connect to actual data source
-                        isPageActive = pagerState.currentPage == 0 && !showShipDetails && !showShipSelection, // Track when page is active and overlays are closed
+                        isPageActive = pagerState.currentPage == 0 && !showShipDetails && !showShipSelection && !showLocations && !showLocationDetails, // Track when page is active and overlays are closed
                         scrollToTopTrigger = scrollToTopTrigger
                     )
                 }
@@ -275,8 +330,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
-        // Hide noise when ShipDetailsScreen or ShipSelectionScreen is shown (they have their own backgrounds)
-        if (!showShipDetails && !showShipSelection) {
+        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, or LocationDetailsScreen is shown (they have their own backgrounds)
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails) {
             Image(
                 painter = painterResource(id = R.drawable.noise_8bit),
                 contentDescription = null,
@@ -289,8 +344,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen or ShipSelectionScreen is shown
-        if (!showShipDetails && !showShipSelection && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, or LocationDetailsScreen is shown
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -302,6 +357,23 @@ fun MainScreen(modifier: Modifier = Modifier) {
             ) {
                 Indicator(activeScreen = activeScreen)
             }
+        }
+        
+        // LocationsScreen overlay - shown on top of everything when showLocations is true
+        if (showLocations) {
+            LocationsScreen(
+                onBackClick = onBackFromLocations,
+                onLocationClick = onLocationClick,
+                shouldResetScroll = shouldResetLocationsScroll
+            )
+        }
+        
+        // LocationDetailsScreen overlay - shown on top of everything when showLocationDetails is true
+        if (showLocationDetails && selectedLocationForDetails != null) {
+            LocationDetailsScreen(
+                location = selectedLocationForDetails!!,
+                onBackClick = onBackFromLocationDetails
+            )
         }
         
         // ShipSelectionScreen overlay - shown on top of everything when showShipSelection is true

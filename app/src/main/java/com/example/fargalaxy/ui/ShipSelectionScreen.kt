@@ -203,7 +203,7 @@ fun ShipSelectionScreen(
                 contentDescription = "Back",
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 24.dp)
+                    .padding(start = 12.dp)
                     .height(51.dp)
                     .clickable(onClick = onBackClick),
                 contentScale = ContentScale.Fit

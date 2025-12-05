@@ -60,6 +60,7 @@ import com.example.fargalaxy.R
  * @param collectiblesCount Current count of collectibles (e.g., "1/30")
  * @param showTitle Whether to show the "Discoveries" title (default true, set to false if title is handled externally)
  * @param onStarshipsClick Callback when the starships item is clicked
+ * @param onLocationsClick Callback when the locations item is clicked
  * @param modifier Modifier for the entire ProgressSection
  */
 @Composable
@@ -69,6 +70,7 @@ fun ProgressSection(
     collectiblesCount: String = "1/30",
     showTitle: Boolean = true,
     onStarshipsClick: () -> Unit = {},
+    onLocationsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -121,7 +123,8 @@ fun ProgressSection(
             ProgressItem(
                 badgeResId = R.drawable.locationsbadge,
                 title = "Locations",
-                count = locationsCount
+                count = locationsCount,
+                onClick = onLocationsClick
             )
             
             // ProgressConnector 2: Horizontally responsive connector with centered horizontal line

@@ -73,6 +73,7 @@ import com.example.fargalaxy.model.Ship
  * @param currentShip The currently selected ship
  * @param onViewShipClick Callback when the "view" button next to ship name is clicked
  * @param onShipSelectionClick Callback when the starships item in ProgressSection is clicked
+ * @param onLocationsClick Callback when the locations item in ProgressSection is clicked
  * @param totalTravelMinutes The total number of minutes the user has been in travel
  * @param isPageActive Boolean flag indicating if this page is currently active and visible (used to reset scroll when returning)
  * @param scrollToTopTrigger State key that when changed triggers scrolling to top (used for back button handling)
@@ -83,6 +84,7 @@ fun CareerScreen(
     currentShip: Ship,
     onViewShipClick: () -> Unit = {},
     onShipSelectionClick: () -> Unit = {},
+    onLocationsClick: () -> Unit = {},
     totalTravelMinutes: Int = 45, // TODO: Connect to actual data source
     isPageActive: Boolean = true,
     scrollToTopTrigger: Int = 0,
@@ -320,6 +322,7 @@ fun CareerScreen(
                     collectiblesCount = "1/30",
                     showTitle = false, // Don't show title, it's handled separately above
                     onStarshipsClick = onShipSelectionClick,
+                    onLocationsClick = onLocationsClick,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
