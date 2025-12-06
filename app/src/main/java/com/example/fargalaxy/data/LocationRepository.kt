@@ -64,6 +64,7 @@ object LocationRepository {
             selectionImageResId = R.drawable.location4selectionscreen,
             detailImageResId = R.drawable.location4,
             isFullWidthImage = true, // Image expands to full width
+            shouldOverflowSelectionImage = true, // Selection image overflows container (full height, wider)
             description = "Industrial mining",
             dayDuration = "11 Earth hours",
             population = "None",

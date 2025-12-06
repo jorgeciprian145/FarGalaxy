@@ -13,6 +13,7 @@ data class Location(
     val detailImageResId: Int, // Drawable resource ID for the detail screen image (e.g., location2.png)
     val selectionTypeDisplay: String? = null, // Optional type to display in selection screen (e.g., "Ship" for capital ships)
     val isFullWidthImage: Boolean = false, // If true, detail image uses full width; if false, uses 90% width
+    val shouldOverflowSelectionImage: Boolean = false, // If true, selection image extends beyond container (full height, wider than container)
     val description: String, // Additional description (e.g., "Major trade hub")
     // Planet-specific fields (nullable for non-planets)
     val dayDuration: String? = null, // Day duration (e.g., "1.3 Earth days")

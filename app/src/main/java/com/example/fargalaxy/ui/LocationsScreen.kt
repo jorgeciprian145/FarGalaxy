@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -354,45 +356,56 @@ private fun LocationRow(
         val imageContainerWidth = availableRowWidth * 0.45f // 45% of available row width
         val textContainerWidth = availableRowWidth * 0.55f // 55% of available row width
         
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp) // 16px horizontal padding
-                .clickable(onClick = onLocationClick),
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
-            verticalAlignment = Alignment.CenterVertically // Vertically center align containers
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp) // 16px horizontal padding
+                    .clickable(onClick = onLocationClick),
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.CenterVertically // Vertically center align containers
+            ) {
             // Render containers in the correct order based on isImageOnLeft
             if (isImageOnLeft) {
-                // Image container: 45% width, 1:1 aspect ratio
-                Box(
+                // Image container: 45% width, 1:1 aspect ratio (unless overflow is enabled)
+                BoxWithConstraints(
                     modifier = Modifier
                         .weight(0.45f) // Use weight to ensure proper distribution
-                        .aspectRatio(1f) // 1:1 aspect ratio
+                        .then(
+                            if (location.shouldOverflowSelectionImage) {
+                                Modifier.fillMaxHeight() // Full height for overflow images
+                            } else {
+                                Modifier.aspectRatio(1f) // 1:1 aspect ratio for normal images
+                            }
+                        )
+                        ,
+                    contentAlignment = Alignment.Center // Center align all content
                 ) {
-                    // Background: planetback.json Lottie animation
+                    // Background: planetback.json Lottie animation - centered in container
                     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.planetback))
                     LottieAnimation(
                         composition = composition,
                         iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(), // contentAlignment centers it automatically
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container, maintains aspect ratio
-                    BoxWithConstraints(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val containerSize = minOf(maxWidth, maxHeight)
-                        Image(
-                            painter = painterResource(id = location.selectionImageResId),
-                            contentDescription = location.name,
-                            modifier = Modifier
-                                .size(containerSize * 0.8f) // 80% of container size
-                                .align(Alignment.Center),
-                            contentScale = ContentScale.Fit // Maintain aspect ratio
-                        )
+                    // Location image on top: 80% of container for normal
+                    // Overflow images are rendered outside the Row to allow overflow
+                    if (!location.shouldOverflowSelectionImage) {
+                        // Normal image: 80% of container, maintains aspect ratio
+                        BoxWithConstraints(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center // Center align - no need for .align() on Image
+                        ) {
+                            val containerSize = minOf(maxWidth, maxHeight)
+                            Image(
+                                painter = painterResource(id = location.selectionImageResId),
+                                contentDescription = location.name,
+                                modifier = Modifier.size(containerSize * 0.8f), // 80% of container size
+                                contentScale = ContentScale.Fit // Maintain aspect ratio
+                            )
+                        }
                     }
                 }
                 
@@ -506,36 +519,84 @@ private fun LocationRow(
                     }
                 }
                 
-                // Image container: 45% width, 1:1 aspect ratio (on right)
-                Box(
+                // Image container: 45% width, 1:1 aspect ratio (on right, unless overflow is enabled)
+                BoxWithConstraints(
                     modifier = Modifier
                         .weight(0.45f) // Use weight to ensure proper distribution
-                        .aspectRatio(1f) // 1:1 aspect ratio
+                        .then(
+                            if (location.shouldOverflowSelectionImage) {
+                                Modifier.fillMaxHeight() // Full height for overflow images
+                            } else {
+                                Modifier.aspectRatio(1f) // 1:1 aspect ratio for normal images
+                            }
+                        )
+                        ,
+                    contentAlignment = Alignment.Center // Center align all content
                 ) {
-                    // Background: planetback.json Lottie animation
+                    // Background: planetback.json Lottie animation - centered in container
                     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.planetback))
                     LottieAnimation(
                         composition = composition,
                         iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(), // contentAlignment centers it automatically
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container, maintains aspect ratio
-                    BoxWithConstraints(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val containerSize = minOf(maxWidth, maxHeight)
-                        Image(
-                            painter = painterResource(id = location.selectionImageResId),
-                            contentDescription = location.name,
-                            modifier = Modifier
-                                .size(containerSize * 0.8f) // 80% of container size
-                                .align(Alignment.Center),
-                            contentScale = ContentScale.Fit // Maintain aspect ratio
-                        )
+                    // Location image on top: 80% of container for normal, full height + wider for overflow
+                    if (!location.shouldOverflowSelectionImage) {
+                        // Normal image: 80% of container, maintains aspect ratio
+                        BoxWithConstraints(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center // Center align - no need for .align() on Image
+                        ) {
+                            val containerSize = minOf(maxWidth, maxHeight)
+                            Image(
+                                painter = painterResource(id = location.selectionImageResId),
+                                contentDescription = location.name,
+                                modifier = Modifier.size(containerSize * 0.8f), // 80% of container size
+                                contentScale = ContentScale.Fit // Maintain aspect ratio
+                            )
+                        }
                     }
+                }
+            }
+            }
+            
+            // Overflow image: Positioned outside Row to allow overflow into padding area
+            // This allows the image to extend beyond the Box constraints into the padding area
+            // Positioned to align with the JSON center, then offset to allow overflow
+            if (location.shouldOverflowSelectionImage) {
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight() // Match the Row's height
+                ) {
+                    // Calculate container center position - same calculation as the JSON container
+                    // The Row has 16dp padding, so available width is maxWidth - 32.dp
+                    val availableRowWidth = maxWidth - 32.dp // 16dp padding on each side
+                    val imageContainerWidth = availableRowWidth * 0.45f
+                    
+                    // Calculate the center X position of the image container (where JSON is centered)
+                    val containerCenterX = if (isImageOnLeft) {
+                        16.dp + imageContainerWidth / 2 // Center of left container (same as JSON)
+                    } else {
+                        maxWidth - 16.dp - imageContainerWidth / 2 // Center of right container (same as JSON)
+                    }
+                    
+                    // Position image at the exact center of the JSON container
+                    // The JSON is centered in its container, which is centered at containerCenterX
+                    Image(
+                        painter = painterResource(id = location.selectionImageResId),
+                        contentDescription = location.name,
+                        modifier = Modifier
+                            .fillMaxHeight() // Full height - width will scale proportionally
+                            .align(Alignment.Center) // Center vertically (same as JSON)
+                            .offset(
+                                // Offset from Box center to container center, then add overflow offset
+                                x = (containerCenterX - maxWidth / 2) + (if (isImageOnLeft) -16.dp else 16.dp)
+                            ),
+                        contentScale = ContentScale.FillHeight // Fill height, maintain aspect ratio
+                    )
                 }
             }
         }
