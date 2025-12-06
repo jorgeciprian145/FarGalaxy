@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.material3.Text
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -125,6 +127,9 @@ fun LocationDetailsScreen(
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
     
+    // Track the actual measured width of the image container to ensure full width
+    var containerWidth by remember { mutableStateOf(0.dp) }
+    
     // Track planet detail back JSON size to calculate clip boundary position
     var planetDetailBackSize by remember { mutableStateOf(IntSize.Zero) }
     
@@ -151,12 +156,14 @@ fun LocationDetailsScreen(
     
     // Calculate clip boundary position:
     // Header bottom: statusBarsPadding + 24dp + 51dp = statusBarsPadding + 75dp
-    // Spacing from header to JSON: 8dp
+    // Spacing from header to JSON: variable (0dp for full-width, 16dp for 90% width)
     // Planet detail back: variable height (planetDetailBackHeightDp)
+    // Spacing from JSON to badge: 8dp
     // Badge/name Column: tracked via onSizeChanged (badgeNameHeight)
     // Spacing to divider: 24dp (added separately, not included in Column measurement)
-    // Total offset from statusBarsPadding: 75dp + 8dp + planetDetailBackHeightDp + 16dp + badgeNameHeight + 24dp
-    val clipBoundaryTop = 75.dp + 8.dp + planetDetailBackHeightDp + 16.dp + badgeNameHeight + 24.dp
+    // Total offset from statusBarsPadding: 75dp + spacing + planetDetailBackHeightDp + 8dp + badgeNameHeight + 24dp
+    val headerToJsonSpacing = if (location.isFullWidthImage) 0.dp else 16.dp
+    val clipBoundaryTop = 75.dp + headerToJsonSpacing + planetDetailBackHeightDp + 8.dp + badgeNameHeight + 24.dp
     
     Box(modifier = modifier.fillMaxSize()) {
         // Background image: Same as ShipDetailsScreen
@@ -225,26 +232,32 @@ fun LocationDetailsScreen(
         }
         
         // Fixed content above clip boundary: Planet detail back, location image, badge, and name
+        // Positioned to span edge-to-edge - statusBarsPadding only affects top, not horizontal width
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .statusBarsPadding()
+                .statusBarsPadding() // Match header's statusBarsPadding for consistent spacing
                 .padding(top = 75.dp) // Header bottom (24dp + 51dp = 75dp)
                 .fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Spacing between header and planet detail back: 8px
-                Spacer(modifier = Modifier.height(8.dp))
+                // Spacing between header and planet detail back: 
+                // 16px for 90% width images, 0px for full-width images (since JSON is scaled larger)
+                if (!location.isFullWidthImage) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
                 
                 // Planet detail back JSON: Full width, maintains aspect ratio
                 // Positioned 8px below header
-                Box(
+                // Ensure this container spans full width edge-to-edge - no padding constraints
+                BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
                         .onSizeChanged { size ->
                             planetDetailBackSize = size
+                            containerWidth = with(density) { size.width.toDp() }
                         }
                 ) {
                     val planetDetailBackComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.planetdetailback))
@@ -252,26 +265,51 @@ fun LocationDetailsScreen(
                         composition = planetDetailBackComposition,
                         iterations = LottieConstants.IterateForever,
                         speed = 0.65f, // Play at 0.65x speed
-                        modifier = Modifier.fillMaxWidth(),
-                        contentScale = ContentScale.Fit // Maintain aspect ratio
-                    )
-                    
-                    // Location image on top: 90% of screen width, maintains aspect ratio
-                    // Vertically and horizontally centered relative to the JSON
-                    // Fades in over 1 second when screen opens
-                    Image(
-                        painter = painterResource(id = location.detailImageResId),
-                        contentDescription = location.name,
                         modifier = Modifier
-                            .width(screenWidthDp * 0.90f) // 90% of screen width
-                            .alpha(imageAlpha) // Fade-in animation
+                            .fillMaxWidth()
+                            .then(
+                                if (location.isFullWidthImage) {
+                                    // For full-width images, make JSON 7% bigger using scale
+                                    Modifier.scale(1.07f)
+                                } else {
+                                    Modifier
+                                }
+                            )
                             .align(Alignment.Center), // Center both vertically and horizontally
                         contentScale = ContentScale.Fit // Maintain aspect ratio
                     )
+                    
+                    // Location image on top: 90% or full width based on location.isFullWidthImage, maintains aspect ratio
+                    // Vertically and horizontally centered relative to the JSON
+                    // Fades in over 1 second when screen opens
+                    // For full width, use fillMaxWidth to ensure edge-to-edge display
+                    if (location.isFullWidthImage) {
+                        // Full width image - centered both vertically and horizontally, fills container width
+                        Image(
+                            painter = painterResource(id = location.detailImageResId),
+                            contentDescription = location.name,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .alpha(imageAlpha) // Fade-in animation
+                                .align(Alignment.Center), // Center both vertically and horizontally
+                            contentScale = ContentScale.FillWidth // Fill width to reach edges
+                        )
+                    } else {
+                        // 90% width image - centered both vertically and horizontally
+                        Image(
+                            painter = painterResource(id = location.detailImageResId),
+                            contentDescription = location.name,
+                            modifier = Modifier
+                                .width(maxWidth * 0.90f) // 90% of measured container width
+                                .alpha(imageAlpha) // Fade-in animation
+                                .align(Alignment.Center), // Center both vertically and horizontally
+                            contentScale = ContentScale.Fit // Maintain aspect ratio for 90% width images
+                        )
+                    }
                 }
                 
-                // Spacing from planet detail back to badge: 16px
-                Spacer(modifier = Modifier.height(16.dp))
+                // Spacing from planet detail back to badge: 8px
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 // Rarity badge and location name container
                 // Positioned 16dp below planet detail back
@@ -364,7 +402,7 @@ fun LocationDetailsScreen(
                     .fillMaxHeight()
                     .verticalScroll(scrollState)
                     .navigationBarsPadding()
-                    .padding(bottom = 188.dp), // Same as ShipDetailsScreen
+                    .padding(bottom = 64.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 // Initial spacer: Push content down 24dp from divider line

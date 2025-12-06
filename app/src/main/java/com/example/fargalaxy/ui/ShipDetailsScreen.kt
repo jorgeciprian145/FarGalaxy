@@ -511,7 +511,7 @@ fun ShipDetailsScreen(
                     .fillMaxHeight()
                     .verticalScroll(scrollState)
                     .navigationBarsPadding()
-                    .padding(bottom = 188.dp),
+                    .padding(bottom = 120.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 // Initial spacer: Push content down 24dp from divider line
