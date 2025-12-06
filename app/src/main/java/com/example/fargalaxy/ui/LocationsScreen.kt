@@ -414,6 +414,7 @@ private fun LocationRow(
                     modifier = Modifier
                         .weight(0.55f) // Use weight to ensure proper distribution
                         .wrapContentHeight()
+                        .offset(y = (-4).dp) // Slight upward offset for better visual alignment
                         .padding(horizontal = 12.dp) // Internal padding for text
                 ) {
                     Column(
@@ -469,6 +470,7 @@ private fun LocationRow(
                     modifier = Modifier
                         .weight(0.55f) // Use weight to ensure proper distribution
                         .wrapContentHeight()
+                        .offset(y = (-4).dp) // Slight upward offset for better visual alignment
                         .padding(horizontal = 12.dp) // Internal padding for text
                 ) {
                     Column(

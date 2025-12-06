@@ -70,6 +70,20 @@ object LocationRepository {
             population = "None",
             diameter = "110,000 km",
             lore = "Sylthara is a massive violet gas giant whose distinctive color comes from microscopic Sylthium crystals suspended in its upper atmosphere. These particles, originally formed within the planet's luminous ring system, refract starlight into shades of deep purple and rose, giving Sylthara its unmistakable appearance.\n\nSylthium is a highly conductive mineral essential for long-range communication arrays and quantum sensor modules. The resource is extremely valuable and difficult to harvest, requiring specialized platforms capable of operating within the planet's turbulent upper layers. Violent electrical storms and shifting pressure gradients make mining operations dangerous, and workers typically serve in short rotational tours to reduce psychological and physical strain.\n\nBetween six and eight major mining platforms operate on Sylthara at any given time, each housing between 450 and 700 personnel. These massive structures are stabilized using magneto-gravitic anchors that lock onto Sylthium-rich clouds moving through the atmosphere."
+        ),
+        Location(
+            id = "location5",
+            name = "Krython B-2",
+            type = "Rocky moon",
+            classification = LocationClassification.PLANET,
+            rarity = LocationRarity.COMMON,
+            selectionImageResId = R.drawable.location5selectionscreen,
+            detailImageResId = R.drawable.location5,
+            description = "Mineral rich",
+            dayDuration = "19 Earth hours",
+            population = "340 personnel (outpost staff)",
+            diameter = "3,200 km",
+            lore = "Krython B-2 is a cold, mineral-rich moon orbiting Sylthara. Its rugged terrain consists of fractured rock fields, deep impact scars, and pockets of ice that accumulate in permanently shadowed regions. Embedded within its crust are faint concentrations of pre-Sylthium crystalline material, deposited over centuries as particles drifted from Sylthara's ring system and settled across the moon's surface.\n\nThe moon's role in the system is modest but steady. While it is not crucial to the sector's economy, Krython B-2 provides a reliable source of supporting minerals and offers an ideal, stable platform for operations tied to Sylthara's mining industry. For this reason, a large corporate outpost was established here decades ago.\n\nThe outpost is jointly operated by Kalyx Extraction Group and Auricon Dynamics, housing around 340 rotating personnel including miners, technicians, researchers, drone operators, medical staff, and geologists. Its purpose is twofold:  to extract and refine small quantities of pre-Sylthium, and to support the scientific study of the mineral interactions between Krython B-2 and Sylthara.\n\nThough its work is technically demanding, the moon itself holds no broader political or military importance. The Alliance maintains no permanent presence here, visiting only for inspections or when coordinating with transit operations. For most workers, Krython B-2 is viewed as a stable, quiet assignment: isolated, harsh, and unremarkable—but undeniably valuable to the corporations that depend on it."
         )
     )
     
