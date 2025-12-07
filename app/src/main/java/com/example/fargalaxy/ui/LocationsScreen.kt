@@ -21,9 +21,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Text
@@ -390,21 +392,36 @@ private fun LocationRow(
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container for normal
-                    // Overflow images are rendered outside the Row to allow overflow
+                    // Location image on top: 80% of container for normal, 100% for location3 and location6
+                    // Overflow images (location4) are rendered outside the Row to allow overflow
+                    // LOCATION3 & LOCATION6: Rendered at 100% size to fill container both horizontally and vertically
                     if (!location.shouldOverflowSelectionImage) {
-                        // Normal image: 80% of container, maintains aspect ratio
-                        BoxWithConstraints(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center // Center align - no need for .align() on Image
-                        ) {
-                            val containerSize = minOf(maxWidth, maxHeight)
+                        // Check if this is location3 or location6 (100% size)
+                        val isLocation3Or6 = location.id == "location3" || location.id == "location6"
+                        
+                        if (isLocation3Or6) {
+                            // LOCATION3 & LOCATION6: 100% size - fill container both horizontally and vertically
+                            // Rendered directly in same container as JSON to ensure exact same size
                             Image(
                                 painter = painterResource(id = location.selectionImageResId),
                                 contentDescription = location.name,
-                                modifier = Modifier.size(containerSize * 0.8f), // 80% of container size
+                                modifier = Modifier.fillMaxSize(), // 100% - fills container both horizontally and vertically, same size as JSON
                                 contentScale = ContentScale.Fit // Maintain aspect ratio
                             )
+                        } else {
+                            // Normal images: 80% of container, maintains aspect ratio
+                            BoxWithConstraints(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center // Center align - no need for .align() on Image
+                            ) {
+                                val containerSize = minOf(maxWidth, maxHeight)
+                                Image(
+                                    painter = painterResource(id = location.selectionImageResId),
+                                    contentDescription = location.name,
+                                    modifier = Modifier.size(containerSize * 0.8f), // 80% of container size
+                                    contentScale = ContentScale.Fit // Maintain aspect ratio
+                                )
+                            }
                         }
                     }
                 }
@@ -414,7 +431,6 @@ private fun LocationRow(
                     modifier = Modifier
                         .weight(0.55f) // Use weight to ensure proper distribution
                         .wrapContentHeight()
-                        .offset(y = (-4).dp) // Slight upward offset for better visual alignment
                         .padding(horizontal = 12.dp) // Internal padding for text
                 ) {
                     Column(
@@ -470,7 +486,6 @@ private fun LocationRow(
                     modifier = Modifier
                         .weight(0.55f) // Use weight to ensure proper distribution
                         .wrapContentHeight()
-                        .offset(y = (-4).dp) // Slight upward offset for better visual alignment
                         .padding(horizontal = 12.dp) // Internal padding for text
                 ) {
                     Column(
@@ -521,17 +536,13 @@ private fun LocationRow(
                     }
                 }
                 
-                // Image container: 45% width, 1:1 aspect ratio (on right, unless overflow is enabled)
+                // Image container: 45% width, 1:1 aspect ratio (on right, consistent for all to maintain row spacing)
+                // CONSISTENT ROW SPACING: All containers use aspectRatio(1f) to maintain same row height
+                // Overflow images (location4, location6) are rendered outside Row, so container height doesn't affect overflow
                 BoxWithConstraints(
                     modifier = Modifier
                         .weight(0.45f) // Use weight to ensure proper distribution
-                        .then(
-                            if (location.shouldOverflowSelectionImage) {
-                                Modifier.fillMaxHeight() // Full height for overflow images
-                            } else {
-                                Modifier.aspectRatio(1f) // 1:1 aspect ratio for normal images
-                            }
-                        )
+                        .aspectRatio(1f) // 1:1 aspect ratio for ALL images (maintains consistent row height)
                         ,
                     contentAlignment = Alignment.Center // Center align all content
                 ) {
@@ -567,11 +578,13 @@ private fun LocationRow(
             // Overflow image: Positioned outside Row to allow overflow into padding area
             // This allows the image to extend beyond the Box constraints into the padding area
             // Positioned to align with the JSON center, then offset to allow overflow
+            // HANDLES: location4 (shouldOverflowSelectionImage = true) only
+            // LOCATION6: Now rendered inside container with clipping (see above), no longer in overflow section
             if (location.shouldOverflowSelectionImage) {
                 BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight() // Match the Row's height
+                        .fillMaxHeight() // Match the Row's height for location4
                 ) {
                     // Calculate container center position - same calculation as the JSON container
                     // The Row has 16dp padding, so available width is maxWidth - 32.dp
@@ -585,8 +598,8 @@ private fun LocationRow(
                         maxWidth - 16.dp - imageContainerWidth / 2 // Center of right container (same as JSON)
                     }
                     
-                    // Position image at the exact center of the JSON container
-                    // The JSON is centered in its container, which is centered at containerCenterX
+                    // LOCATION4 OVERFLOW IMPLEMENTATION: Full height overflow (fillMaxHeight)
+                    // Location4 uses fillMaxHeight to extend beyond container bounds
                     Image(
                         painter = painterResource(id = location.selectionImageResId),
                         contentDescription = location.name,

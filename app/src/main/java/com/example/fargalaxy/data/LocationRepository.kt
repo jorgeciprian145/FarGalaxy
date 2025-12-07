@@ -52,7 +52,7 @@ object LocationRepository {
             description = "", // Not used for capital ships
             weight = "56 million tons",
             length = "1.5 km",
-            population = "5.000 crew members",
+            population = "5,000 crew members",
                 lore = "The ASN Silver Meridian is a Horizon-class battlecruiser operated by the Alliance Star Navy. Designed as a long-range defensive and command vessel, it plays a critical role in safeguarding the most important worlds aligned with the Alliance. Although it is not the largest ship in the fleet, its balanced combination of endurance, presence, and advanced technology makes it one of the most respected vessels in active service.\n\nThe Silver Meridian is most frequently stationed near Aurelia, home of the Alliance Flight Academy and one of the cultural centers of the region. Its presence above the planet is both symbolic and practical. For many young pilots beginning their training on Aurelia, the silhouette of the Silver Meridian hanging quietly in orbit represents the future they aspire to reach: service, mastery, and the responsibility of protecting peaceful worlds."
         ),
         Location(
@@ -84,6 +84,34 @@ object LocationRepository {
             population = "340 personnel (outpost staff)",
             diameter = "3,200 km",
             lore = "Krython B-2 is a cold, mineral-rich moon orbiting Sylthara. Its rugged terrain consists of fractured rock fields, deep impact scars, and pockets of ice that accumulate in permanently shadowed regions. Embedded within its crust are faint concentrations of pre-Sylthium crystalline material, deposited over centuries as particles drifted from Sylthara's ring system and settled across the moon's surface.\n\nThe moon's role in the system is modest but steady. While it is not crucial to the sector's economy, Krython B-2 provides a reliable source of supporting minerals and offers an ideal, stable platform for operations tied to Sylthara's mining industry. For this reason, a large corporate outpost was established here decades ago.\n\nThe outpost is jointly operated by Kalyx Extraction Group and Auricon Dynamics, housing around 340 rotating personnel including miners, technicians, researchers, drone operators, medical staff, and geologists. Its purpose is twofold:  to extract and refine small quantities of pre-Sylthium, and to support the scientific study of the mineral interactions between Krython B-2 and Sylthara.\n\nThough its work is technically demanding, the moon itself holds no broader political or military importance. The Alliance maintains no permanent presence here, visiting only for inspections or when coordinating with transit operations. For most workers, Krython B-2 is viewed as a stable, quiet assignment: isolated, harsh, and unremarkable—but undeniably valuable to the corporations that depend on it."
+        ),
+        Location(
+            id = "location6",
+            name = "Primeway Station",
+            type = "Orbital transit station",
+            classification = LocationClassification.SPACE_STATION,
+            rarity = LocationRarity.COMMON,
+            selectionImageResId = R.drawable.location6selectionscreen,
+            detailImageResId = R.drawable.location6,
+            description = "",
+            weight = "88 million tons",
+            diameter = "8.6 km (outer arms)",
+            population = "8,000 personnel",
+            lore = "Primeway Station is a mid-sized orbital facility positioned along several well-traveled transport routes in the region. Built by the Primeway Transit Consortium decades ago, the station was designed to support steady commercial movement rather than to impress visitors. Its structure consists of a tall central spine surrounded by layered rings, each dedicated to a different function: refueling, maintenance, cargo handling, and short-stay habitation.\n\nTraffic flows constantly through the station's three exterior docking arms, where small and mid-sized ships anchor for quick refueling or routine maintenance. Cargo drones and automated lifts operate around the lower rings, transferring sealed containers between freighters and storage modules before redirecting them toward nearby systems. Upper levels house control centers, life-support systems, navigation offices, and the administrative branches of several transport companies that rely on the station for day-to-day operations.\n\nInside, Primeway hosts a compact but practical mix of services: parts vendors, contract brokers, rest pods, supply counters, and scattered eateries that serve crews passing through on tight schedules. Pilots rarely stay long—just enough to refuel, restock, file transit data, or pick up minor jobs before returning to their route.\n\nAlthough unassuming compared to major hubs in the galaxy, Primeway Station remains an essential waypoint for travelers who depend on reliable infrastructure to keep moving. Its constant movement of vessels, cargo, and personnel gives it a quiet life of its own: always active, always useful, and always ready to serve the next arrival."
+        ),
+        Location(
+            id = "location7",
+            name = "Elyrion",
+            type = "Habitable moon",
+            classification = LocationClassification.PLANET,
+            rarity = LocationRarity.COMMON,
+            selectionImageResId = R.drawable.location7selectionscreen,
+            detailImageResId = R.drawable.location7,
+            description = "Flora and fauna rich",
+            dayDuration = "26 Earth hours",
+            population = "600,000 (Colony)",
+            diameter = "5,600 km",
+            lore = "Elyrion is a large habitable moon known for its lush landscapes, turquoise waters, and remarkably diverse ecosystem. Its mild climate and oxygen-rich atmosphere allowed life to flourish long before human settlement, giving rise to dense forests, vibrant wetlands, and wide coastal regions that shift in color depending on the angle of the sun. At night, patches of bioluminescent vegetation shimmer across the shadowed side, creating a soft glow visible even from orbit.\n\nThe main settlement, Elyrion Haven, is home to roughly 600,000 residents. What began as a small scientific outpost grew into a stable colony centered around agriculture, ecological research, and light tourism. The moon's fertile soils support high-yield crops and unique bioplants that are exported to nearby systems, while research institutes study Elyrion's flora for medical and biotechnological applications.\n\nTravelers describe Elyrion as one of the most welcoming destinations in the region. Its cities are modest but well-integrated into the environment, connected by lightweight magrails and surrounded by carefully preserved natural reserves. Most inhabitants choose Elyrion for its quality of life and its peaceful atmosphere rather than economic opportunity.\n\nThough not considered strategically important, the moon plays a steady role in supporting trade, science, and culture. In a galaxy filled with industrial hubs and harsh frontier worlds, Elyrion stands out simply for being a place where life thrives."
         )
     )
     

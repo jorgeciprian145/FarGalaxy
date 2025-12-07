@@ -644,14 +644,111 @@ fun LocationDetailsScreen(
                         }
                         
                         LocationClassification.SPACE_STATION -> {
-                            // TODO: Implement space station layout when needed
-                            // For now, show a placeholder
+                            // Row 1: Type and Population
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                // Type
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = "Type",
+                                        fontFamily = Exo2,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFFFFFF)
+                                    )
+                                    Text(
+                                        text = location.type,
+                                        fontFamily = Exo2,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.W400,
+                                        color = Color(0xFFFFFFFF),
+                                        lineHeight = 18.sp
+                                    )
+                                }
+                                
+                                // Population
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = "Population",
+                                        fontFamily = Exo2,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFFFFFF)
+                                    )
+                                    Text(
+                                        text = location.population,
+                                        fontFamily = Exo2,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.W400,
+                                        color = Color(0xFFFFFFFF),
+                                        lineHeight = 18.sp
+                                    )
+                                }
+                            }
+                            
+                            // Row 2: Weight and Diameter
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                // Weight
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = "Weight",
+                                        fontFamily = Exo2,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFFFFFF)
+                                    )
+                                    location.weight?.let {
+                                        Text(
+                                            text = it,
+                                            fontFamily = Exo2,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.W400,
+                                            color = Color(0xFFFFFFFF),
+                                            lineHeight = 18.sp
+                                        )
+                                    }
+                                }
+                                
+                                // Diameter
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
                             Text(
-                                text = "Space station details coming soon",
+                                        text = "Diameter",
                                 fontFamily = Exo2,
                                 fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFFFFFF)
                             )
+                                    location.diameter?.let {
+                                        Text(
+                                            text = it,
+                                            fontFamily = Exo2,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.W400,
+                                            color = Color(0xFFFFFFFF),
+                                            lineHeight = 18.sp
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
