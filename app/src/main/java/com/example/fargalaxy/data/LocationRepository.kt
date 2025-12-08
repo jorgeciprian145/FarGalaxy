@@ -50,9 +50,9 @@ object LocationRepository {
             detailImageResId = R.drawable.location3,
             selectionTypeDisplay = "Ship", // Display "Ship" in selection screen
             description = "", // Not used for capital ships
-            weight = "56 million tons",
-            length = "1.5 km",
-            population = "5,000 crew members",
+            weight = "12 million tons",
+            length = "1.1 km",
+            population = "2,000 crew members",
                 lore = "The ASN Silver Meridian is a Horizon-class battlecruiser operated by the Alliance Star Navy. Designed as a long-range defensive and command vessel, it plays a critical role in safeguarding the most important worlds aligned with the Alliance. Although it is not the largest ship in the fleet, its balanced combination of endurance, presence, and advanced technology makes it one of the most respected vessels in active service.\n\nThe Silver Meridian is most frequently stationed near Aurelia, home of the Alliance Flight Academy and one of the cultural centers of the region. Its presence above the planet is both symbolic and practical. For many young pilots beginning their training on Aurelia, the silhouette of the Silver Meridian hanging quietly in orbit represents the future they aspire to reach: service, mastery, and the responsibility of protecting peaceful worlds."
         ),
         Location(
@@ -112,6 +112,22 @@ object LocationRepository {
             population = "600,000 (Colony)",
             diameter = "5,600 km",
             lore = "Elyrion is a large habitable moon known for its lush landscapes, turquoise waters, and remarkably diverse ecosystem. Its mild climate and oxygen-rich atmosphere allowed life to flourish long before human settlement, giving rise to dense forests, vibrant wetlands, and wide coastal regions that shift in color depending on the angle of the sun. At night, patches of bioluminescent vegetation shimmer across the shadowed side, creating a soft glow visible even from orbit.\n\nThe main settlement, Elyrion Haven, is home to roughly 600,000 residents. What began as a small scientific outpost grew into a stable colony centered around agriculture, ecological research, and light tourism. The moon's fertile soils support high-yield crops and unique bioplants that are exported to nearby systems, while research institutes study Elyrion's flora for medical and biotechnological applications.\n\nTravelers describe Elyrion as one of the most welcoming destinations in the region. Its cities are modest but well-integrated into the environment, connected by lightweight magrails and surrounded by carefully preserved natural reserves. Most inhabitants choose Elyrion for its quality of life and its peaceful atmosphere rather than economic opportunity.\n\nThough not considered strategically important, the moon plays a steady role in supporting trade, science, and culture. In a galaxy filled with industrial hubs and harsh frontier worlds, Elyrion stands out simply for being a place where life thrives."
+        ),
+        Location(
+            id = "location8",
+            name = "KEG Stoneweld",
+            type = "Heavy industrial mining barge",
+            classification = LocationClassification.CAPITAL_SHIP,
+            rarity = LocationRarity.COMMON,
+            selectionImageResId = R.drawable.location8selectionscreen,
+            detailImageResId = R.drawable.location8,
+            isFullWidthImage = true, // Image expands to full width
+            selectionTypeDisplay = "Ship", // Display "Ship" in selection screen
+            description = "", // Not used for capital ships
+            weight = "8 million tons",
+            length = "920 m",
+            population = "640 personnel",
+            lore = "The KEG Stoneweld is one of Kalyx Extraction Group's flagship heavy mining barges, engineered for deep-resource extraction in some of the most hostile environments in known space. Built around a reinforced rectangular superstructure, the Stoneweld prioritizes durability over aesthetics: thick armored plating, exposed industrial frameworks, and modular cargo blocks form a silhouette that resembles a mobile refinery more than a starship.\n\nPowered by redundant reactor arrays and supported by a fleet of over three hundred autonomous mining drones, the barge can bore into dense asteroid clusters, skim mineral-rich cloud bands in gas giants, or anchor above unstable lunar surfaces. Its advanced magnetic collectors and onboard nano-refiners allow the Stoneweld to process raw material as it works, drastically reducing hauling costs.\n\nA typical mission lasts several months, during which its crew of engineers, technicians, and extraction specialists live inside long, cramped industrial corridors. Despite its harsh conditions, the Stoneweld is valued for its reliability: stories among KEG teams describe barges surviving impacts that would tear lighter ships apart."
         )
     )
     

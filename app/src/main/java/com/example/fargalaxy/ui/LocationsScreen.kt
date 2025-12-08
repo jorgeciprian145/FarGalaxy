@@ -21,11 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Text
@@ -43,7 +40,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -80,10 +76,10 @@ import com.example.fargalaxy.model.Location
  */
 @Composable
 fun LocationsScreen(
+    modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onLocationClick: (Location) -> Unit = {},
-    shouldResetScroll: Boolean = false,
-    modifier: Modifier = Modifier
+    shouldResetScroll: Boolean = false
 ) {
     // Get discovered locations from repository
     val discoveredLocations = LocationRepository.getDiscoveredLocations()
@@ -127,9 +123,11 @@ fun LocationsScreen(
     
     // Calculate if content is being clipped (scroll position >= 16dp means content moved up past initial spacer)
     // When scrolled 16dp or more, content reaches the clip boundary at 147dp
-    val isContentClipped = derivedStateOf {
-        with(density) {
-            scrollState.value >= 16.dp.toPx().toInt()
+    val isContentClipped = remember {
+        derivedStateOf {
+            with(density) {
+                scrollState.value >= 16.dp.toPx().toInt()
+            }
         }
     }
     
@@ -352,13 +350,7 @@ private fun LocationRow(
     onLocationClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        // Calculate available width after Row's horizontal padding (16dp on each side = 32dp total)
-        val availableRowWidth = maxWidth - 32.dp
-        val imageContainerWidth = availableRowWidth * 0.45f // 45% of available row width
-        val textContainerWidth = availableRowWidth * 0.55f // 55% of available row width
-        
-        Box(modifier = Modifier.fillMaxWidth()) {
+    Box(modifier = modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -370,7 +362,7 @@ private fun LocationRow(
             // Render containers in the correct order based on isImageOnLeft
             if (isImageOnLeft) {
                 // Image container: 45% width, 1:1 aspect ratio (unless overflow is enabled)
-                BoxWithConstraints(
+                Box(
                     modifier = Modifier
                         .weight(0.45f) // Use weight to ensure proper distribution
                         .then(
@@ -379,8 +371,7 @@ private fun LocationRow(
                             } else {
                                 Modifier.aspectRatio(1f) // 1:1 aspect ratio for normal images
                             }
-                        )
-                        ,
+                        ),
                     contentAlignment = Alignment.Center // Center align all content
                 ) {
                     // Background: planetback.json Lottie animation - centered in container
@@ -392,15 +383,15 @@ private fun LocationRow(
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container for normal, 100% for location3 and location6
+                    // Location image on top: 80% of container for normal, 100% for location3, location6, and location8
                     // Overflow images (location4) are rendered outside the Row to allow overflow
-                    // LOCATION3 & LOCATION6: Rendered at 100% size to fill container both horizontally and vertically
+                    // LOCATION3, LOCATION6 & LOCATION8: Rendered at 100% size to fill container both horizontally and vertically
                     if (!location.shouldOverflowSelectionImage) {
-                        // Check if this is location3 or location6 (100% size)
-                        val isLocation3Or6 = location.id == "location3" || location.id == "location6"
+                        // Check if this is location3, location6, or location8 (100% size)
+                        val isLocation3Or6Or8 = location.id == "location3" || location.id == "location6" || location.id == "location8"
                         
-                        if (isLocation3Or6) {
-                            // LOCATION3 & LOCATION6: 100% size - fill container both horizontally and vertically
+                        if (isLocation3Or6Or8) {
+                            // LOCATION3, LOCATION6 & LOCATION8: 100% size - fill container both horizontally and vertically
                             // Rendered directly in same container as JSON to ensure exact same size
                             Image(
                                 painter = painterResource(id = location.selectionImageResId),
@@ -539,11 +530,10 @@ private fun LocationRow(
                 // Image container: 45% width, 1:1 aspect ratio (on right, consistent for all to maintain row spacing)
                 // CONSISTENT ROW SPACING: All containers use aspectRatio(1f) to maintain same row height
                 // Overflow images (location4, location6) are rendered outside Row, so container height doesn't affect overflow
-                BoxWithConstraints(
+                Box(
                     modifier = Modifier
                         .weight(0.45f) // Use weight to ensure proper distribution
-                        .aspectRatio(1f) // 1:1 aspect ratio for ALL images (maintains consistent row height)
-                        ,
+                        .aspectRatio(1f), // 1:1 aspect ratio for ALL images (maintains consistent row height)
                     contentAlignment = Alignment.Center // Center align all content
                 ) {
                     // Background: planetback.json Lottie animation - centered in container
@@ -616,5 +606,4 @@ private fun LocationRow(
             }
         }
     }
-}
 
