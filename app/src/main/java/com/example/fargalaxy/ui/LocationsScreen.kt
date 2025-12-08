@@ -19,10 +19,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Text
@@ -86,25 +89,27 @@ fun LocationsScreen(
     val discoveredLocationsCount = discoveredLocations.size
     
     // Save scroll position to persist when navigating to LocationDetailsScreen and back
-    var savedScrollPosition by rememberSaveable {
+    var savedFirstVisibleItemIndex by rememberSaveable {
+        mutableStateOf(0)
+    }
+    var savedFirstVisibleItemScrollOffset by rememberSaveable {
         mutableStateOf(0)
     }
     
-    // Scroll state: Create new state, will be restored from saved position
-    val scrollState = rememberScrollState()
+    // LazyListState: Create new state, will be restored from saved position
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = if (shouldResetScroll) 0 else savedFirstVisibleItemIndex,
+        initialFirstVisibleItemScrollOffset = if (shouldResetScroll) 0 else savedFirstVisibleItemScrollOffset
+    )
     
-    // Restore scroll position when composable is first created (if not resetting)
+    // Track previous reset flag for scroll reset logic
     var previousResetFlag by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (savedScrollPosition > 0 && !shouldResetScroll) {
-            scrollState.scrollTo(savedScrollPosition)
-        }
-    }
     
     // Save scroll position when it changes (but not when resetting)
-    LaunchedEffect(scrollState.value) {
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
         if (!shouldResetScroll) {
-            savedScrollPosition = scrollState.value
+            savedFirstVisibleItemIndex = listState.firstVisibleItemIndex
+            savedFirstVisibleItemScrollOffset = listState.firstVisibleItemScrollOffset
         }
     }
     
@@ -112,8 +117,9 @@ fun LocationsScreen(
     LaunchedEffect(shouldResetScroll) {
         if (shouldResetScroll && !previousResetFlag) {
             // Only reset when flag changes from false to true (opening from CareerScreen)
-            scrollState.animateScrollTo(0)
-            savedScrollPosition = 0 // Also clear saved position
+            listState.animateScrollToItem(0)
+            savedFirstVisibleItemIndex = 0
+            savedFirstVisibleItemScrollOffset = 0
         }
         previousResetFlag = shouldResetScroll
     }
@@ -121,12 +127,12 @@ fun LocationsScreen(
     // Get density to convert dp to pixels
     val density = LocalDensity.current
     
-    // Calculate if content is being clipped (scroll position >= 16dp means content moved up past initial spacer)
+    // Calculate if content is being clipped (first visible item > 0 or scroll offset >= 16dp means content moved up past initial spacer)
     // When scrolled 16dp or more, content reaches the clip boundary at 147dp
     val isContentClipped = remember {
         derivedStateOf {
             with(density) {
-                scrollState.value >= 16.dp.toPx().toInt()
+                listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset >= 16.dp.toPx().toInt()
             }
         }
     }
@@ -276,36 +282,34 @@ fun LocationsScreen(
                 .fillMaxHeight()
                 .clipToBounds() // Clip content that goes above this boundary
         ) {
-            // Scrollable content column: Content can scroll up and get clipped at the boundary
+            // LazyColumn: Content can scroll up and get clipped at the boundary
+            // Only visible items (and a small buffer) are composed for better performance
             // Initially, content starts 16dp below clip line (via spacer)
-            // Column fills available height to enable proper scrolling
-            Column(
+            LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .verticalScroll(scrollState)
-                    .navigationBarsPadding() // Account for navigation bar height
-                    .padding(bottom = 32.dp), // Allow last row to be 32dp above bottom bar
-                verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control
+                    .navigationBarsPadding(), // Account for navigation bar height
+                contentPadding = PaddingValues(
+                    top = 16.dp, // Initial spacer: Push content down 16dp from clip line
+                    bottom = 32.dp // Allow last row to be 32dp above bottom bar
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
             ) {
-                // Initial spacer: Push content down 16dp from clip line
-                Spacer(modifier = Modifier.height(16.dp))
-                
                 // Location rows: Each row contains a location image container and text container
                 // Rows alternate: first row has image on left, second on right, etc.
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp) // 8px spacing between rows
-                ) {
-                    discoveredLocations.forEachIndexed { index, location ->
-                        val isImageOnLeft = index % 2 == 0 // Alternate: even index = left, odd index = right
-                        LocationRow(
-                            location = location,
-                            isImageOnLeft = isImageOnLeft,
-                            onLocationClick = { onLocationClick(location) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                itemsIndexed(
+                    items = discoveredLocations,
+                    key = { index, location -> location.id } // Use location ID as key for stable identity
+                ) { index, location ->
+                    val isImageOnLeft = index % 2 == 0 // Alternate: even index = left, odd index = right
+                    LocationRow(
+                        location = location,
+                        isImageOnLeft = isImageOnLeft,
+                        onLocationClick = { onLocationClick(location) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
             
