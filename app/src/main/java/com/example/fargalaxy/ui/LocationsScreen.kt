@@ -387,15 +387,15 @@ private fun LocationRow(
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container for normal, 100% for location3, location6, and location8
+                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, and location11
                     // Overflow images (location4) are rendered outside the Row to allow overflow
-                    // LOCATION3, LOCATION6 & LOCATION8: Rendered at 100% size to fill container both horizontally and vertically
+                    // LOCATION3, LOCATION6, LOCATION8 & LOCATION11: Rendered at 100% size to fill container both horizontally and vertically
                     if (!location.shouldOverflowSelectionImage) {
-                        // Check if this is location3, location6, or location8 (100% size)
-                        val isLocation3Or6Or8 = location.id == "location3" || location.id == "location6" || location.id == "location8"
+                        // Check if this is location3, location6, location8, or location11 (100% size)
+                        val isLocation3Or6Or8Or11 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11"
                         
-                        if (isLocation3Or6Or8) {
-                            // LOCATION3, LOCATION6 & LOCATION8: 100% size - fill container both horizontally and vertically
+                        if (isLocation3Or6Or8Or11) {
+                            // LOCATION3, LOCATION6, LOCATION8 & LOCATION11: 100% size - fill container both horizontally and vertically
                             // Rendered directly in same container as JSON to ensure exact same size
                             Image(
                                 painter = painterResource(id = location.selectionImageResId),
@@ -549,20 +549,34 @@ private fun LocationRow(
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container for normal, full height + wider for overflow
+                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, and location11
+                    // Overflow images (location4) are rendered outside the Row to allow overflow
                     if (!location.shouldOverflowSelectionImage) {
-                        // Normal image: 80% of container, maintains aspect ratio
-                        BoxWithConstraints(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center // Center align - no need for .align() on Image
-                        ) {
-                            val containerSize = minOf(maxWidth, maxHeight)
+                        // Check if this is location3, location6, location8, or location11 (100% size)
+                        val isLocation3Or6Or8Or11 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11"
+                        
+                        if (isLocation3Or6Or8Or11) {
+                            // LOCATION3, LOCATION6, LOCATION8 & LOCATION11: 100% size - fill container both horizontally and vertically
                             Image(
                                 painter = painterResource(id = location.selectionImageResId),
                                 contentDescription = location.name,
-                                modifier = Modifier.size(containerSize * 0.8f), // 80% of container size
+                                modifier = Modifier.fillMaxSize(), // 100% - fills container both horizontally and vertically, same size as JSON
                                 contentScale = ContentScale.Fit // Maintain aspect ratio
                             )
+                        } else {
+                            // Normal images: 80% of container, maintains aspect ratio
+                            BoxWithConstraints(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center // Center align - no need for .align() on Image
+                            ) {
+                                val containerSize = minOf(maxWidth, maxHeight)
+                                Image(
+                                    painter = painterResource(id = location.selectionImageResId),
+                                    contentDescription = location.name,
+                                    modifier = Modifier.size(containerSize * 0.8f), // 80% of container size
+                                    contentScale = ContentScale.Fit // Maintain aspect ratio
+                                )
+                            }
                         }
                     }
                 }

@@ -25,6 +25,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import android.graphics.RenderEffect as AndroidRenderEffect
+import android.graphics.Shader
 import androidx.compose.material3.Text
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -44,6 +48,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
@@ -97,6 +103,74 @@ private fun getLocationBadgeContainerColor(rarity: LocationRarity): Color {
         LocationRarity.LEGENDARY -> Color(0x29E7CC52) // #E7CC52 at 16% opacity (0x29 = ~16%)
         LocationRarity.MYTHICAL -> Color(0x29F6823A) // #F6823A at 16% opacity (0x29 = ~16%)
         else -> Color(0x29FFFFFF) // White at 16% opacity (default for COMMON and others)
+    }
+}
+
+/**
+ * Helper function to get the faction badge drawable resource ID based on faction string.
+ * 
+ * @param faction The location's faction
+ * @return The badge drawable resource ID, or null if faction is "None"
+ */
+private fun getFactionBadgeResId(faction: String): Int? {
+    return when (faction) {
+        "Alliance of Starfaring Nations", "Alliance of Star Nations" -> R.drawable.alliancebadge
+        "Independent Systems Federation" -> R.drawable.isfbadge
+        "Navakeshi Star Armada" -> R.drawable.navakeshibadge
+        "None" -> null
+        else -> null
+    }
+}
+
+/**
+ * Helper function to get the faction logo drawable resource ID based on faction string.
+ * 
+ * @param faction The location's faction
+ * @return The logo drawable resource ID, or null if faction is "None"
+ */
+private fun getFactionLogoResId(faction: String): Int? {
+    return when (faction) {
+        "Alliance of Starfaring Nations", "Alliance of Star Nations" -> R.drawable.alliancelogo
+        "Independent Systems Federation" -> R.drawable.isflogo
+        "Navakeshi Star Armada" -> R.drawable.navakeshilogo
+        "None" -> null
+        else -> null
+    }
+}
+
+/**
+ * Helper function to format population text based on location classification.
+ * 
+ * @param population The population value from location data
+ * @param classification The location's classification
+ * @return Formatted population string with appropriate suffix
+ */
+private fun formatPopulation(population: String, classification: LocationClassification): String {
+    return when (classification) {
+        LocationClassification.CAPITAL_SHIP -> "$population crew members"
+        LocationClassification.SPACE_STATION -> "$population personnel"
+        LocationClassification.PLANET -> population // Planets already have descriptive text, keep as is
+    }
+}
+
+/**
+ * Modifier extension to apply backdrop blur effect (API 31+).
+ * Creates a blur effect that blurs the content behind this composable.
+ * Note: This uses RenderEffect which blurs the composable's own content.
+ * For true backdrop blur, the composable needs to be positioned over the content to blur.
+ * 
+ * @param radius The blur radius in pixels
+ * @return Modifier with blur effect applied
+ */
+private fun Modifier.backdropBlur(radius: Float = 35f): Modifier {
+    return this.graphicsLayer {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            renderEffect = AndroidRenderEffect.createBlurEffect(
+                radius,
+                radius,
+                Shader.TileMode.CLAMP
+            ).asComposeRenderEffect()
+        }
     }
 }
 
@@ -158,12 +232,12 @@ fun LocationDetailsScreen(
     // Header bottom: statusBarsPadding + 24dp + 51dp = statusBarsPadding + 75dp
     // Spacing from header to JSON: variable (0dp for full-width, 16dp for 90% width)
     // Planet detail back: variable height (planetDetailBackHeightDp)
-    // Spacing from JSON to badge: 8dp
+    // Spacing from JSON to badge: 12dp (8dp original + 4dp additional)
     // Badge/name Column: tracked via onSizeChanged (badgeNameHeight)
     // Spacing to divider: 24dp (added separately, not included in Column measurement)
-    // Total offset from statusBarsPadding: 75dp + spacing + planetDetailBackHeightDp + 8dp + badgeNameHeight + 24dp
+    // Total offset from statusBarsPadding: 75dp + spacing + planetDetailBackHeightDp + 12dp + badgeNameHeight + 24dp
     val headerToJsonSpacing = if (location.isFullWidthImage) 0.dp else 16.dp
-    val clipBoundaryTop = 75.dp + headerToJsonSpacing + planetDetailBackHeightDp + 8.dp + badgeNameHeight + 24.dp
+    val clipBoundaryTop = 75.dp + headerToJsonSpacing + planetDetailBackHeightDp + 12.dp + badgeNameHeight + 24.dp
     
     Box(modifier = modifier.fillMaxSize()) {
         // Background image: Same as ShipDetailsScreen
@@ -279,6 +353,23 @@ fun LocationDetailsScreen(
                         contentScale = ContentScale.Fit // Maintain aspect ratio
                     )
                     
+                    // Faction logo: Only for Capital Ships, positioned behind location image
+                    // 80% of container size, centered, 8% opacity, maintains aspect ratio
+                    if (location.classification == LocationClassification.CAPITAL_SHIP) {
+                        getFactionLogoResId(location.faction)?.let { logoResId ->
+                            val containerSize = minOf(maxWidth, maxHeight)
+                            Image(
+                                painter = painterResource(id = logoResId),
+                                contentDescription = "Faction logo",
+                                modifier = Modifier
+                                    .size(containerSize * 0.80f) // 80% of container size
+                                    .alpha(0.08f) // 8% opacity
+                                    .align(Alignment.Center), // Center both vertically and horizontally
+                                contentScale = ContentScale.Fit // Maintain aspect ratio
+                            )
+                        }
+                    }
+                    
                     // Location image on top: 90% or full width based on location.isFullWidthImage, maintains aspect ratio
                     // Vertically and horizontally centered relative to the JSON
                     // Fades in over 1 second when screen opens
@@ -306,13 +397,64 @@ fun LocationDetailsScreen(
                             contentScale = ContentScale.Fit // Maintain aspect ratio for 90% width images
                         )
                     }
+                    
+                    // Faction badge button: Positioned based on location classification
+                    // Only shown if faction is not "None"
+                    // Badge size: 120dp (150% of original 80dp size)
+                    // Backdrop blur effect applied to area behind badge
+                    getFactionBadgeResId(location.faction)?.let { badgeResId ->
+                        if (location.classification == LocationClassification.CAPITAL_SHIP) {
+                            // For Capital Ship: Horizontally aligned with location image, at the bottom edge of the image container, no padding
+                            // Badge size: 77.76dp (10% smaller than 86.4dp)
+                            // Backdrop blur layer positioned behind badge area
+                            Box(
+                                modifier = Modifier
+                                    .size(77.76.dp) // 10% smaller than 86.4dp
+                                    .align(Alignment.BottomCenter)
+                                    .backdropBlur(radius = 35f)
+                                    .alpha(0.5f) // Semi-transparent to show blurred content behind
+                            )
+                            // Badge image on top
+                            Image(
+                                painter = painterResource(id = badgeResId),
+                                contentDescription = "Faction badge",
+                                modifier = Modifier
+                                    .size(77.76.dp) // 10% smaller than 86.4dp
+                                    .align(Alignment.BottomCenter)
+                                    .clickable(onClick = { /* TODO: Handle badge click */ }),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            // For Planet/Space Station: Vertically centered relative to location image, positioned to the right with 10% screen width padding
+                            // Backdrop blur layer positioned behind badge area
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp) // 150% bigger than original 80dp
+                                    .align(Alignment.CenterEnd)
+                                    .padding(end = maxWidth * 0.10f) // 10% of screen width padding from right
+                                    .backdropBlur(radius = 35f)
+                                    .alpha(0.5f) // Semi-transparent to show blurred content behind
+                            )
+                            // Badge image on top
+                            Image(
+                                painter = painterResource(id = badgeResId),
+                                contentDescription = "Faction badge",
+                                modifier = Modifier
+                                    .size(120.dp) // 150% bigger than original 80dp
+                                    .align(Alignment.CenterEnd)
+                                    .padding(end = maxWidth * 0.10f) // 10% of screen width padding from right
+                                    .clickable(onClick = { /* TODO: Handle badge click */ }),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    }
                 }
                 
-                // Spacing from planet detail back to badge: 8px
-                Spacer(modifier = Modifier.height(8.dp))
+                // Spacing from planet detail back (image container bottom) to badge: 12dp (8dp + 4dp additional)
+                Spacer(modifier = Modifier.height(12.dp))
                 
                 // Rarity badge and location name container
-                // Positioned 16dp below planet detail back
+                // Positioned 12dp below planet detail back (image container bottom)
                 // Uses Column to stack badge and location name vertically
                 Column(
                     modifier = Modifier
@@ -469,7 +611,7 @@ fun LocationDetailsScreen(
                                         color = Color(0xFFFFFFFF)
                                     )
                                     Text(
-                                        text = location.population,
+                                        text = formatPopulation(location.population, location.classification),
                                         fontFamily = Exo2,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.W400,
@@ -533,6 +675,28 @@ fun LocationDetailsScreen(
                                     }
                                 }
                             }
+                            
+                            // Row 3: Faction (full width)
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Faction",
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFFFFF)
+                                )
+                                Text(
+                                    text = location.faction,
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.W400,
+                                    color = Color(0xFFFFFFFF),
+                                    lineHeight = 18.sp
+                                )
+                            }
                         }
                         
                         LocationClassification.CAPITAL_SHIP -> {
@@ -564,20 +728,20 @@ fun LocationDetailsScreen(
                                     )
                                 }
                                 
-                                // Population (crew)
+                                // Crew
                                 Column(
                                     modifier = Modifier.weight(1f),
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text(
-                                        text = "Population",
+                                        text = "Crew",
                                         fontFamily = Exo2,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFFFFFFFF)
                                     )
                                     Text(
-                                        text = location.population,
+                                        text = formatPopulation(location.population, location.classification),
                                         fontFamily = Exo2,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.W400,
@@ -641,6 +805,28 @@ fun LocationDetailsScreen(
                                     }
                                 }
                             }
+                            
+                            // Row 3: Faction (full width)
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Faction",
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFFFFF)
+                                )
+                                Text(
+                                    text = location.faction,
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.W400,
+                                    color = Color(0xFFFFFFFF),
+                                    lineHeight = 18.sp
+                                )
+                            }
                         }
                         
                         LocationClassification.SPACE_STATION -> {
@@ -685,7 +871,7 @@ fun LocationDetailsScreen(
                                         color = Color(0xFFFFFFFF)
                                     )
                                     Text(
-                                        text = location.population,
+                                        text = formatPopulation(location.population, location.classification),
                                         fontFamily = Exo2,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.W400,
@@ -730,13 +916,13 @@ fun LocationDetailsScreen(
                                     modifier = Modifier.weight(1f),
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                            Text(
+                                    Text(
                                         text = "Diameter",
-                                fontFamily = Exo2,
-                                fontSize = 14.sp,
+                                        fontFamily = Exo2,
+                                        fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFFFFFF)
-                            )
+                                        color = Color(0xFFFFFFFF)
+                                    )
                                     location.diameter?.let {
                                         Text(
                                             text = it,
@@ -748,6 +934,28 @@ fun LocationDetailsScreen(
                                         )
                                     }
                                 }
+                            }
+                            
+                            // Row 3: Faction (full width)
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Faction",
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFFFFF)
+                                )
+                                Text(
+                                    text = location.faction,
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.W400,
+                                    color = Color(0xFFFFFFFF),
+                                    lineHeight = 18.sp
+                                )
                             }
                         }
                     }

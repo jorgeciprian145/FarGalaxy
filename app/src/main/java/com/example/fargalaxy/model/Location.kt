@@ -23,6 +23,7 @@ data class Location(
     val length: String? = null, // Length (e.g., "1.5 km")
     // Common fields
     val population: String, // Population/crew description (e.g., "Billions (interstellar metropolis)" or "5.000 crew members")
+    val faction: String, // Faction the location belongs to (e.g., "Alliance of Starfaring Nations", "Independent Systems Federation", "Navakeshi Star Armada", "None")
     val lore: String // Location lore - paragraph explaining the story of the location
 )
 
