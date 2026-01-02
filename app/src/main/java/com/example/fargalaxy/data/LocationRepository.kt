@@ -222,6 +222,7 @@ object LocationRepository {
             rarity = LocationRarity.UNCOMMON,
             selectionImageResId = R.drawable.location14selectionscreen,
             detailImageResId = R.drawable.location14,
+            isFullWidthImage = true,
             selectionTypeDisplay = "Ship",
             description = "",
             weight = "1.3 million tons",

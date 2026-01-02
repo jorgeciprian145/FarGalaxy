@@ -380,8 +380,16 @@ private fun LocationRow(
                         ),
                     contentAlignment = Alignment.Center // Center align all content
                 ) {
-                    // Background: planetback.json Lottie animation - centered in container
-                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.planetback))
+                    // Background: JSON animation based on location rarity - centered in container
+                    val jsonResourceId = when (location.rarity) {
+                        LocationRarity.COMMON -> R.raw.planetback
+                        LocationRarity.UNCOMMON -> R.raw.planetbackuncommon
+                        LocationRarity.RARE -> R.raw.planetbackrare
+                        LocationRarity.EPIC -> R.raw.planetbackepic
+                        LocationRarity.LEGENDARY -> R.raw.planetbacklegendary
+                        LocationRarity.MYTHICAL -> R.raw.minimythicalradarlocation
+                    }
+                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(jsonResourceId))
                     LottieAnimation(
                         composition = composition,
                         iterations = LottieConstants.IterateForever,
@@ -389,15 +397,15 @@ private fun LocationRow(
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, location11, location13, location14, location16, location21, location22, location23, location25, and location26
+                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, location11, location13, location14, location16, location19, location21, location22, location23, location25, and location26
                     // Overflow images (location4, location13, location22) are rendered outside the Row to allow overflow
-                    // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: Rendered at 100% size to fill container both horizontally and vertically
+                    // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION19, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: Rendered at 100% size to fill container both horizontally and vertically
                     if (!location.shouldOverflowSelectionImage) {
-                        // Check if this is location3, location6, location8, location11, location13, location14, location16, location21, location22, location23, location25, or location26 (100% size)
-                        val isLocation3Or6Or8Or11Or13Or14Or16Or21Or22Or23Or25Or26 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11" || location.id == "location13" || location.id == "location14" || location.id == "location16" || location.id == "location21" || location.id == "location22" || location.id == "location23" || location.id == "location25" || location.id == "location26"
+                        // Check if this is location3, location6, location8, location11, location13, location14, location16, location19, location21, location22, location23, location25, or location26 (100% size)
+                        val isLocation3Or6Or8Or11Or13Or14Or16Or19Or21Or22Or23Or25Or26 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11" || location.id == "location13" || location.id == "location14" || location.id == "location16" || location.id == "location19" || location.id == "location21" || location.id == "location22" || location.id == "location23" || location.id == "location25" || location.id == "location26"
                         
-                        if (isLocation3Or6Or8Or11Or13Or14Or16Or21Or22Or23Or25Or26) {
-                            // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: 100% size - fill container both horizontally and vertically
+                        if (isLocation3Or6Or8Or11Or13Or14Or16Or19Or21Or22Or23Or25Or26) {
+                            // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION19, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: 100% size - fill container both horizontally and vertically
                             // Rendered directly in same container as JSON to ensure exact same size
                             Image(
                                 painter = painterResource(id = location.selectionImageResId),
@@ -544,11 +552,14 @@ private fun LocationRow(
                         .aspectRatio(1f), // 1:1 aspect ratio for ALL images (maintains consistent row height)
                     contentAlignment = Alignment.Center // Center align all content
                 ) {
-                    // Background: minimythicalradarlocation.json for mythical locations, planetback.json for others - centered in container
-                    val jsonResourceId = if (location.rarity == LocationRarity.MYTHICAL) {
-                        R.raw.minimythicalradarlocation
-                    } else {
-                        R.raw.planetback
+                    // Background: JSON animation based on location rarity - centered in container
+                    val jsonResourceId = when (location.rarity) {
+                        LocationRarity.COMMON -> R.raw.planetback
+                        LocationRarity.UNCOMMON -> R.raw.planetbackuncommon
+                        LocationRarity.RARE -> R.raw.planetbackrare
+                        LocationRarity.EPIC -> R.raw.planetbackepic
+                        LocationRarity.LEGENDARY -> R.raw.planetbacklegendary
+                        LocationRarity.MYTHICAL -> R.raw.minimythicalradarlocation
                     }
                     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(jsonResourceId))
                     LottieAnimation(
@@ -558,14 +569,14 @@ private fun LocationRow(
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, location11, location13, location14, location16, location21, location22, location23, location25, and location26
+                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, location11, location13, location14, location16, location19, location21, location22, location23, location25, and location26
                     // Overflow images (location4, location13, location22) are rendered outside the Row to allow overflow
                     if (!location.shouldOverflowSelectionImage) {
-                        // Check if this is location3, location6, location8, location11, location13, location14, location16, location21, location22, location23, location25, or location26 (100% size)
-                        val isLocation3Or6Or8Or11Or13Or14Or16Or21Or22Or23Or25Or26 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11" || location.id == "location13" || location.id == "location14" || location.id == "location16" || location.id == "location21" || location.id == "location22" || location.id == "location23" || location.id == "location25" || location.id == "location26"
+                        // Check if this is location3, location6, location8, location11, location13, location14, location16, location19, location21, location22, location23, location25, or location26 (100% size)
+                        val isLocation3Or6Or8Or11Or13Or14Or16Or19Or21Or22Or23Or25Or26 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11" || location.id == "location13" || location.id == "location14" || location.id == "location16" || location.id == "location19" || location.id == "location21" || location.id == "location22" || location.id == "location23" || location.id == "location25" || location.id == "location26"
                         
-                        if (isLocation3Or6Or8Or11Or13Or14Or16Or21Or22Or23Or25Or26) {
-                            // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: 100% size - fill container both horizontally and vertically
+                        if (isLocation3Or6Or8Or11Or13Or14Or16Or19Or21Or22Or23Or25Or26) {
+                            // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION19, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: 100% size - fill container both horizontally and vertically
                             Image(
                                 painter = painterResource(id = location.selectionImageResId),
                                 contentDescription = location.name,

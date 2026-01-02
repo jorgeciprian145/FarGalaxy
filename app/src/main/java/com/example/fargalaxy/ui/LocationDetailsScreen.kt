@@ -346,11 +346,14 @@ fun LocationDetailsScreen(
                             containerWidth = with(density) { size.width.toDp() }
                         }
                 ) {
-                    // Use planetradarmythical for mythical locations, planetradarlegendary for legendary locations, planetdetailback for others
+                    // Use different JSON animations based on location rarity
                     val jsonResourceId = when (location.rarity) {
-                        LocationRarity.MYTHICAL -> R.raw.planetradarmythical
+                        LocationRarity.COMMON -> R.raw.planetdetailback
+                        LocationRarity.UNCOMMON -> R.raw.planetdetailbackuncommon
+                        LocationRarity.RARE -> R.raw.planetdetailbackrare
+                        LocationRarity.EPIC -> R.raw.planetdetailbackepic
                         LocationRarity.LEGENDARY -> R.raw.planetradarlegendary
-                        else -> R.raw.planetdetailback
+                        LocationRarity.MYTHICAL -> R.raw.planetradarmythical
                     }
                     val planetDetailBackComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(jsonResourceId))
                     LottieAnimation(
