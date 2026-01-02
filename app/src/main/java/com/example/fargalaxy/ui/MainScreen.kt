@@ -19,9 +19,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -167,14 +169,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val onLocationClick: (com.example.fargalaxy.model.Location) -> Unit = { location ->
         selectedLocationForDetails = location
         showLocationDetails = true
-        showLocations = false // Hide locations screen when showing details
+        // Don't hide LocationsScreen - keep it in composition to preserve scroll position
     }
     
     // Handle back from location details
     val onBackFromLocationDetails: () -> Unit = {
         showLocationDetails = false
         selectedLocationForDetails = null
-        showLocations = true // Return to locations screen
+        // LocationsScreen is still in composition, so scroll position is preserved
     }
     
     // Reset the scroll flag after it's been used
@@ -200,18 +202,19 @@ fun MainScreen(modifier: Modifier = Modifier) {
         isFromCareerScreen = false // Not from CareerScreen
         selectedShipForDetails = ship
         showShipDetails = true
-        showShipSelection = false // Hide selection screen when showing details
+        // Don't hide ShipSelectionScreen - keep it in composition to preserve scroll position
     }
     
     // Handle back from ship details - return to previous screen
     val onBackFromShipDetailsUpdated: () -> Unit = {
         showShipDetails = false
         isFromCareerScreen = false
-        // If we came from ShipSelectionScreen, return there; otherwise just hide details (returns to CareerScreen)
+        // If we came from ShipSelectionScreen, it's still in composition so scroll position is preserved
+        // If we came from CareerScreen, just hide details (returns to CareerScreen)
         if (selectedShipForDetails != null) {
             selectedShipForDetails = null
-            shouldResetShipSelectionScroll = false // Don't reset scroll when returning from ShipDetailsScreen
-            showShipSelection = true // Return to selection screen
+            // ShipSelectionScreen is still in composition, so scroll position is preserved
+            // No need to show it again or reset scroll
         }
     }
     
@@ -250,6 +253,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
             showLocationDetails -> {
                 onBackFromLocationDetails()
             }
+            // If ShipDetailsScreen is shown, close it (check before ShipSelectionScreen since it's on top)
+            showShipDetails -> {
+                onBackFromShipDetailsUpdated()
+            }
             // If LocationsScreen is shown, close it
             showLocations -> {
                 onBackFromLocations()
@@ -257,10 +264,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
             // If ShipSelectionScreen is shown, close it
             showShipSelection -> {
                 onBackFromShipSelection()
-            }
-            // If ShipDetailsScreen is shown, close it
-            showShipDetails -> {
-                onBackFromShipDetailsUpdated()
             }
             // If on CareerScreen (page 0), scroll to top then navigate to GalaxyScreen
             pagerState.currentPage == 0 -> {
@@ -361,11 +364,25 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // LocationsScreen overlay - shown on top of everything when showLocations is true
         if (showLocations) {
-            LocationsScreen(
-                onBackClick = onBackFromLocations,
-                onLocationClick = onLocationClick,
-                shouldResetScroll = shouldResetLocationsScroll
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                LocationsScreen(
+                    onBackClick = onBackFromLocations,
+                    onLocationClick = onLocationClick,
+                    shouldResetScroll = shouldResetLocationsScroll
+                )
+                
+                // Block pointer events when LocationDetailsScreen is shown
+                if (showLocationDetails) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                // Consume all pointer events to prevent interaction with LocationsScreen
+                                detectTapGestures { }
+                            }
+                    )
+                }
+            }
         }
         
         // LocationDetailsScreen overlay - shown on top of everything when showLocationDetails is true
@@ -378,11 +395,25 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // ShipSelectionScreen overlay - shown on top of everything when showShipSelection is true
         if (showShipSelection) {
-            ShipSelectionScreen(
-                onBackClick = onBackFromShipSelection,
-                onShipClick = onShipClick,
-                shouldResetScroll = shouldResetShipSelectionScroll
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                ShipSelectionScreen(
+                    onBackClick = onBackFromShipSelection,
+                    onShipClick = onShipClick,
+                    shouldResetScroll = shouldResetShipSelectionScroll
+                )
+                
+                // Block pointer events when ShipDetailsScreen is shown
+                if (showShipDetails) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                // Consume all pointer events to prevent interaction with ShipSelectionScreen
+                                detectTapGestures { }
+                            }
+                    )
+                }
+            }
         }
         
         // ShipDetailsScreen overlay - shown on top of everything when showShipDetails is true

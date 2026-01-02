@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -55,6 +56,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.LocationRepository
 import com.example.fargalaxy.model.Location
+import com.example.fargalaxy.model.LocationRarity
 
 /**
  * LocationsScreen composable - displays the location selection screen where users can view discovered locations.
@@ -387,15 +389,15 @@ private fun LocationRow(
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, and location11
-                    // Overflow images (location4) are rendered outside the Row to allow overflow
-                    // LOCATION3, LOCATION6, LOCATION8 & LOCATION11: Rendered at 100% size to fill container both horizontally and vertically
+                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, location11, location13, location14, location16, location21, location22, location23, location25, and location26
+                    // Overflow images (location4, location13, location22) are rendered outside the Row to allow overflow
+                    // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: Rendered at 100% size to fill container both horizontally and vertically
                     if (!location.shouldOverflowSelectionImage) {
-                        // Check if this is location3, location6, location8, or location11 (100% size)
-                        val isLocation3Or6Or8Or11 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11"
+                        // Check if this is location3, location6, location8, location11, location13, location14, location16, location21, location22, location23, location25, or location26 (100% size)
+                        val isLocation3Or6Or8Or11Or13Or14Or16Or21Or22Or23Or25Or26 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11" || location.id == "location13" || location.id == "location14" || location.id == "location16" || location.id == "location21" || location.id == "location22" || location.id == "location23" || location.id == "location25" || location.id == "location26"
                         
-                        if (isLocation3Or6Or8Or11) {
-                            // LOCATION3, LOCATION6, LOCATION8 & LOCATION11: 100% size - fill container both horizontally and vertically
+                        if (isLocation3Or6Or8Or11Or13Or14Or16Or21Or22Or23Or25Or26) {
+                            // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: 100% size - fill container both horizontally and vertically
                             // Rendered directly in same container as JSON to ensure exact same size
                             Image(
                                 painter = painterResource(id = location.selectionImageResId),
@@ -445,13 +447,14 @@ private fun LocationRow(
                         // Spacing between top line and name label
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // Name label: 16sp, Bold
+                        // Name label: 16sp, Bold, center aligned
                         Text(
                             text = location.name,
                             fontFamily = Exo2,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = Color(0xFFFFFFFF)
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
                         )
                         
                         // Type label: 14sp, regular, 0dp spacing below name
@@ -500,13 +503,14 @@ private fun LocationRow(
                         // Spacing between top line and name label
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // Name label: 16sp, Bold
+                        // Name label: 16sp, Bold, center aligned
                         Text(
                             text = location.name,
                             fontFamily = Exo2,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = Color(0xFFFFFFFF)
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
                         )
                         
                         // Type label: 14sp, regular, 0dp spacing below name
@@ -540,8 +544,13 @@ private fun LocationRow(
                         .aspectRatio(1f), // 1:1 aspect ratio for ALL images (maintains consistent row height)
                     contentAlignment = Alignment.Center // Center align all content
                 ) {
-                    // Background: planetback.json Lottie animation - centered in container
-                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.planetback))
+                    // Background: minimythicalradarlocation.json for mythical locations, planetback.json for others - centered in container
+                    val jsonResourceId = if (location.rarity == LocationRarity.MYTHICAL) {
+                        R.raw.minimythicalradarlocation
+                    } else {
+                        R.raw.planetback
+                    }
+                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(jsonResourceId))
                     LottieAnimation(
                         composition = composition,
                         iterations = LottieConstants.IterateForever,
@@ -549,14 +558,14 @@ private fun LocationRow(
                         contentScale = ContentScale.FillBounds
                     )
                     
-                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, and location11
-                    // Overflow images (location4) are rendered outside the Row to allow overflow
+                    // Location image on top: 80% of container for normal, 100% for location3, location6, location8, location11, location13, location14, location16, location21, location22, location23, location25, and location26
+                    // Overflow images (location4, location13, location22) are rendered outside the Row to allow overflow
                     if (!location.shouldOverflowSelectionImage) {
-                        // Check if this is location3, location6, location8, or location11 (100% size)
-                        val isLocation3Or6Or8Or11 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11"
+                        // Check if this is location3, location6, location8, location11, location13, location14, location16, location21, location22, location23, location25, or location26 (100% size)
+                        val isLocation3Or6Or8Or11Or13Or14Or16Or21Or22Or23Or25Or26 = location.id == "location3" || location.id == "location6" || location.id == "location8" || location.id == "location11" || location.id == "location13" || location.id == "location14" || location.id == "location16" || location.id == "location21" || location.id == "location22" || location.id == "location23" || location.id == "location25" || location.id == "location26"
                         
-                        if (isLocation3Or6Or8Or11) {
-                            // LOCATION3, LOCATION6, LOCATION8 & LOCATION11: 100% size - fill container both horizontally and vertically
+                        if (isLocation3Or6Or8Or11Or13Or14Or16Or21Or22Or23Or25Or26) {
+                            // LOCATION3, LOCATION6, LOCATION8, LOCATION11, LOCATION13, LOCATION14, LOCATION16, LOCATION21, LOCATION22, LOCATION23, LOCATION25 & LOCATION26: 100% size - fill container both horizontally and vertically
                             Image(
                                 painter = painterResource(id = location.selectionImageResId),
                                 contentDescription = location.name,
@@ -608,16 +617,26 @@ private fun LocationRow(
                     
                     // LOCATION4 OVERFLOW IMPLEMENTATION: Full height overflow (fillMaxHeight)
                     // Location4 uses fillMaxHeight to extend beyond container bounds
+                    // LOCATION13: Additional 30dp offset to the right (16dp + 12dp + 8dp - 4dp - 2dp)
+                    // LOCATION22: Additional 15dp offset to the left (30dp - 8dp - 4dp - 2dp - 2dp - 1dp, inverted direction), 11dp down, and 5% bigger
+                    val isLocation13 = location.id == "location13"
+                    val isLocation22 = location.id == "location22"
+                    val baseOffset = (containerCenterX - maxWidth / 2) + (if (isImageOnLeft) -16.dp else 16.dp)
+                    val finalOffsetX = when {
+                        isLocation13 -> baseOffset + 32.dp // Offset to the right
+                        isLocation22 -> baseOffset - 27.dp // Offset to the left (inverted, 15dp less than 30dp)
+                        else -> baseOffset
+                    }
+                    val finalOffsetY = if (isLocation22) 11.dp else 0.dp // 11dp down for location22
+                    
                     Image(
                         painter = painterResource(id = location.selectionImageResId),
                         contentDescription = location.name,
                         modifier = Modifier
                             .fillMaxHeight() // Full height - width will scale proportionally
+                            .then(if (isLocation22) Modifier.scale(1.15f) else Modifier) // 5% bigger for location22
                             .align(Alignment.Center) // Center vertically (same as JSON)
-                            .offset(
-                                // Offset from Box center to container center, then add overflow offset
-                                x = (containerCenterX - maxWidth / 2) + (if (isImageOnLeft) -16.dp else 16.dp)
-                            ),
+                            .offset(x = finalOffsetX, y = finalOffsetY),
                         contentScale = ContentScale.FillHeight // Fill height, maintain aspect ratio
                     )
                 }

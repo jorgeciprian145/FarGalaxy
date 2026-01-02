@@ -227,23 +227,35 @@ fun LocationDetailsScreen(
         )
         
         // Location details galaxy background: Behind JSON but outside image container
-        // 60% of screen height, maintains original aspect ratio, horizontally centered, top-aligned, 32% opacity
+        // 60% of screen height, maintains original aspect ratio, horizontally centered, top-aligned
+        // 64% opacity for mythical locations, 32% opacity for others
         // Positioned at the absolute top of the screen (no padding)
+        // Use mythicalgalaxybackground for mythical locations, locationdetailsgalaxy for others
+        val galaxyBackgroundResId = if (location.rarity == LocationRarity.MYTHICAL) {
+            R.drawable.mythicalgalaxybackground
+        } else {
+            R.drawable.locationdetailsgalaxy
+        }
+        val galaxyBackgroundOpacity = if (location.rarity == LocationRarity.MYTHICAL) {
+            0.64f // 64% opacity for mythical locations
+        } else {
+            0.32f // 32% opacity for others
+        }
+        val imageHeight = screenHeightDp * 0.60f // 60% of screen height
         BoxWithConstraints(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
+                .height(imageHeight)
         ) {
-            val imageHeight = screenHeightDp * 0.60f // 60% of screen height
             Image(
-                painter = painterResource(id = R.drawable.locationdetailsgalaxy),
+                painter = painterResource(id = galaxyBackgroundResId),
                 contentDescription = null,
                 modifier = Modifier
-                    .height(imageHeight)
-                    .fillMaxWidth()
-                    .alpha(0.32f) // 32% opacity
+                    .fillMaxSize()
+                    .alpha(galaxyBackgroundOpacity)
                     .align(Alignment.TopCenter),
-                contentScale = ContentScale.FillHeight // Fill height, maintain aspect ratio (excess trimmed from sides)
+                contentScale = ContentScale.Crop // Fill entire container, maintain aspect ratio (excess trimmed from sides)
             )
         }
         
@@ -334,7 +346,13 @@ fun LocationDetailsScreen(
                             containerWidth = with(density) { size.width.toDp() }
                         }
                 ) {
-                    val planetDetailBackComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.planetdetailback))
+                    // Use planetradarmythical for mythical locations, planetradarlegendary for legendary locations, planetdetailback for others
+                    val jsonResourceId = when (location.rarity) {
+                        LocationRarity.MYTHICAL -> R.raw.planetradarmythical
+                        LocationRarity.LEGENDARY -> R.raw.planetradarlegendary
+                        else -> R.raw.planetdetailback
+                    }
+                    val planetDetailBackComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(jsonResourceId))
                     LottieAnimation(
                         composition = planetDetailBackComposition,
                         iterations = LottieConstants.IterateForever,
@@ -581,7 +599,7 @@ fun LocationDetailsScreen(
                                 // Type
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Type",
@@ -613,7 +631,7 @@ fun LocationDetailsScreen(
                                 // Population
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Population",
@@ -642,7 +660,7 @@ fun LocationDetailsScreen(
                                 // Day duration
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Day duration",
@@ -666,7 +684,7 @@ fun LocationDetailsScreen(
                                 // Diameter
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Diameter",
@@ -691,7 +709,7 @@ fun LocationDetailsScreen(
                             // Row 3: Faction (full width)
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
                             ) {
                                 Text(
                                     text = "Faction",
@@ -721,7 +739,7 @@ fun LocationDetailsScreen(
                                 // Type
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Type",
@@ -743,7 +761,7 @@ fun LocationDetailsScreen(
                                 // Population (crew)
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Population",
@@ -772,7 +790,7 @@ fun LocationDetailsScreen(
                                 // Weight
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Weight",
@@ -796,7 +814,7 @@ fun LocationDetailsScreen(
                                 // Length
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Length",
@@ -821,7 +839,7 @@ fun LocationDetailsScreen(
                             // Row 3: Faction (full width)
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
                             ) {
                                 Text(
                                     text = "Faction",
@@ -851,7 +869,7 @@ fun LocationDetailsScreen(
                                 // Type
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Type",
@@ -873,7 +891,7 @@ fun LocationDetailsScreen(
                                 // Population
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Population",
@@ -902,7 +920,7 @@ fun LocationDetailsScreen(
                                 // Weight
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Weight",
@@ -926,7 +944,7 @@ fun LocationDetailsScreen(
                                 // Diameter
                                 Column(
                                     modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
                                 ) {
                                     Text(
                                         text = "Diameter",
@@ -951,7 +969,7 @@ fun LocationDetailsScreen(
                             // Row 3: Faction (full width)
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
                             ) {
                                 Text(
                                     text = "Faction",
@@ -979,7 +997,7 @@ fun LocationDetailsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     Text(
                         text = "Location's lore",
