@@ -48,6 +48,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.fargalaxy.data.LocationRepository
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
@@ -316,9 +317,15 @@ fun CareerScreen(
                 Spacer(modifier = Modifier.height(20.dp))
                 
                 // ProgressSection: Contains the progress items row (no title shown, handled separately above)
+                // Calculate location counts from repository
+                val discoveredLocations = LocationRepository.getDiscoveredLocations()
+                val discoveredLocationsCount = discoveredLocations.size
+                val totalLocationsCount = LocationRepository.getTotalLocationsCount()
+                val locationsCountText = "$discoveredLocationsCount/$totalLocationsCount"
+                
                 ProgressSection(
                     starshipsCount = starshipsCountText,
-                    locationsCount = "1/30",
+                    locationsCount = locationsCountText,
                     collectiblesCount = "1/30",
                     showTitle = false, // Don't show title, it's handled separately above
                     onStarshipsClick = onShipSelectionClick,

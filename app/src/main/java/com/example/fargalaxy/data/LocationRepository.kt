@@ -15,7 +15,7 @@ object LocationRepository {
         Location(
             id = "location1",
             name = "Aurelia",
-            type = "Core World",
+            type = "Core world",
             classification = LocationClassification.PLANET,
             rarity = LocationRarity.COMMON,
             selectionImageResId = R.drawable.location1selectionscreen,
@@ -30,7 +30,7 @@ object LocationRepository {
         Location(
             id = "location2",
             name = "Valthor",
-            type = "Core World",
+            type = "Core world",
             classification = LocationClassification.PLANET,
             rarity = LocationRarity.COMMON,
             selectionImageResId = R.drawable.location2selectionscreen,
@@ -138,7 +138,7 @@ object LocationRepository {
         Location(
             id = "location9",
             name = "Hjorn-4",
-            type = "Colony World",
+            type = "Colony world",
             classification = LocationClassification.PLANET,
             rarity = LocationRarity.COMMON,
             selectionImageResId = R.drawable.location9selectionscreen,
@@ -233,7 +233,7 @@ object LocationRepository {
         Location(
             id = "location15",
             name = "Khaelor Prime",
-            type = "Colony World",
+            type = "Colony world",
             classification = LocationClassification.PLANET,
             rarity = LocationRarity.UNCOMMON,
             selectionImageResId = R.drawable.location15selectionscreen,
@@ -378,7 +378,7 @@ object LocationRepository {
         Location(
             id = "location24",
             name = "Navakesh",
-            type = "Core World",
+            type = "Core world",
             classification = LocationClassification.PLANET,
             rarity = LocationRarity.LEGENDARY,
             selectionImageResId = R.drawable.location24selectionscreen,
@@ -430,6 +430,11 @@ object LocationRepository {
      * TODO: Filter to only show discovered locations when discovery system is implemented
      */
     fun getDiscoveredLocations(): List<Location> = locations
+    
+    /**
+     * Get the total number of locations in the repository.
+     */
+    fun getTotalLocationsCount(): Int = locations.size
     
     /**
      * Get a location by its ID.
