@@ -73,6 +73,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track if LocationDetailsScreen should be shown
     var showLocationDetails by remember { mutableStateOf(false) }
     
+    // Track if FactionDetailsScreen should be shown
+    var showFactionDetails by remember { mutableStateOf(false) }
+    
+    // Track the selected faction for details
+    var selectedFactionForDetails by remember { mutableStateOf<String?>(null) }
+    
     // Track if we should reset scroll in ShipSelectionScreen (true when opening from CareerScreen)
     var shouldResetShipSelectionScroll by remember { mutableStateOf(false) }
     
@@ -249,6 +255,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back button press
     BackHandler(enabled = true) {
         when {
+            // If FactionDetailsScreen is shown, close it
+            showFactionDetails -> {
+                showFactionDetails = false
+                selectedFactionForDetails = null
+            }
             // If LocationDetailsScreen is shown, close it
             showLocationDetails -> {
                 onBackFromLocationDetails()
@@ -389,7 +400,34 @@ fun MainScreen(modifier: Modifier = Modifier) {
         if (showLocationDetails && selectedLocationForDetails != null) {
             LocationDetailsScreen(
                 location = selectedLocationForDetails!!,
-                onBackClick = onBackFromLocationDetails
+                onBackClick = onBackFromLocationDetails,
+                onFactionBadgeClick = { faction ->
+                    selectedFactionForDetails = faction
+                    showFactionDetails = true
+                }
+            )
+            
+            // Block pointer events when FactionDetailsScreen is shown
+            if (showFactionDetails) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            // Consume all pointer events to prevent interaction with LocationDetailsScreen
+                            detectTapGestures { }
+                        }
+                )
+            }
+        }
+        
+        // FactionDetailsScreen overlay - shown on top of everything when showFactionDetails is true
+        if (showFactionDetails && selectedFactionForDetails != null) {
+            FactionDetailsScreen(
+                faction = selectedFactionForDetails!!,
+                onBackClick = {
+                    showFactionDetails = false
+                    selectedFactionForDetails = null
+                }
             )
         }
         

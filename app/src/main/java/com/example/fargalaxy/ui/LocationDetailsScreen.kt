@@ -157,12 +157,14 @@ private fun formatPopulation(population: String, classification: LocationClassif
  * 
  * @param location The location to display details for
  * @param onBackClick Callback when the back button is clicked
+ * @param onFactionBadgeClick Callback when the faction badge is clicked
  * @param modifier Modifier for the screen
  */
 @Composable
 fun LocationDetailsScreen(
     location: Location,
     onBackClick: () -> Unit = {},
+    onFactionBadgeClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Scroll state to track scrolling
@@ -430,67 +432,36 @@ fun LocationDetailsScreen(
                         )
                     }
                     
-                    // Faction badge button: Positioned based on location classification
+                    // Faction badge button: Same placement and size for all location types
                     // Only shown if faction is not "None"
-                    // Badge size: 119.7504dp (10% bigger than 108.864dp)
+                    // Horizontally aligned with location image, at the bottom edge of the image container, no padding
+                    // Badge size: 83.82528dp (same as ships)
                     // Backdrop blur effect applied to area behind badge
                     getFactionBadgeResId(location.faction)?.let { badgeResId ->
-                        if (location.classification == LocationClassification.CAPITAL_SHIP) {
-                            // For Capital Ship: Horizontally aligned with location image, at the bottom edge of the image container, no padding
-                            // Badge size: 83.82528dp (30% smaller than 119.7504dp for ships)
-                            // Backdrop blur layer positioned behind badge area
-                            Box(
-                                modifier = Modifier
-                                    .size(83.82528.dp)
-                                    .align(Alignment.BottomCenter)
-                                    .graphicsLayer {
-                                        renderEffect = AndroidRenderEffect.createBlurEffect(
-                                            35f, // Blur radius
-                                            35f,
-                                            Shader.TileMode.CLAMP
-                                        ).asComposeRenderEffect()
-                                    }
-                                    .alpha(0.5f) // Semi-transparent to show blurred content behind
-                            )
-                            // Badge image on top
-                            Image(
-                                painter = painterResource(id = badgeResId),
-                                contentDescription = "Faction badge",
-                                modifier = Modifier
-                                    .size(83.82528.dp)
-                                    .align(Alignment.BottomCenter)
-                                    .clickable(onClick = { /* TODO: Handle badge click */ }),
-                                contentScale = ContentScale.Fit
-                            )
-                        } else {
-                            // For Planet/Space Station: Vertically centered relative to location image, positioned to the right with 10% screen width padding
-                            // Backdrop blur layer positioned behind badge area
-                            Box(
-                                modifier = Modifier
-                                    .size(119.7504.dp)
-                                    .align(Alignment.CenterEnd)
-                                    .padding(end = maxWidth * 0.10f) // 10% of screen width padding from right
-                                    .graphicsLayer {
-                                        renderEffect = AndroidRenderEffect.createBlurEffect(
-                                            35f, // Blur radius
-                                            35f,
-                                            Shader.TileMode.CLAMP
-                                        ).asComposeRenderEffect()
-                                    }
-                                    .alpha(0.5f) // Semi-transparent to show blurred content behind
-                            )
-                            // Badge image on top
-                            Image(
-                                painter = painterResource(id = badgeResId),
-                                contentDescription = "Faction badge",
-                                modifier = Modifier
-                                    .size(119.7504.dp)
-                                    .align(Alignment.CenterEnd)
-                                    .padding(end = maxWidth * 0.10f) // 10% of screen width padding from right
-                                    .clickable(onClick = { /* TODO: Handle badge click */ }),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
+                        // Backdrop blur layer positioned behind badge area
+                        Box(
+                            modifier = Modifier
+                                .size(83.82528.dp)
+                                .align(Alignment.BottomCenter)
+                                .graphicsLayer {
+                                    renderEffect = AndroidRenderEffect.createBlurEffect(
+                                        35f, // Blur radius
+                                        35f,
+                                        Shader.TileMode.CLAMP
+                                    ).asComposeRenderEffect()
+                                }
+                                .alpha(0.5f) // Semi-transparent to show blurred content behind
+                        )
+                        // Badge image on top
+                        Image(
+                            painter = painterResource(id = badgeResId),
+                            contentDescription = "Faction badge",
+                            modifier = Modifier
+                                .size(83.82528.dp)
+                                .align(Alignment.BottomCenter)
+                                .clickable(onClick = { onFactionBadgeClick(location.faction) }),
+                            contentScale = ContentScale.Fit
+                        )
                     }
                 }
                 
