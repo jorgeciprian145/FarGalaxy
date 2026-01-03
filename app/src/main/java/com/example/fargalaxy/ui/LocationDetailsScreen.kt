@@ -165,13 +165,8 @@ fun LocationDetailsScreen(
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // Scroll state to track when content is being clipped
+    // Scroll state to track scrolling
     val scrollState = rememberScrollState()
-    
-    // Calculate if content is being scrolled (scroll position > 0 means scrolling has started)
-    val isScrolling = derivedStateOf {
-        scrollState.value > 0
-    }
     
     // Get density to convert dp to pixels
     val density = LocalDensity.current
@@ -182,11 +177,8 @@ fun LocationDetailsScreen(
     // Track the actual measured width of the image container to ensure full width
     var containerWidth by remember { mutableStateOf(0.dp) }
     
-    // Track planet detail back JSON size to calculate clip boundary position
+    // Track planet detail back JSON size
     var planetDetailBackSize by remember { mutableStateOf(IntSize.Zero) }
-    
-    // Track the actual height of the badge/name Column (without the 24dp spacer)
-    var badgeNameHeight by remember { mutableStateOf(0.dp) }
     
     // Animated alpha for location image fade-in
     var imageVisible by remember { mutableStateOf(false) }
@@ -201,21 +193,13 @@ fun LocationDetailsScreen(
         imageVisible = true
     }
     
-    // Convert planet detail back height to dp for calculation
-    val planetDetailBackHeightDp = with(density) {
-        planetDetailBackSize.height.toDp()
+    // Calculate if content is being scrolled (scroll position > 0 means scrolling has started)
+    // Header bottom is at statusBarsPadding + 75dp, trim line appears when scrolling starts
+    val isContentClipped = derivedStateOf {
+        with(density) {
+            scrollState.value > 0
+        }
     }
-    
-    // Calculate clip boundary position:
-    // Header bottom: statusBarsPadding + 24dp + 51dp = statusBarsPadding + 75dp
-    // Spacing from header to JSON: variable (0dp for full-width, 16dp for 90% width)
-    // Planet detail back: variable height (planetDetailBackHeightDp)
-    // Spacing from JSON to badge: 8dp
-    // Badge/name Column: tracked via onSizeChanged (badgeNameHeight)
-    // Spacing to divider: 24dp (added separately, not included in Column measurement)
-    // Total offset from statusBarsPadding: 75dp + spacing + planetDetailBackHeightDp + 8dp + badgeNameHeight + 24dp
-    val headerToJsonSpacing = if (location.isFullWidthImage) 0.dp else 16.dp
-    val clipBoundaryTop = 75.dp + headerToJsonSpacing + planetDetailBackHeightDp + 8.dp + badgeNameHeight + 24.dp
     
     Box(modifier = modifier.fillMaxSize()) {
         // Background image: Same as ShipDetailsScreen
@@ -281,7 +265,7 @@ fun LocationDetailsScreen(
         // Top controls area: Title and back button
         // Positioned at the same location as ShipDetailsScreen
         // (statusBarsPadding + 24.dp from top, 51.dp height)
-        // These elements remain static and above the clipping line
+        // These elements remain static at the top
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -317,17 +301,44 @@ fun LocationDetailsScreen(
             )
         }
         
-        // Fixed content above clip boundary: Planet detail back, location image, badge, and name
-        // Positioned to span edge-to-edge - statusBarsPadding only affects top, not horizontal width
+        // Trim line container: Positioned 16dp under the bottom edge of the back button
+        // Trim line appears when content is being scrolled
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .statusBarsPadding() // Match header's statusBarsPadding for consistent spacing
-                .padding(top = 75.dp) // Header bottom (24dp + 51dp = 75dp)
+                .statusBarsPadding()
+                .padding(top = 91.dp) // Header bottom (24dp + 51dp = 75dp) + 16dp
                 .fillMaxWidth()
+                .height(1.dp)
+        ) {
+            // White divider line: Only visible when content is being clipped
+            if (isContentClipped.value) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Color(0xFFFFFFFF)) // White line, full width, 1px
+                )
+            }
+        }
+        
+        // Scrollable content container: All content scrolls together
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(top = 92.dp) // Header bottom (24dp + 51dp = 75dp) + 16dp + 1dp for trim line
+                .fillMaxWidth()
+                .fillMaxHeight()
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .verticalScroll(scrollState)
+                    .navigationBarsPadding()
+                    .padding(bottom = 64.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 // Spacing between header and planet detail back: 
                 // 16px for 90% width images, 0px for full-width images (since JSON is scaled larger)
@@ -483,8 +494,8 @@ fun LocationDetailsScreen(
                     }
                 }
                 
-                // Spacing from planet detail back to badge: 12dp (8dp + 4dp)
-                Spacer(modifier = Modifier.height(12.dp))
+                // Spacing from planet detail back to badge: 20dp (12dp + 8dp additional)
+                Spacer(modifier = Modifier.height(20.dp))
                 
                 // Rarity badge and location name container
                 // Positioned 16dp below planet detail back
@@ -492,11 +503,7 @@ fun LocationDetailsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .onSizeChanged { size ->
-                            // Measure the badge/name Column height (without the 24dp Spacer)
-                            badgeNameHeight = with(density) { size.height.toDp() }
-                        },
+                        .padding(horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Rarity badge: Container with rarity text (e.g., "COMMON LOCATION", "UNCOMMON LOCATION")
@@ -536,51 +543,20 @@ fun LocationDetailsScreen(
                     )
                 }
                 
-                // Spacing from location name to divider line: 24px
-                // Moved outside inner Column to be a direct child of outer Column
+                // Spacing from location name to divider: 24dp
                 Spacer(modifier = Modifier.height(24.dp))
-            }
-        }
-        
-        // Clip boundary container: Positioned at the horizontal divider line
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .padding(top = clipBoundaryTop)
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .clipToBounds()
-        ) {
-            // Horizontal divider line: Fixed at clip boundary, 32% opacity
-            // Initially has 16px padding on sides, expands to full width when scrolling
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .then(
-                        if (isScrolling.value) {
-                            Modifier.fillMaxWidth()
-                        } else {
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                        }
-                    )
-                    .height(1.dp)
-                    .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))
-            )
-            
-            // Scrollable content column: Only content below the divider scrolls
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .verticalScroll(scrollState)
-                    .navigationBarsPadding()
-                    .padding(bottom = 64.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                // Initial spacer: Push content down 24dp from divider line
+                
+                // Horizontal divider line: Static divider between name and content
+                // White color, 32% opacity, 1dp height, 16dp horizontal padding
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .padding(horizontal = 16.dp)
+                        .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))
+                )
+                
+                // Spacing from divider to content: 24dp
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // Two-row layout for location details
