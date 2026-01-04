@@ -125,13 +125,31 @@ fun FactionDetailsScreen(
     }
     
     Box(modifier = modifier.fillMaxSize()) {
-        // Background image: Changes based on faction, full width, maintains aspect ratio, aligned to top
-        Image(
-            painter = painterResource(id = getFactionBackgroundResId(faction)),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+        // Solid background color behind everything
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF111419))
         )
+        
+        // Background image: Changes based on faction, 60% screen height, maintains aspect ratio, aligned to top
+        // Excess width is trimmed on the sides
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .fillMaxHeight(0.6f) // 60% of screen height
+                .clipToBounds() // Clip excess on sides
+        ) {
+            Image(
+                painter = painterResource(id = getFactionBackgroundResId(faction)),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
+                contentScale = ContentScale.Crop // Crop sides to maintain aspect ratio at 60% height
+            )
+        }
         
         // Top gradient overlay: Covers 35% of screen height, creating a fade effect at the top.
         // Gradient transitions from solid black at the top to transparent at the bottom.
