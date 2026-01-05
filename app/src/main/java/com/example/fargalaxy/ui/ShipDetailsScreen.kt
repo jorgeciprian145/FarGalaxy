@@ -533,7 +533,7 @@ fun ShipDetailsScreen(
                             // Type
                             Column(
                                 modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
                             ) {
                                 Text(
                                     text = "Type",
@@ -555,7 +555,7 @@ fun ShipDetailsScreen(
                             // Manufacturer
                             Column(
                                 modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
                             ) {
                                 Text(
                                     text = "Manufacturer",
@@ -584,7 +584,7 @@ fun ShipDetailsScreen(
                             // Crew capacity
                             Column(
                                 modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
                             ) {
                                 Text(
                                     text = "Crew capacity",
@@ -614,7 +614,7 @@ fun ShipDetailsScreen(
                             // Dimensions
                             Column(
                                 modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
                             ) {
                                 Text(
                                     text = "Dimensions",
@@ -649,7 +649,7 @@ fun ShipDetailsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
                         Text(
                             text = "Ship's lore",
