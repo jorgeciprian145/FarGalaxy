@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -86,6 +87,7 @@ fun CareerScreen(
     onViewShipClick: () -> Unit = {},
     onShipSelectionClick: () -> Unit = {},
     onLocationsClick: () -> Unit = {},
+    onBackClick: () -> Unit = {},
     totalTravelMinutes: Int = 45, // TODO: Connect to actual data source
     isPageActive: Boolean = true,
     scrollToTopTrigger: Int = 0,
@@ -194,20 +196,39 @@ fun CareerScreen(
         // Title area: "Your career" text positioned 16dp above the indicator
         // Indicator is at 48.dp from top (with status bar padding), so title should be at 32.dp (48.dp - 16.dp)
         // Rendered after gradients so it appears on top
-        Column(
+        // Back button positioned on the right side, 16dp from edge, vertically aligned with indicator (same height container)
+        Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .statusBarsPadding()
-                .padding(top = 32.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(top = 48.dp)
+                .fillMaxWidth()
+                .height(51.dp)
         ) {
+            // Title: Centered horizontally, positioned at top of container (matching original 32dp position relative to indicator)
             Text(
                 text = "Your career",
                 fontFamily = Exo2,
                 fontSize = 18.sp,
                 color = Color(0xFFFFFFFF),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-16).dp) // Offset to maintain original 32dp position (48dp - 16dp)
+            )
+            
+            // Back button: Right side, 16dp from edge, 4dp upward offset, rotated 180 degrees
+            Image(
+                painter = painterResource(id = R.drawable.backdefault),
+                contentDescription = "Back",
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 16.dp)
+                    .offset(y = (-20).dp) // 20dp upward offset (4dp + 8dp + 8dp)
+                    .height(51.dp)
+                    .graphicsLayer { rotationZ = 180f } // Rotate 180 degrees to the right
+                    .clickable(onClick = onBackClick),
+                contentScale = ContentScale.Fit
             )
         }
         
@@ -250,13 +271,14 @@ fun CareerScreen(
                 // Initial spacer: Push content down 8dp from clip line (so it starts at 123dp visually)
                 Spacer(modifier = Modifier.height(0.dp))
                 
-                // Total Time Traveling Counter - NEW COMPONENT
+                // Total Focus Time Counter - NEW COMPONENT
                 TotalTimeTravelingCounter(
                     totalMinutes = totalTravelMinutes,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // 20.dp spacing between time counter and level card
+                // Spacing between Total Focus Time counter and level card
+                // TODO: Adjust height value as needed for desired spacing
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // LevelStatusCard: combines the badge and SpaceLicenseCard into a single component
@@ -271,6 +293,121 @@ fun CareerScreen(
                         .fillMaxWidth()
                         .padding(start = 8.dp, end = 16.dp)
                 )
+                
+                // 24.dp spacing between level card and stats section
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Stats section: 3 columns with current streak, sessions this month, and total sessions
+                // TODO: Replace placeholder values with dynamic data
+                // Placeholder values: currentStreak = "3 d", sessionsThisMonth = "2", totalSessions = "3"
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between columns
+                ) {
+                    // Column 1: Current streak
+                    // TODO: Replace placeholder with dynamic currentStreak value
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between value and label
+                    ) {
+                        // Value: Bold, 32sp
+                        // TODO: This will be a dynamic value - current streak of days
+                        // TODO: Adjust spacing between number and "d" by changing spacedBy value
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp), // Adjust spacing between "3" and "d"
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Text(
+                                text = "3",
+                                fontFamily = Exo2,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 32.sp,
+                                color = Color(0xFFFFFFFF)
+                            )
+                            Text(
+                                text = "d",
+                                fontFamily = Exo2,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 32.sp,
+                                color = Color(0xFFFFFFFF)
+                            )
+                        }
+                        // Label: Regular, 14sp
+                        // TODO: Adjust lineHeight value as needed for desired line spacing
+                        Text(
+                            text = "Current\nstreak",
+                            fontFamily = Exo2,
+                            fontWeight = FontWeight.W400,
+                            fontSize = 14.sp,
+                            lineHeight = 18.sp, // Adjust line height for multi-line label
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    
+                    // Column 2: Sessions this month
+                    // TODO: Replace placeholder with dynamic sessionsThisMonth value
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between value and label
+                    ) {
+                        // Value: Bold, 32sp
+                        // TODO: This will be a dynamic value - number of completed travels this month
+                        Text(
+                            text = "2",
+                            fontFamily = Exo2,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 32.sp,
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                        // Label: Regular, 14sp
+                        // TODO: Adjust lineHeight value as needed for desired line spacing
+                        Text(
+                            text = "Sessions\nthis month",
+                            fontFamily = Exo2,
+                            fontWeight = FontWeight.W400,
+                            fontSize = 14.sp,
+                            lineHeight = 18.sp, // Adjust line height for multi-line label
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    
+                    // Column 3: Total sessions
+                    // TODO: Replace placeholder with dynamic totalSessions value
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between value and label
+                    ) {
+                        // Value: Bold, 32sp
+                        // TODO: This will be a dynamic value - total number of sessions since app download
+                        Text(
+                            text = "3",
+                            fontFamily = Exo2,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 32.sp,
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                        // Label: Regular, 14sp
+                        // TODO: Adjust lineHeight value as needed for desired line spacing
+                        Text(
+                            text = "Total\nsessions",
+                            fontFamily = Exo2,
+                            fontWeight = FontWeight.W400,
+                            fontSize = 14.sp,
+                            lineHeight = 18.sp, // Adjust line height for multi-line label
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
                 
                 // 20.dp spacing between level card and horizontal divider
                 Spacer(modifier = Modifier.height(28.dp))
@@ -339,140 +476,48 @@ fun CareerScreen(
                 // Horizontal line 2: 1dp height white line with 16dp side padding
                 HorizontalDivider(modifier = Modifier.fillMaxWidth())
                 
-                // 20.dp spacing between second horizontal line and "Achievements" label
-                Spacer(modifier = Modifier.height(20.dp))
-                
-                // "Achievements" section header: Row with "Achievements" label on left and count on right
-                // Both labels are bottom-aligned, with 16dp padding on respective sides
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    // "Achievements" label: 18sp, bold, Exo2 font
-                    Text(
-                        text = "Achievements",
-                        fontFamily = Exo2,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color(0xFFFFFFFF)
-                    )
-                    
-                    // Dynamic count label: 20sp, bold, Exo2 font (e.g., "1/24")
-                    Text(
-                        text = "1/24", // TODO: Make this dynamic based on unlocked achievements
-                        fontFamily = Exo2,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color(0xFFFFFFFF)
-                    )
-                }
-                
-                // 20.dp spacing between labels and achievements grid
-                Spacer(modifier = Modifier.height(28.dp))
-                
-                // Achievements grid container: 4 columns with 16dp side padding
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    // Column 1
-                    AchievementColumn(
-                        achievementName = "Locked",
-                        isLocked = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    // Column 2
-                    AchievementColumn(
-                        achievementName = "Locked",
-                        isLocked = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    // Column 3
-                    AchievementColumn(
-                        achievementName = "Locked",
-                        isLocked = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    // Column 4
-                    AchievementColumn(
-                        achievementName = "Locked",
-                        isLocked = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                
-                // 20.dp spacing between achievements grid and VIEW ALL button
-                Spacer(modifier = Modifier.height(20.dp))
-                
-                // VIEW ALL button: Fixed size, same style as CANCEL/STOP TRAVEL buttons
-                // Centered horizontally in the available width
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ViewAllButton(
-                        onClick = { /* TODO: Navigate to achievements screen */ }
-                    )
-                }
-                
-                // 20.dp spacing between VIEW ALL button and horizontal divider
-                Spacer(modifier = Modifier.height(28.dp))
-                
-                // Horizontal divider: Separates Achievements section from Travel log
-                HorizontalDivider(modifier = Modifier.fillMaxWidth())
-                
                 // 20.dp spacing between horizontal divider and "Travel log" label
                 Spacer(modifier = Modifier.height(20.dp))
                 
-                // "Travel log" label: 18sp, bold, Exo2 font with 24dp horizontal padding
+                // "Session log" label: 18sp, bold, Exo2 font with 16dp horizontal padding
                 Text(
-                    text = "Travel log",
+                    text = "Session log",
                     fontFamily = Exo2,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color(0xFFFFFFFF),
-                    modifier = Modifier.padding(horizontal = 16.dp) // 24dp padding to match Discoveries/Achievements
+                    modifier = Modifier.padding(horizontal = 16.dp) // 16dp padding to match other sections
                 )
                 
-                // 16.dp spacing between "Travel log" label and travel log rows
+                // 16.dp spacing between "Session log" label and session log rows
                 Spacer(modifier = Modifier.height(20.dp))
                 
-                // Travel log rows container
+                // Session log rows container
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp) // 8dp spacing between rows
+                    verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
                 ) {
                     TravelLogRow(
-                        label = "Total time traveling",
-                        value = "75 mins"
+                        label = "Last session",
+                        value = "Today",
+                        isValueBold = true
                     )
                     TravelLogRow(
-                        label = "Total successful travels",
-                        value = "4"
+                        label = "Sessions this week",
+                        value = "2"
                     )
                     TravelLogRow(
-                        label = "Total attempted travels",
-                        value = "8"
+                        label = "Sessions this month",
+                        value = "2"
                     )
                     TravelLogRow(
-                        label = "Longest travel time",
-                        value = "45 mins"
+                        label = "Average session time",
+                        value = "15 m"
                     )
                     TravelLogRow(
-                        label = "Top speed reached",
-                        value = "48965523689"
-                    )
-                    TravelLogRow(
-                        label = "Travel success ratio",
-                        value = "50%"
+                        label = "Longest session",
+                        value = "20 mins",
+                        isValueBold = true
                     )
                 }
             }
@@ -534,7 +579,7 @@ private fun TotalTimeTravelingCounter(
                             leftSvgWidth = size.width.toDp()
                         }
                     }
-                    .padding(end = internalPadding) // 8dp internal padding to center content
+                    .padding(end = internalPadding) // 12dp internal padding to center content
             ) {
                 val leftComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration))
                 LottieAnimation(
@@ -566,7 +611,7 @@ private fun TotalTimeTravelingCounter(
                             rightSvgWidth = size.width.toDp()
                         }
                     }
-                    .padding(start = internalPadding) // 8dp internal padding to center content
+                    .padding(start = internalPadding) // 12dp internal padding to center content
             ) {
                 val rightComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration))
                 LottieAnimation(
@@ -676,9 +721,9 @@ private fun AutoSizingTimeDisplay(
             )
         }
         
-        // "Total time traveling" label: 14sp, regular (doesn't scale)
+        // "Total focus time" label: 14sp, regular (doesn't scale)
         Text(
-            text = "Total time traveling",
+            text = "Total focus time",
             fontFamily = Exo2,
             fontSize = 14.sp,
             color = Color(0xFFFFFFFF)
@@ -935,21 +980,23 @@ private fun ViewAllButton(
  * TravelLogRow composable - displays a single row in the travel log section.
  * 
  * Each row has:
- * - Fixed height of 44dp
+ * - Fixed height of 56dp
  * - Full width with 16dp side padding from screen edges
  * - Internal padding of 16dp on sides (total 32dp from screen edge to content)
- * - Two labels: left (14sp regular) and right (20sp bold)
+ * - Two labels: left (14sp regular) and right (20sp, can be bold or regular)
  * - Labels are bottom-aligned with each other
- * - Row is vertically centered (labels are centered in the 44dp container)
+ * - Row is vertically centered (labels are centered in the 56dp container)
  * 
- * @param label The left label text (e.g., "Total time traveling")
- * @param value The right value text (e.g., "75 mins")
+ * @param label The left label text (e.g., "Last session")
+ * @param value The right value text (e.g., "Today")
+ * @param isValueBold Whether the value should be displayed in bold (default false)
  * @param modifier Modifier for the row
  */
 @Composable
 private fun TravelLogRow(
     label: String,
     value: String,
+    isValueBold: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -978,11 +1025,11 @@ private fun TravelLogRow(
                 color = Color(0xFFFFFFFF)
             )
             
-            // Right value: 20sp, bold
+            // Right value: 20sp, bold or regular based on isValueBold
             Text(
                 text = value,
                 fontFamily = Exo2,
-                fontWeight = FontWeight.Bold,
+                fontWeight = if (isValueBold) FontWeight.Bold else FontWeight.W400,
                 fontSize = 20.sp,
                 color = Color(0xFFFFFFFF)
             )

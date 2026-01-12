@@ -321,6 +321,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onViewShipClick = onViewShipClick,
                         onShipSelectionClick = onShipSelectionClick,
                         onLocationsClick = onLocationsClick,
+                        onBackClick = { navigateToPage(1) }, // Navigate to GalaxyScreen
                         totalTravelMinutes = 45, // TODO: Connect to actual data source
                         isPageActive = pagerState.currentPage == 0 && !showShipDetails && !showShipSelection && !showLocations && !showLocationDetails, // Track when page is active and overlays are closed
                         scrollToTopTrigger = scrollToTopTrigger

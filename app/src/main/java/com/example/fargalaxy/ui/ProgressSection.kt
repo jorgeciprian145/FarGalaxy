@@ -132,10 +132,10 @@ fun ProgressSection(
                 modifier = Modifier.weight(1f) // Apply weight at call site in RowScope
             )
             
-            // ProgressItem 3: Collectibles (fixed width, no weight)
+            // ProgressItem 3: Medals (fixed width, no weight)
             ProgressItem(
                 badgeResId = R.drawable.collectiblesbadge,
-                title = "Collectibles",
+                title = "Medals",
                 count = collectiblesCount
             )
         }
