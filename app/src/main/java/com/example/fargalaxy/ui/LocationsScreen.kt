@@ -248,14 +248,26 @@ fun LocationsScreen(
         // Counter container: Positioned 24dp below the back button
         // Back button bottom: statusBarsPadding + 24.dp + 51.dp = statusBarsPadding + 75.dp
         // Container top: statusBarsPadding + 75.dp + 24.dp = statusBarsPadding + 99.dp
-        // Center-aligned counter: Shows "X Discovered" (no sort button)
-        Box(
+        // Center-aligned labels: Sector name and "X Discovered" (no sort button)
+        Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .statusBarsPadding()
                 .padding(top = 99.dp) // 24dp below back button (75.dp + 24.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between labels
         ) {
+            // Sector name: Center-aligned, Regular, 14sp
+            Text(
+                text = "Astra Verge", // TODO: Replace with dynamic sector name
+                fontFamily = Exo2,
+                fontWeight = FontWeight.W400, // Regular
+                fontSize = 14.sp,
+                color = Color(0xFFFFFFFF),
+                textAlign = TextAlign.Center
+            )
+            
             // Counter: Center-aligned, Dynamic number, Bold, 20sp
             Text(
                 text = "$discoveredLocationsCount Discovered",
@@ -263,18 +275,15 @@ fun LocationsScreen(
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 color = Color(0xFFFFFFFF),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth()
+                textAlign = TextAlign.Center
             )
         }
         
         // Clip boundary container: Box positioned 16dp below the counter container
         // Counter container top: statusBarsPadding + 99.dp
-        // Counter container height: ~32.dp (text height)
-        // Counter container bottom: statusBarsPadding + 99.dp + 32.dp = statusBarsPadding + 131.dp
-        // Clip line is at: statusBarsPadding + 131.dp + 16.dp = statusBarsPadding + 147.dp
+        // Counter container height: ~32.dp (text height) + sector name height
+        // Counter container bottom: statusBarsPadding + 99.dp + labels height
+        // Clip line is at: statusBarsPadding + 99.dp + labels height + 16.dp
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -294,7 +303,7 @@ fun LocationsScreen(
                     .fillMaxHeight()
                     .navigationBarsPadding(), // Account for navigation bar height
                 contentPadding = PaddingValues(
-                    top = 16.dp, // Initial spacer: Push content down 16dp from clip line
+                    top = 32.dp, // 32dp spacing between bottom of "26 Discovered" label and first row
                     bottom = 32.dp // Allow last row to be 32dp above bottom bar
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows

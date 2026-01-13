@@ -277,24 +277,8 @@ fun CareerScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                // Spacing between Total Focus Time counter and level card
+                // Spacing between Total Focus Time counter and stats section
                 // TODO: Adjust height value as needed for desired spacing
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // LevelStatusCard: combines the badge and SpaceLicenseCard into a single component
-                // Card has 8px left margin and 16px right margin, full width otherwise
-                LevelStatusCard(
-                    title = "Space license",
-                    xpCurrent = 320,
-                    xpToNext = 680,
-                    level = 1,
-                    progress = 320f / (320f + 680f), // 320 / 1000 = 0.32
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 8.dp, end = 16.dp)
-                )
-                
-                // 24.dp spacing between level card and stats section
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // Stats section: 3 columns with current streak, sessions this month, and total sessions
@@ -409,10 +393,26 @@ fun CareerScreen(
                     }
                 }
                 
-                // 20.dp spacing between level card and horizontal divider
-                Spacer(modifier = Modifier.height(28.dp))
+                // 32.dp spacing between stats section and level card (24dp + 8dp additional)
+                Spacer(modifier = Modifier.height(32.dp))
                 
-                // Horizontal divider: Separates level card from current ship section
+                // LevelStatusCard: combines the badge and SpaceLicenseCard into a single component
+                // Card has 8px left margin and 16px right margin, full width otherwise
+                LevelStatusCard(
+                    title = "Space license",
+                    xpCurrent = 320,
+                    xpToNext = 680,
+                    level = 1,
+                    progress = 320f / (320f + 680f), // 320 / 1000 = 0.32
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 16.dp)
+                )
+                
+                // 24.dp spacing between level card and horizontal divider
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Horizontal divider: Separates stats section from current ship section
                 HorizontalDivider(modifier = Modifier.fillMaxWidth())
                 
                 // Current ship row: Contains ship name labels on left and "VIEW" button on right
@@ -566,11 +566,27 @@ private fun TotalTimeTravelingCounter(
         
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = sidePadding), // 16dp padding from screen edges
-            horizontalArrangement = Arrangement.Center, // Center the entire group
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(0.dp), // No spacing, we'll use Spacers
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Outer left decorative element: sidedecoration2 - positioned at left edge with 16dp padding
+            Box(
+                modifier = Modifier
+                    .padding(start = sidePadding) // 16dp padding from left edge
+            ) {
+                val outerLeftComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration2))
+                LottieAnimation(
+                    composition = outerLeftComposition,
+                    iterations = 1, // Play once
+                    modifier = Modifier.width(24.dp), // Fixed width of 24dp
+                    contentScale = ContentScale.Fit // Maintain original aspect ratio
+                )
+            }
+            
+            // 8dp spacing between outer left sidedecoration2 and inner left sidedecoration
+            Spacer(modifier = Modifier.width(8.dp))
+            
             // Left decorative element: Lottie animation
             Box(
                 modifier = Modifier
@@ -579,7 +595,6 @@ private fun TotalTimeTravelingCounter(
                             leftSvgWidth = size.width.toDp()
                         }
                     }
-                    .padding(end = internalPadding) // 12dp internal padding to center content
             ) {
                 val leftComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration))
                 LottieAnimation(
@@ -589,6 +604,9 @@ private fun TotalTimeTravelingCounter(
                     contentScale = ContentScale.Fit // Maintain original aspect ratio
                 )
             }
+            
+            // Spacer: Stretches to fill available space between inner left decoration and center content
+            Spacer(modifier = Modifier.weight(1f))
             
             // Center content: Number + "m" + label (responsive, auto-scales)
             // This should be centered as a unit with the SVGs hugging it
@@ -603,6 +621,9 @@ private fun TotalTimeTravelingCounter(
                 )
             }
             
+            // Spacer: Stretches to fill available space between center content and inner right decoration
+            Spacer(modifier = Modifier.weight(1f))
+            
             // Right decorative element: Lottie animation (mirrored)
             Box(
                 modifier = Modifier
@@ -611,7 +632,6 @@ private fun TotalTimeTravelingCounter(
                             rightSvgWidth = size.width.toDp()
                         }
                     }
-                    .padding(start = internalPadding) // 12dp internal padding to center content
             ) {
                 val rightComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration))
                 LottieAnimation(
@@ -620,6 +640,25 @@ private fun TotalTimeTravelingCounter(
                     modifier = Modifier
                         .height(88.dp) // Fixed height of 88px
                         .scale(scaleX = -1f, scaleY = 1f), // Mirror horizontally
+                    contentScale = ContentScale.Fit // Maintain original aspect ratio
+                )
+            }
+            
+            // 8dp spacing between inner right sidedecoration and outer right sidedecoration2
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            // Outer right decorative element: sidedecoration2 (rotated 180 degrees) - positioned at right edge with 16dp padding
+            Box(
+                modifier = Modifier
+                    .padding(end = sidePadding) // 16dp padding from right edge
+            ) {
+                val outerRightComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration2))
+                LottieAnimation(
+                    composition = outerRightComposition,
+                    iterations = 1, // Play once
+                    modifier = Modifier
+                        .width(24.dp) // Fixed width of 24dp
+                        .graphicsLayer { rotationZ = 180f }, // Rotate 180 degrees
                     contentScale = ContentScale.Fit // Maintain original aspect ratio
                 )
             }

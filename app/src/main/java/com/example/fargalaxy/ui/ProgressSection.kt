@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -204,14 +205,27 @@ private fun ProgressItem(
         // 8dp spacing between count and title
         Spacer(modifier = Modifier.height(2.dp))
         
-        // Title label: 14sp, regular, Exo2 font (now second, below)
-        Text(
-            text = title,
-            fontFamily = Exo2,
-            fontWeight = FontWeight.W400, // Regular
-            fontSize = 14.sp,
-            color = Color(0xFFFFFFFF)
-        )
+        // Title label with chevron: 14sp, regular, Exo2 font (now second, below)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp), // 4dp spacing between label and chevron
+            verticalAlignment = Alignment.CenterVertically // Vertically align label and chevron
+        ) {
+            Text(
+                text = title,
+                fontFamily = Exo2,
+                fontWeight = FontWeight.W400, // Regular
+                fontSize = 14.sp,
+                color = Color(0xFFFFFFFF)
+            )
+            Image(
+                painter = painterResource(id = R.drawable.chevronsmall),
+                contentDescription = null,
+                modifier = Modifier
+                    .height(12.dp) // 12dp height, maintaining aspect ratio
+                    .offset(y = 1.dp), // Move downwards by 1dp
+                contentScale = ContentScale.Fit // Maintain original aspect ratio
+            )
+        }
     }
 }
 

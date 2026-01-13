@@ -339,7 +339,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 }
                 2 -> {
                     // VaultScreen - content only (no background/noise/indicator)
-                    VaultScreen()
+                    VaultScreen(
+                        onBackClick = { navigateToPage(1) } // Navigate to GalaxyScreen
+                    )
                 }
             }
         }
