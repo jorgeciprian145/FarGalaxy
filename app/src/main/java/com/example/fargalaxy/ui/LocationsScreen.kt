@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.Text
@@ -249,12 +250,21 @@ fun LocationsScreen(
         // Back button bottom: statusBarsPadding + 24.dp + 51.dp = statusBarsPadding + 75.dp
         // Container top: statusBarsPadding + 75.dp + 24.dp = statusBarsPadding + 99.dp
         // Center-aligned labels: Sector name and "X Discovered" (no sort button)
+        // Track labels container height to position clip line 8dp below it
+        var labelsContainerHeight by remember { mutableStateOf(0.dp) }
+        val density = LocalDensity.current
+        
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .statusBarsPadding()
                 .padding(top = 99.dp) // 24dp below back button (75.dp + 24.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .onSizeChanged { size ->
+                    with(density) {
+                        labelsContainerHeight = size.height.toDp()
+                    }
+                },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between labels
         ) {
@@ -279,16 +289,14 @@ fun LocationsScreen(
             )
         }
         
-        // Clip boundary container: Box positioned 16dp below the counter container
-        // Counter container top: statusBarsPadding + 99.dp
-        // Counter container height: ~32.dp (text height) + sector name height
-        // Counter container bottom: statusBarsPadding + 99.dp + labels height
-        // Clip line is at: statusBarsPadding + 99.dp + labels height + 16.dp
+        // Clip boundary container: Box positioned 8dp below the labels container
+        // Labels container top: statusBarsPadding + 99.dp
+        // Clip line is at: statusBarsPadding + 99.dp + labelsContainerHeight + 8.dp
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .statusBarsPadding()
-                .padding(top = 147.dp) // Clip boundary position: 16dp below counter container
+                .padding(top = 99.dp + labelsContainerHeight + 8.dp) // Clip boundary position: 8dp below labels container
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .clipToBounds() // Clip content that goes above this boundary

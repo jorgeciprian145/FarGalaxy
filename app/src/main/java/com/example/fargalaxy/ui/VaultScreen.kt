@@ -30,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -39,6 +41,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -144,28 +149,62 @@ fun VaultScreen(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top label: "Astra Verge" - Bold, 18sp
-            Text(
-                text = "Astra Verge", // TODO: Replace with dynamic value
-                fontFamily = Exo2,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color(0xFFFFFFFF),
-                textAlign = TextAlign.Center
-            )
-            
-            // 0dp spacing between labels
-            Spacer(modifier = Modifier.height(0.dp))
-            
-            // Bottom label: "Current galaxy sector" - Regular, 14sp
-            Text(
-                text = "Current galaxy sector",
-                fontFamily = Exo2,
-                fontWeight = FontWeight.W400, // Regular
-                fontSize = 14.sp,
-                color = Color(0xFFFFFFFF),
-                textAlign = TextAlign.Center
-            )
+            // Box containing labels (centered) and info icon (positioned to the right)
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Labels group: "Astra Verge" and "Current galaxy sector" - centered horizontally
+                // Measure labels width to position icon correctly
+                var labelsWidth by remember { mutableStateOf(0.dp) }
+                val density = LocalDensity.current
+                
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center) // Center the labels group
+                        .onSizeChanged { size ->
+                            with(density) {
+                                labelsWidth = size.width.toDp()
+                            }
+                        },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between labels
+                ) {
+                    // Top label: "Astra Verge" - Bold, 18sp
+                    Text(
+                        text = "Astra Verge", // TODO: Replace with dynamic value
+                        fontFamily = Exo2,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    // Bottom label: "Current galaxy sector" - Regular, 14sp
+                    Text(
+                        text = "Current galaxy sector",
+                        fontFamily = Exo2,
+                        fontWeight = FontWeight.W400, // Regular
+                        fontSize = 14.sp,
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                
+                // Info icon: Positioned 16dp to the right of the labels group, vertically aligned
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center) // Start from center
+                        .offset(x = labelsWidth / 2 + 16.dp), // Move to the right edge of labels + 16dp
+                    contentAlignment = Alignment.Center // Center the icon vertically within the box
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.infoicon),
+                        contentDescription = "Info",
+                        modifier = Modifier.height(40.dp), // 40dp height, maintaining aspect ratio
+                        contentScale = ContentScale.Fit
+                    )
+                }
+            }
             
             // 12dp spacing between bottom label and counter composable
             Spacer(modifier = Modifier.height(12.dp))
@@ -186,20 +225,20 @@ fun VaultScreen(
                     .padding(horizontal = 16.dp) // 16dp side padding
             ) {
                 val totalWidth = maxWidth
-                val centerColumnWidth = totalWidth * 0.70f // 70% of screen width
+                val subColumnWidth = totalWidth * 0.32f // 32% of screen width for each sub-column
+                val centerColumnWidth = totalWidth * 0.68f // 68% of screen width
+                val subColumnSpacing = totalWidth * 0.04f // 4% of screen width spacing between sub-columns
                 val columnSpacing = 16.dp
-                val centerInternalPadding = 8.dp
-                val centerSubColumnSpacing = 16.dp // 16dp spacing between internal columns
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(columnSpacing), // 16dp spacing between columns
                     verticalAlignment = Alignment.CenterVertically // Vertically align JSONs and labels
                 ) {
-                    // Left column: Rectangle JSON aligned to the left, stretches to fill remaining space
+                    // Left column: Rectangle JSON aligned towards the center component, stretches to fill remaining space
                     Box(
                         modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.CenterStart // Align rectangle to the left
+                        contentAlignment = Alignment.CenterEnd // Align rectangle towards the center (right side of left column)
                     ) {
                         val leftRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle))
                         LottieAnimation(
@@ -210,19 +249,17 @@ fun VaultScreen(
                         )
                     }
                     
-                    // Center column: 60% of screen width, subdivided into 2 columns
+                    // Center column: 68% of screen width, subdivided into 2 columns with 4% spacing
                     Box(
                         modifier = Modifier.width(centerColumnWidth)
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = centerInternalPadding), // 8dp internal padding to sides
-                            horizontalArrangement = Arrangement.spacedBy(centerSubColumnSpacing) // 16dp spacing between sub-columns
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(subColumnSpacing) // 4% of screen width spacing between sub-columns
                         ) {
-                            // Left sub-column: Focus time stats
+                            // Left sub-column: Focus time stats - 32% of screen width
                             Column(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.width(subColumnWidth),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between labels
                             ) {
@@ -248,9 +285,9 @@ fun VaultScreen(
                                 )
                             }
                             
-                            // Right sub-column: Sector rewards stats
+                            // Right sub-column: Sector rewards stats - 32% of screen width
                             Column(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.width(subColumnWidth),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between labels
                             ) {
@@ -278,10 +315,10 @@ fun VaultScreen(
                         }
                     }
                     
-                    // Right column: Rectangle JSON aligned to the right, stretches to fill remaining space
+                    // Right column: Rectangle JSON aligned towards the center component, stretches to fill remaining space
                     Box(
                         modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.CenterEnd // Align rectangle to the right
+                        contentAlignment = Alignment.CenterStart // Align rectangle towards the center (left side of right column)
                     ) {
                         val rightRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle))
                         LottieAnimation(
@@ -295,7 +332,98 @@ fun VaultScreen(
                     }
                 }
             }
+            
+            // 24dp spacing between stats section and button
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // "VIEW SECTOR DETAILS" button
+            ViewSectorDetailsButton(
+                onClick = {}, // TODO: Add callback for viewing sector details
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+            )
+            
+            // 24dp spacing between button and divider
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Horizontal divider: Separates button from content below
+            HorizontalDivider(modifier = Modifier.fillMaxWidth())
         }
+    }
+}
+
+/**
+ * HorizontalDivider composable - displays a horizontal white line with side padding.
+ * 
+ * Creates a 1dp height white line with 16dp horizontal padding on both sides.
+ * Used to separate sections in the VaultScreen.
+ * 
+ * @param modifier Modifier for the divider
+ */
+@Composable
+private fun HorizontalDivider(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .height(1.dp)
+            .padding(horizontal = 16.dp) // 16dp side padding
+            .fillMaxWidth()
+            .background(Color(0x66FFFFFF)) // White color with 40% opacity (0x66 = ~40% alpha)
+    )
+}
+
+/**
+ * ViewSectorDetailsButton composable - displays the "VIEW SECTOR DETAILS" button with secondary style.
+ * 
+ * Uses the same visual format as ViewButton but with dynamic width:
+ * - Transparent background with white border
+ * - White text
+ * - Rounded corners (80dp radius)
+ * - Dynamic width: text width + 16dp padding on each side
+ * - Fixed height: 32dp
+ * - 16sp font size, regular weight
+ * 
+ * @param onClick Callback when button is clicked
+ * @param modifier Modifier for the button
+ */
+@Composable
+private fun ViewSectorDetailsButton(
+    onClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val textMeasurer = rememberTextMeasurer()
+    val buttonText = "VIEW SECTOR DETAILS"
+    
+    // Measure text width
+    val textLayoutResult = textMeasurer.measure(
+        text = buttonText,
+        style = TextStyle(
+            fontFamily = Exo2,
+            fontSize = 16.sp
+        )
+    )
+    val textWidth = with(LocalDensity.current) { textLayoutResult.size.width.toDp() }
+    val buttonWidth = textWidth + 48.dp // 24dp padding on each side
+    
+    Box(
+        modifier = modifier
+            .width(buttonWidth)
+            .height(32.dp)
+            .clip(RoundedCornerShape(80.dp))
+            .border(
+                width = 1.dp,
+                color = Color(0xFFFFFFFF), // White border
+                shape = RoundedCornerShape(80.dp)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = buttonText,
+            fontFamily = Exo2,
+            fontSize = 16.sp,
+            color = Color(0xFFFFFFFF), // White text
+            textAlign = TextAlign.Center
+        )
     }
 }
 
