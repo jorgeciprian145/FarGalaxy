@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -59,6 +60,14 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
+
+/**
+ * Enum to represent the selected tab in ShipDetailsScreen.
+ */
+private enum class ShipDetailsTab {
+    DETAILS,
+    SPECS
+}
 
 /**
  * Helper function to convert ShipRarity enum to display text.
@@ -189,6 +198,8 @@ fun ShipDetailsScreen(
     // Determine if the ship being viewed is the current ship
     val isCurrentShip = ship.id == currentShip.id
     val titleText = if (isCurrentShip) "Your current ship" else "Ship details"
+    // Tab state: Track which tab is selected (DETAILS or SPECS)
+    var selectedTab by remember { mutableStateOf(ShipDetailsTab.DETAILS) }
     // Scroll state to track when content is being clipped
     val scrollState = rememberScrollState()
     
@@ -212,14 +223,17 @@ fun ShipDetailsScreen(
     }
     
     // Calculate clip boundary position:
-    // Header bottom: statusBarsPadding + 48dp + 51dp = statusBarsPadding + 99dp
+    // Fixed content Box starts at: statusBarsPadding + 64.dp
     // Ship image: variable height (shipImageHeightDp)
     // Badge/name Column: tracked via onSizeChanged (badgeNameHeight)
-    // Spacing to divider: 24dp (added separately, not included in Column measurement)
-    // Total offset from statusBarsPadding: 99dp + shipImageHeightDp + badgeNameHeight + 24dp
-    val clipBoundaryTop = 84.dp + shipImageHeightDp + badgeNameHeight
+    // Spacing to divider/trim line: 24dp (divider should be 24dp below ship name)
+    // Additional offset: 40dp (temporary adjustment to test positioning)
+    // Total offset from statusBarsPadding: 64.dp + shipImageHeightDp + badgeNameHeight + 24.dp + 40.dp
+    val clipBoundaryTop = 64.dp + shipImageHeightDp + badgeNameHeight + 24.dp + 40.dp
     
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
         // Background image
         Image(
             painter = painterResource(id = R.drawable.shipscreenbackground),
@@ -388,18 +402,20 @@ fun ShipDetailsScreen(
             // Rarity badge and ship name container
             // Positioned below the ship image container
             // Uses Column to stack badge and ship name vertically
+            // Applied vertical offset of -28dp to move upwards
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
+                    .offset(y = (-28).dp)
                     .onSizeChanged { size ->
                         // Measure the badge/name Column height (without the 24dp Spacer)
                         badgeNameHeight = with(density) { size.height.toDp() }
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Spacing between ship image and badge
-                Spacer(modifier = Modifier.height(0.dp))
+                // Spacing between ship image and badge: 8dp
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 // Rarity badge: Container with rarity text (e.g., "COMMON SHIP", "UNCOMMON SHIP")
                 // Height hugs content, width adjusts to content, 4px padding inside (horizontal and vertical)
@@ -471,12 +487,13 @@ fun ShipDetailsScreen(
                 }
             }
             
-            // Spacing from ship name to divider line: 24px
-            // Moved outside inner Column to be a direct child of outer Column
+            // Spacing from ship name to divider/trim line: 24dp
             Spacer(modifier = Modifier.height(24.dp))
+            }
         }
         
-        // Clip boundary container: Positioned at the horizontal divider line
+        // Clip boundary container: Positioned at the trim line, 24dp below ship name
+        // The divider/trim line is at the top of this container
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -486,18 +503,17 @@ fun ShipDetailsScreen(
                 .fillMaxHeight()
                 .clipToBounds()
         ) {
-            // Horizontal divider line: Fixed at clip boundary, 32% opacity
-            // Initially has 16px padding on sides, expands to full width when scrolling
+            // Horizontal divider/trim line: Fixed at clip boundary, 32% opacity
+            // Positioned at the very top of the clip boundary container (24dp below ship name)
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
+                    .fillMaxWidth()
                     .then(
                         if (isScrolling.value) {
-                            Modifier.fillMaxWidth()
-                        } else {
                             Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
+                        } else {
+                            Modifier.padding(horizontal = 16.dp)
                         }
                     )
                     .height(1.dp)
@@ -514,16 +530,104 @@ fun ShipDetailsScreen(
                     .padding(bottom = 120.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                // Initial spacer: Push content down 24dp from divider line
+                // Spacing from divider (clip boundary top) to toggle: 24dp
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                // Two-row layout for ship details
-                Column(
+                // Tab toggle: Positioned 24dp below divider, scrolls with content
+                // External container: 40dp height, 4dp internal padding, 16dp horizontal padding, 60dp corner radius, 1dp white stroke
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                        .padding(horizontal = 16.dp)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(60.dp))
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFFFFFFF),
+                            shape = RoundedCornerShape(60.dp)
+                        )
+                        .padding(4.dp)
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
+                        // DETAILS tab
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(60.dp))
+                                .then(
+                                    if (selectedTab == ShipDetailsTab.DETAILS) {
+                                        Modifier.background(Color(0xFFFFFFFF)) // White background when selected
+                                    } else {
+                                        Modifier // No background when unselected
+                                    }
+                                )
+                                .clickable { selectedTab = ShipDetailsTab.DETAILS },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "DETAILS",
+                                fontFamily = Exo2,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W400,
+                                color = if (selectedTab == ShipDetailsTab.DETAILS) {
+                                    Color(0xFF010102) // Dark color when selected
+                                } else {
+                                    Color(0xFFFFFFFF) // White when unselected
+                                },
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.offset(y = (-1).dp)
+                            )
+                        }
+                        
+                        // SPECS tab
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(60.dp))
+                                .then(
+                                    if (selectedTab == ShipDetailsTab.SPECS) {
+                                        Modifier.background(Color(0xFFFFFFFF)) // White background when selected
+                                    } else {
+                                        Modifier // No background when unselected
+                                    }
+                                )
+                                .clickable { selectedTab = ShipDetailsTab.SPECS },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "SPECS",
+                                fontFamily = Exo2,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W400,
+                                color = if (selectedTab == ShipDetailsTab.SPECS) {
+                                    Color(0xFF010102) // Dark color when selected
+                                } else {
+                                    Color(0xFFFFFFFF) // White when unselected
+                                },
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.offset(y = (-1).dp)
+                            )
+                        }
+                    }
+                }
+                
+                // Spacing between toggle and content: 24dp
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Content based on selected tab
+                if (selectedTab == ShipDetailsTab.DETAILS) {
+                    // Two-row layout for ship details
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
                         // Row 1: Type and Manufacturer
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -666,6 +770,105 @@ fun ShipDetailsScreen(
                             color = Color(0xFFFFFFFF),
                             lineHeight = 18.sp
                         )
+                    }
+                } else {
+                    // SPECS tab content
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        // Speed
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                        ) {
+                            Text(
+                                text = "Speed",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFFFFF)
+                            )
+                            Text(
+                                text = "${ship.speed}",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.W400,
+                                color = Color(0xFFFFFFFF),
+                                lineHeight = 18.sp
+                            )
+                        }
+                        
+                        // Acceleration
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                        ) {
+                            Text(
+                                text = "Acceleration",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFFFFF)
+                            )
+                            Text(
+                                text = "${ship.acceleration}",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.W400,
+                                color = Color(0xFFFFFFFF),
+                                lineHeight = 18.sp
+                            )
+                        }
+                        
+                        // Warp Converters
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                        ) {
+                            Text(
+                                text = "Warp Converters",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFFFFF)
+                            )
+                            Text(
+                                text = "${ship.warpConverters}",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.W400,
+                                color = Color(0xFFFFFFFF),
+                                lineHeight = 18.sp
+                            )
+                        }
+                        
+                        // Unique Trait (if available)
+                        ship.uniqueTrait?.let { trait ->
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
+                            ) {
+                                Text(
+                                    text = trait.name,
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFFFFF)
+                                )
+                                Text(
+                                    text = trait.description,
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.W400,
+                                    color = Color(0xFFFFFFFF),
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
                     }
                 }
             }

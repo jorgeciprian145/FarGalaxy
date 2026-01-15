@@ -18,9 +18,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -32,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -40,6 +45,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -115,7 +122,7 @@ fun VaultScreen(
         ) {
             // Title: Centered horizontally, positioned at top of container (matching original 32dp position relative to indicator)
             Text(
-                text = "Vault",
+                text = "Galaxy",
                 fontFamily = Exo2,
                 fontSize = 18.sp,
                 color = Color(0xFFFFFFFF),
@@ -139,26 +146,67 @@ fun VaultScreen(
             )
         }
         
-        // Content area: Labels and sector exploration progress
-        // Header trimming line is at 115dp (48dp + 51dp + 16dp), content starts at 115dp
-        Column(
+        // Scroll state to track when content is being clipped
+        val scrollState = rememberScrollState()
+        val density = LocalDensity.current
+        
+        // Calculate if content is being clipped (scroll position >= 8dp means content moved up past initial spacer)
+        // When scrolled 8dp or more, content reaches the clip boundary at 115dp
+        val isContentClipped = derivedStateOf {
+            with(density) {
+                scrollState.value >= 8.dp.toPx().toInt()
+            }
+        }
+        
+        // Clip boundary container: Box positioned at 115dp to define clipping boundary
+        // Indicator bottom is at: statusBarPadding + 48dp + 51dp = statusBarPadding + 99dp
+        // Clip line is at: statusBarPadding + 99dp + 16dp = statusBarPadding + 115dp
+        Box(
             modifier = Modifier
-                .align(Alignment.TopCenter)
+                .align(Alignment.TopStart)
                 .statusBarsPadding()
-                .padding(top = 115.dp) // Start at header trimming line (0dp from trimming line)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(top = 115.dp) // Clip boundary position
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .clipToBounds() // Clip content that goes above this boundary
         ) {
-            // Box containing labels (centered) and info icon (positioned to the right)
-            Box(
-                modifier = Modifier.fillMaxWidth()
+            // White divider line: Only visible when content is being clipped
+            // Positioned behind the Column so it doesn't block touch events
+            if (isContentClipped.value) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Color(0xFFFFFFFF)) // White line, full width, 1px
+                )
+            }
+            
+            // Scrollable content column: Content can scroll up and get clipped at the boundary
+            // Initially, content starts 8dp below clip line (via spacer)
+            // Column fills available height to enable proper scrolling
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .verticalScroll(scrollState)
+                    .navigationBarsPadding() // Account for navigation bar height
+                    .padding(bottom = 32.dp), // Allow last row to be 32dp above bottom bar
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Labels group: "Astra Verge" and "Current galaxy sector" - centered horizontally
-                // Measure labels width to position icon correctly
-                var labelsWidth by remember { mutableStateOf(0.dp) }
-                val density = LocalDensity.current
+                // Initial spacer: Push content down 8dp from clip line (so it starts at 123dp visually)
+                Spacer(modifier = Modifier.height(0.dp))
                 
-                Column(
+                // Box containing labels (centered) and info icon (positioned to the right)
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Labels group: "Astra Verge" and "Current galaxy sector" - centered horizontally
+                    // Measure labels width to position icon correctly
+                    var labelsWidth by remember { mutableStateOf(0.dp) }
+                    val density = LocalDensity.current
+                    
+                    Column(
                     modifier = Modifier
                         .align(Alignment.Center) // Center the labels group
                         .onSizeChanged { size ->
@@ -188,42 +236,42 @@ fun VaultScreen(
                         color = Color(0xFFFFFFFF),
                         textAlign = TextAlign.Center
                     )
+                    }
+                    
+                    // Info icon: Positioned 16dp to the right of the labels group, vertically aligned
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center) // Start from center
+                            .offset(x = labelsWidth / 2 + 16.dp), // Move to the right edge of labels + 16dp
+                        contentAlignment = Alignment.Center // Center the icon vertically within the box
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.infoicon),
+                            contentDescription = "Info",
+                            modifier = Modifier.height(40.dp), // 40dp height, maintaining aspect ratio
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
                 
-                // Info icon: Positioned 16dp to the right of the labels group, vertically aligned
-                Box(
+                // 12dp spacing between bottom label and counter composable
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Sector Exploration Progress Counter
+                SectorExplorationProgress(
+                    progress = 0.25f, // TODO: Replace with dynamic value (placeholder: 25%)
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // 24dp spacing between SectorExplorationProgress and stats section
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Stats section: 3 columns with side rectangles and center stats
+                BoxWithConstraints(
                     modifier = Modifier
-                        .align(Alignment.Center) // Start from center
-                        .offset(x = labelsWidth / 2 + 16.dp), // Move to the right edge of labels + 16dp
-                    contentAlignment = Alignment.Center // Center the icon vertically within the box
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp) // 16dp side padding
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.infoicon),
-                        contentDescription = "Info",
-                        modifier = Modifier.height(40.dp), // 40dp height, maintaining aspect ratio
-                        contentScale = ContentScale.Fit
-                    )
-                }
-            }
-            
-            // 12dp spacing between bottom label and counter composable
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Sector Exploration Progress Counter
-            SectorExplorationProgress(
-                progress = 0.25f, // TODO: Replace with dynamic value (placeholder: 25%)
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            // 24dp spacing between SectorExplorationProgress and stats section
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Stats section: 3 columns with side rectangles and center stats
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp) // 16dp side padding
-            ) {
                 val totalWidth = maxWidth
                 val subColumnWidth = totalWidth * 0.32f // 32% of screen width for each sub-column
                 val centerColumnWidth = totalWidth * 0.68f // 68% of screen width
@@ -240,11 +288,11 @@ fun VaultScreen(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.CenterEnd // Align rectangle towards the center (right side of left column)
                     ) {
-                        val leftRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle))
+                        val leftRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle2))
                         LottieAnimation(
                             composition = leftRectangleComposition,
                             iterations = 1,
-                            modifier = Modifier.height(8.dp), // 8dp height, maintaining aspect ratio
+                            modifier = Modifier.height(16.dp), // 16dp height, maintaining aspect ratio
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -320,34 +368,59 @@ fun VaultScreen(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.CenterStart // Align rectangle towards the center (left side of right column)
                     ) {
-                        val rightRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle))
+                        val rightRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle2))
                         LottieAnimation(
                             composition = rightRectangleComposition,
                             iterations = 1,
                             modifier = Modifier
-                                .height(8.dp) // 8dp height, maintaining aspect ratio
+                                .height(16.dp) // 16dp height, maintaining aspect ratio
                                 .graphicsLayer { rotationZ = 180f }, // Rotate 180 degrees
                             contentScale = ContentScale.Fit
                         )
                     }
                 }
+                }
+                
+                // 24dp spacing between stats section and button
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // "VIEW SECTOR DETAILS" button
+                ViewSectorDetailsButton(
+                    onClick = {}, // TODO: Add callback for viewing sector details
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                )
+                
+                // 32dp spacing between button and divider
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                // Horizontal divider: Separates button from content below
+                HorizontalDivider(modifier = Modifier.fillMaxWidth())
+                
+                // 20dp spacing between divider and credits section
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                // Credits section
+                CreditsSection(
+                    creditsAmount = 2600, // TODO: Replace with dynamic value
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // 20dp spacing between credits section and divider
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                // Horizontal divider: Separates credits section from content below
+                HorizontalDivider(modifier = Modifier.fillMaxWidth())
+                
+                // 24dp spacing between divider and purchase section
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Purchase section
+                PurchaseSection(modifier = Modifier.fillMaxWidth())
+                
+                // 24dp bottom spacer for extra space when scrolling
+                Spacer(modifier = Modifier.height(24.dp))
             }
-            
-            // 24dp spacing between stats section and button
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // "VIEW SECTOR DETAILS" button
-            ViewSectorDetailsButton(
-                onClick = {}, // TODO: Add callback for viewing sector details
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-            )
-            
-            // 24dp spacing between button and divider
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Horizontal divider: Separates button from content below
-            HorizontalDivider(modifier = Modifier.fillMaxWidth())
         }
     }
 }
@@ -369,6 +442,77 @@ private fun HorizontalDivider(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .background(Color(0x66FFFFFF)) // White color with 40% opacity (0x66 = ~40% alpha)
     )
+}
+
+/**
+ * CreditsSection composable - displays the user's interstellar credits with icon and info.
+ * 
+ * Top row: Credits icon (32dp width) + credits amount label (Bold, 32sp) with 8dp spacing
+ * Bottom row: "Current Interstellar Credits" label (Regular, 14sp) + info icon (40dp) with 0dp spacing
+ * Spacing between rows: -8dp
+ * 
+ * @param creditsAmount The amount of credits to display
+ * @param modifier Modifier for the section
+ */
+@Composable
+private fun CreditsSection(
+    creditsAmount: Int,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp), // 16dp side padding
+        horizontalAlignment = Alignment.CenterHorizontally, // Center align both rows
+        verticalArrangement = Arrangement.spacedBy((-8).dp) // -8dp spacing between rows
+    ) {
+        // Top row: Credits icon + credits amount label
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp), // 8dp spacing between icon and label
+            verticalAlignment = Alignment.CenterVertically // Vertically align icon and label
+        ) {
+            // Credits icon: 32dp width, maintaining aspect ratio
+            Image(
+                painter = painterResource(id = R.drawable.creditsicon),
+                contentDescription = "Credits",
+                modifier = Modifier.width(32.dp), // 32dp width, maintaining aspect ratio
+                contentScale = ContentScale.Fit
+            )
+            
+            // Credits amount label: Bold, 32sp
+            Text(
+                text = creditsAmount.toString(),
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                color = Color(0xFFFFFFFF)
+            )
+        }
+        
+        // Bottom row: "Interstellar Credits" label + info icon
+        Row(
+            modifier = Modifier.offset(x = 15.dp), // 15dp offset to the right
+            horizontalArrangement = Arrangement.spacedBy(0.dp), // 0dp spacing between label and icon
+            verticalAlignment = Alignment.CenterVertically // Vertically align label and icon
+        ) {
+            // "Interstellar Credits" label: Regular, 14sp
+            Text(
+                text = "Interstellar Credits",
+                fontFamily = Exo2,
+                fontWeight = FontWeight.W400, // Regular
+                fontSize = 14.sp,
+                color = Color(0xFFFFFFFF)
+            )
+            
+            // Info icon: 40dp size, maintaining aspect ratio
+            Image(
+                painter = painterResource(id = R.drawable.infoicon),
+                contentDescription = "Info",
+                modifier = Modifier.size(40.dp), // 40dp size, maintaining aspect ratio
+                contentScale = ContentScale.Fit
+            )
+        }
+    }
 }
 
 /**
@@ -643,6 +787,187 @@ private fun SectorExplorationProgress(
                         .height(88.dp) // Match sidedecoration height
                         .graphicsLayer { rotationZ = 180f }, // Rotate 180 degrees
                     contentScale = ContentScale.Fit // Maintain original aspect ratio
+                )
+            }
+        }
+    }
+}
+
+/**
+ * PurchaseSection composable - displays the purchase items section with title, subtitle, and 3 purchase rows.
+ * 
+ * Layout:
+ * - Title: "Purchase items" (Bold, 18sp)
+ * - Subtitle: "Use your credits for purchases" (Regular, 14sp) - 0dp spacing from title
+ * - 16dp spacing
+ * - 3 rows section with 16dp padding on both sides
+ * - Each row: SVG (84dp height, 1:1 aspect ratio) + content container (stretches remaining width, 16dp internal padding, 84dp height)
+ * - Content container has: 1dp stroke on top and bottom (FFFFFF at 32% opacity)
+ * - Inside content: title (16sp bold) and subtitle (14sp regular) vertically stacked, 0dp spacing, left-aligned
+ * - Chevron icon (8dp height) aligned to the right of the content container
+ * 
+ * @param modifier Modifier for the section
+ */
+@Composable
+private fun PurchaseSection(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, end = 16.dp), // 8dp padding on left, 16dp on right for the rows section
+        horizontalAlignment = Alignment.Start
+    ) {
+        // Title: "Purchase items" - Bold, 18sp
+        Text(
+            text = "Purchase items",
+            fontFamily = Exo2,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = Color(0xFFFFFFFF)
+        )
+        
+        // Subtitle: "Use your credits for purchases" - Regular, 14sp, 0dp spacing from title
+        Text(
+            text = "Use your credits for purchases",
+            fontFamily = Exo2,
+            fontWeight = FontWeight.W400, // Regular
+            fontSize = 14.sp,
+            color = Color(0xFFFFFFFF)
+        )
+        
+        // 16dp spacing between subtitle and rows section
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Rows section: 3 purchase rows
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
+        ) {
+            // First row: Staryard
+            PurchaseRow(
+                svgResId = R.drawable.staryard,
+                title = "Staryard",
+                subtitle = "Acquire new ships"
+            )
+            
+            // Second row: Equipment
+            PurchaseRow(
+                svgResId = R.drawable.equipment,
+                title = "Equipment",
+                subtitle = "Buy boosts & modifiers"
+            )
+            
+            // Third row: Space Store
+            PurchaseRow(
+                svgResId = R.drawable.store,
+                title = "Space Store",
+                subtitle = "Browse crates & offers"
+            )
+        }
+    }
+}
+
+/**
+ * PurchaseRow composable - displays a single purchase row with SVG, title, subtitle, and chevron.
+ * 
+ * Layout:
+ * - Row with SVG on left (84dp height, 1:1 aspect ratio) and content container on right
+ * - No spacing between SVG and content
+ * - Content container: stretches remaining width, 16dp internal padding left/right, 84dp height
+ * - Content has: 1dp stroke on top and bottom (FFFFFF at 32% opacity)
+ * - Inside content: title (16sp bold) and subtitle (14sp regular) vertically stacked, 0dp spacing, left-aligned
+ * - Chevron icon (8dp height) aligned to the right of the content container
+ * 
+ * @param svgResId The drawable resource ID for the SVG icon
+ * @param title The title text
+ * @param subtitle The subtitle text
+ */
+@Composable
+private fun PurchaseRow(
+    svgResId: Int,
+    title: String,
+    subtitle: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(0.dp) // No spacing between SVG and content
+    ) {
+        // SVG icon: 84dp height, 1:1 aspect ratio
+        Image(
+            painter = painterResource(id = svgResId),
+            contentDescription = title,
+            modifier = Modifier
+                .height(84.dp) // 84dp height
+                .width(84.dp), // 84dp width (1:1 aspect ratio)
+            contentScale = ContentScale.Fit // Maintain original aspect ratio
+        )
+        
+        // Content container: stretches remaining width, 16dp internal padding, 84dp height
+        // Has 1dp stroke on top and bottom (FFFFFF at 32% opacity)
+        Box(
+            modifier = Modifier
+                .weight(1f) // Stretches to fill remaining width
+                .height(84.dp) // 84dp height
+        ) {
+            // Top border: 1dp height, full width
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0x52FFFFFF)) // White with 32% opacity
+            )
+            
+            // Bottom border: 1dp height, full width
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0x52FFFFFF)) // White with 32% opacity
+            )
+            
+            // Content: title and subtitle vertically stacked, chevron on the right
+            // 16dp internal padding left/right
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp), // 16dp internal padding left/right
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left side: Title and subtitle vertically stacked, left-aligned
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(0.dp), // 0dp spacing between labels
+                    horizontalAlignment = Alignment.Start // Left-aligned
+                ) {
+                    // Title: Bold, 16sp
+                    Text(
+                        text = title,
+                        fontFamily = Exo2,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color(0xFFFFFFFF)
+                    )
+                    
+                    // Subtitle: Regular, 14sp
+                    Text(
+                        text = subtitle,
+                        fontFamily = Exo2,
+                        fontWeight = FontWeight.W400, // Regular
+                        fontSize = 14.sp,
+                        color = Color(0xFFFFFFFF)
+                    )
+                }
+                
+                // Right side: Chevron icon (maintains aspect ratio)
+                Image(
+                    painter = painterResource(id = R.drawable.chevronmedium),
+                    contentDescription = null,
+                    modifier = Modifier.height(16.dp), // 16dp height, maintaining aspect ratio
+                    contentScale = ContentScale.Fit
                 )
             }
         }

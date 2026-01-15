@@ -1109,26 +1109,6 @@ fun GalaxyScreen(
             )
         }
 
-        // Countdown ring layer: Circular progress ring centered on the radar and ship.
-        // Only visible when isTraveling is true.
-        // Positioned above the radar but below the ship image and impulse.
-        // The ring visually represents remaining time, shrinking as the countdown progresses.
-        // Decreases smoothly every second for continuous visual feedback.
-        // On first appearance, animates from 0° to full circle over 5 seconds.
-        // Disappears completely when countdown reaches 0.
-        // Can be hidden/shown by tapping the ship during travel (with fade animation).
-        if (isTraveling) {
-            CountdownRing(
-                selectedMinutes = selectedMinutes,
-                remainingSeconds = remainingSeconds,
-                isInitialAppearance = isInitialRingAppearance,
-                isVisible = isRingVisible,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(y = (-1).dp)  // Negative value moves upward
-                    .size(278.dp)
-            )
-        }
 
         // Impulse/thrust effect layer: Engine thrust effect that appears when traveling.
         // Positioned above the countdown ring but below the ship image.
