@@ -66,11 +66,13 @@ import com.example.fargalaxy.R
  * Only the content moves when swiping.
  * 
  * @param onBackClick Callback when the back button is clicked
+ * @param onStaryardClick Callback when the Staryard row is clicked
  * @param modifier Modifier for the screen
  */
 @Composable
 fun VaultScreen(
     onBackClick: () -> Unit = {},
+    onStaryardClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -416,7 +418,10 @@ fun VaultScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // Purchase section
-                PurchaseSection(modifier = Modifier.fillMaxWidth())
+                PurchaseSection(
+                    onStaryardClick = onStaryardClick,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 
                 // 24dp bottom spacer for extra space when scrolling
                 Spacer(modifier = Modifier.height(24.dp))
@@ -810,45 +815,56 @@ private fun SectorExplorationProgress(
  */
 @Composable
 private fun PurchaseSection(
+    onStaryardClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(start = 8.dp, end = 16.dp), // 8dp padding on left, 16dp on right for the rows section
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
-        // Title: "Purchase items" - Bold, 18sp
-        Text(
-            text = "Purchase items",
-            fontFamily = Exo2,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            color = Color(0xFFFFFFFF)
-        )
-        
-        // Subtitle: "Use your credits for purchases" - Regular, 14sp, 0dp spacing from title
-        Text(
-            text = "Use your credits for purchases",
-            fontFamily = Exo2,
-            fontWeight = FontWeight.W400, // Regular
-            fontSize = 14.sp,
-            color = Color(0xFFFFFFFF)
-        )
+        // Title and subtitle section with 16dp side padding
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp), // 16dp side padding for title and subtitle
+            horizontalAlignment = Alignment.Start
+        ) {
+            // Title: "Purchase items" - Bold, 18sp
+            Text(
+                text = "Purchase items",
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color(0xFFFFFFFF)
+            )
+            
+            // Subtitle: "Use your credits for purchases" - Regular, 14sp, 0dp spacing from title
+            Text(
+                text = "Use your credits for purchases",
+                fontFamily = Exo2,
+                fontWeight = FontWeight.W400, // Regular
+                fontSize = 14.sp,
+                color = Color(0xFFFFFFFF)
+            )
+        }
         
         // 16dp spacing between subtitle and rows section
         Spacer(modifier = Modifier.height(16.dp))
         
         // Rows section: 3 purchase rows
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 16.dp), // 10dp left padding, 16dp right padding for rows
             verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
         ) {
             // First row: Staryard
             PurchaseRow(
                 svgResId = R.drawable.staryard,
                 title = "Staryard",
-                subtitle = "Acquire new ships"
+                subtitle = "Acquire new ships",
+                onClick = onStaryardClick
             )
             
             // Second row: Equipment
@@ -882,15 +898,19 @@ private fun PurchaseSection(
  * @param svgResId The drawable resource ID for the SVG icon
  * @param title The title text
  * @param subtitle The subtitle text
+ * @param onClick Callback when the row is clicked
  */
 @Composable
 private fun PurchaseRow(
     svgResId: Int,
     title: String,
-    subtitle: String
+    subtitle: String,
+    onClick: () -> Unit = {}
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.spacedBy(0.dp) // No spacing between SVG and content
     ) {
         // SVG icon: 84dp height, 1:1 aspect ratio

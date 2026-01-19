@@ -73,6 +73,38 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track if LocationDetailsScreen should be shown
     var showLocationDetails by remember { mutableStateOf(false) }
     
+    // Track if StaryardScreen should be shown
+    var showStaryard by remember { mutableStateOf(false) }
+    
+    // Track if StaryardDetailsScreen should be shown
+    var showStaryardDetails by remember { mutableStateOf(false) }
+    
+    // Track the selected ship for staryard details
+    var selectedShipForStaryardDetails by remember { mutableStateOf<Ship?>(null) }
+    
+    // Track the price of the selected ship for staryard details
+    var selectedShipPrice by remember { mutableStateOf(0) }
+    
+    // User credits (placeholder - will be replaced with dynamic value later)
+    val userCredits = 2600
+    
+    // Ship prices for testing (matching StaryardScreen)
+    val shipPrices = mapOf(
+        "type45c_shooting_star" to 1500,
+        "navakeshi_star_pouncer" to 1800,
+        "a300_albatross" to 2000,
+        "b7f_starforce" to 2400,
+        "navakeshi_star_crusher" to 3000,
+        "b15_specter" to 3500,
+        "n6_98_melina" to 4000,
+        "model3_tortoise_ccp" to 4500,
+        "h98_valkyrie" to 5000,
+        "navakeshi_star_ravager" to 5500,
+        "silver_lightning" to 6000,
+        "vulcani_legenda_f1" to 6500,
+        "force_of_nature" to 7000
+    )
+    
     // Track if FactionDetailsScreen should be shown
     var showFactionDetails by remember { mutableStateOf(false) }
     
@@ -169,6 +201,39 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back from locations
     val onBackFromLocations: () -> Unit = {
         showLocations = false
+    }
+    
+    // Handle staryard navigation
+    val onStaryardClick: () -> Unit = {
+        showStaryard = true
+    }
+    
+    // Handle back from staryard
+    val onBackFromStaryard: () -> Unit = {
+        showStaryard = false
+    }
+    
+    // Handle ship click from StaryardScreen
+    val onStaryardShipClick: (Ship) -> Unit = { ship ->
+        selectedShipForStaryardDetails = ship
+        selectedShipPrice = shipPrices[ship.id] ?: 0
+        showStaryardDetails = true
+    }
+    
+    // Handle back from staryard details
+    val onBackFromStaryardDetails: () -> Unit = {
+        showStaryardDetails = false
+        selectedShipForStaryardDetails = null
+        selectedShipPrice = 0
+    }
+    
+    // Handle purchase click from StaryardDetailsScreen
+    val onPurchaseClick: () -> Unit = {
+        // TODO: Implement purchase logic
+        // For now, just close the details screen
+        showStaryardDetails = false
+        selectedShipForStaryardDetails = null
+        selectedShipPrice = 0
     }
     
     // Handle location click from LocationsScreen
@@ -276,6 +341,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
             showShipSelection -> {
                 onBackFromShipSelection()
             }
+            // If StaryardDetailsScreen is shown, close it
+            showStaryardDetails -> {
+                onBackFromStaryardDetails()
+            }
+            // If StaryardScreen is shown, close it
+            showStaryard -> {
+                onBackFromStaryard()
+            }
             // If on CareerScreen (page 0), scroll to top then navigate to GalaxyScreen
             pagerState.currentPage == 0 -> {
                 coroutineScope.launch {
@@ -340,15 +413,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 2 -> {
                     // VaultScreen - content only (no background/noise/indicator)
                     VaultScreen(
-                        onBackClick = { navigateToPage(1) } // Navigate to GalaxyScreen
+                        onBackClick = { navigateToPage(1) }, // Navigate to GalaxyScreen
+                        onStaryardClick = onStaryardClick
                     )
                 }
             }
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
-        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, or LocationDetailsScreen is shown (they have their own backgrounds)
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails) {
+        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, or StaryardDetailsScreen is shown (they have their own backgrounds)
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails) {
             Image(
                 painter = painterResource(id = R.drawable.noise_8bit),
                 contentDescription = null,
@@ -361,8 +435,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, or LocationDetailsScreen is shown
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, or StaryardDetailsScreen is shown
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -465,6 +539,39 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 onBackClick = onBackFromShipDetailsUpdated,
                 onSelectShip = onSelectShip,
                 onChangeShip = if (isFromCareerScreen) onChangeShip else null
+            )
+        }
+        
+        // StaryardScreen overlay - shown on top of everything when showStaryard is true
+        if (showStaryard) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                StaryardScreen(
+                    onBackClick = onBackFromStaryard,
+                    onShipClick = onStaryardShipClick
+                )
+                
+                // Block pointer events when StaryardDetailsScreen is shown
+                if (showStaryardDetails) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                // Consume all pointer events to prevent interaction with StaryardScreen
+                                detectTapGestures { }
+                            }
+                    )
+                }
+            }
+        }
+        
+        // StaryardDetailsScreen overlay - shown on top of everything when showStaryardDetails is true
+        if (showStaryardDetails && selectedShipForStaryardDetails != null) {
+            StaryardDetailsScreen(
+                ship = selectedShipForStaryardDetails!!,
+                price = selectedShipPrice,
+                userCredits = userCredits,
+                onBackClick = onBackFromStaryardDetails,
+                onPurchaseClick = onPurchaseClick
             )
         }
     }

@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -61,22 +62,6 @@ import com.example.fargalaxy.R
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
 import com.example.fargalaxy.ui.ProgressBar
-
-/**
- * Enum to represent the selected tab in ShipDetailsScreen.
- */
-private enum class ShipDetailsTab {
-    DETAILS,
-    SPECS
-}
-
-/**
- * Helper function to convert ShipRarity enum to display text.
- * Returns the rarity name in uppercase followed by " SHIP".
- */
-fun getRarityDisplayText(rarity: ShipRarity): String {
-    return "${rarity.name} SHIP"
-}
 
 /**
  * Helper function to get the manufacturer logo drawable resource ID based on manufacturer name.
@@ -176,31 +161,27 @@ private fun formatShipNameForDisplay(shipId: String, shipName: String, screenWid
 }
 
 /**
- * ShipDetailsScreen composable - displays details about a ship.
- * This screen opens when the user taps "view" next to the ship name on the career screen,
- * or when tapping a ship in the ship selection screen.
+ * StaryardDetailsScreen composable - displays details about a ship in the staryard.
+ * This screen opens when the user taps on a ship in the StaryardScreen.
  * 
  * @param ship The ship to display details for
- * @param currentShip The currently active ship (used to determine if title should be "Your current ship" or "Ship details")
+ * @param price The price of the ship in credits
+ * @param userCredits The user's current credits
  * @param onBackClick Callback when the back button is clicked
- * @param onSelectShip Callback when the "SELECT SHIP" button is clicked (only shown when ship is not current ship)
- * @param onChangeShip Callback when the "CHANGE SHIP" button is clicked (only shown when ship is current ship and this callback is provided, null by default)
+ * @param onPurchaseClick Callback when the purchase button is clicked
  * @param modifier Modifier for the screen
  */
 @Composable
-fun ShipDetailsScreen(
+fun StaryardDetailsScreen(
     ship: Ship,
-    currentShip: Ship,
+    price: Int,
+    userCredits: Int,
     onBackClick: () -> Unit = {},
-    onSelectShip: () -> Unit = {},
-    onChangeShip: (() -> Unit)? = null,
+    onPurchaseClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // Determine if the ship being viewed is the current ship
-    val isCurrentShip = ship.id == currentShip.id
-    val titleText = if (isCurrentShip) "Your current ship" else "Ship details"
-    // Tab state: Track which tab is selected (DETAILS or SPECS)
-    var selectedTab by remember { mutableStateOf(ShipDetailsTab.DETAILS) }
+    // Determine if user can afford the ship
+    val canAfford = price <= userCredits
     // Scroll state to track when content is being clipped
     val scrollState = rememberScrollState()
     
@@ -215,8 +196,8 @@ fun ShipDetailsScreen(
     // Track ship image size to calculate clip boundary position
     var shipImageSize by remember { mutableStateOf(IntSize.Zero) }
     
-    // Track the actual height of the badge/name Column (without the 24dp spacer)
-    var badgeNameHeight by remember { mutableStateOf(0.dp) }
+    // Track the actual height of the badge/name/price Column (includes badge, name, spacing, and price container)
+    var badgeNamePriceHeight by remember { mutableStateOf(0.dp) }
     
     // Convert ship image height to dp for calculation
     val shipImageHeightDp = with(density) {
@@ -226,11 +207,13 @@ fun ShipDetailsScreen(
     // Calculate clip boundary position:
     // Fixed content Box starts at: statusBarsPadding + 64.dp
     // Ship image: variable height (shipImageHeightDp)
-    // Badge/name Column: tracked via onSizeChanged (badgeNameHeight)
-    // Spacing to divider/trim line: 24dp (divider should be 24dp below ship name)
-    // Additional offset: 40dp (temporary adjustment to test positioning)
-    // Total offset from statusBarsPadding: 64.dp + shipImageHeightDp + badgeNameHeight + 24.dp + 40.dp
-    val clipBoundaryTop = 64.dp + shipImageHeightDp + badgeNameHeight + 24.dp + 40.dp
+    // Badge/name/price Column: tracked via onSizeChanged (badgeNamePriceHeight)
+    // Column has -28dp offset, so visual position is adjusted
+    // Spacing to divider/trim line: 24dp (divider should be 24dp below price container)
+    // Additional offset: 40dp for most ships, but B15 specter needs 12dp less (28dp adjustment)
+    // Total offset from statusBarsPadding: 64.dp + shipImageHeightDp + badgeNamePriceHeight + 24.dp + adjustment
+    val additionalOffset = if (ship.id == "b15_specter") 12.dp else 40.dp
+    val clipBoundaryTop = 64.dp + shipImageHeightDp + badgeNamePriceHeight + 24.dp + additionalOffset
     
     Box(
         modifier = modifier.fillMaxSize()
@@ -299,11 +282,11 @@ fun ShipDetailsScreen(
                 contentScale = ContentScale.Fit
             )
             
-            // Title: "Your current ship" or "Ship details" based on whether this is the current ship
+            // Title: "Ship details"
             // Same font style as "Your career" in CareerScreen
             // Horizontally centered on the screen
             Text(
-                text = titleText,
+                text = "Ship details",
                 fontFamily = Exo2,
                 fontSize = 18.sp,
                 color = Color(0xFFFFFFFF),
@@ -410,8 +393,8 @@ fun ShipDetailsScreen(
                     .padding(horizontal = 16.dp)
                     .offset(y = (-28).dp)
                     .onSizeChanged { size ->
-                        // Measure the badge/name Column height (without the 24dp Spacer)
-                        badgeNameHeight = with(density) { size.height.toDp() }
+                        // Measure the badge/name/price Column height (includes badge, name, spacing, and price container)
+                        badgeNamePriceHeight = with(density) { size.height.toDp() }
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -486,9 +469,101 @@ fun ShipDetailsScreen(
                         textAlign = TextAlign.Center
                     )
                 }
+                
+                // Price container: 16dp below ship name, above trim line
+                // Contains: creditsicon (24dp width) + 8dp spacing + price label (32sp bold)
+                // Container: 16dp horizontal padding, 8dp vertical padding, 1dp white stroke at 32% opacity
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (canAfford) {
+                        // When user has enough credits: Use sidedecoration2 JSON (same as total focus time counter)
+                        // Left sidedecoration2: 24dp width, plays once then stays static
+                        val leftDecorationComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration2))
+                        LottieAnimation(
+                            composition = leftDecorationComposition,
+                            iterations = 1, // Play once then stays static
+                            modifier = Modifier.width(24.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else {
+                        // When user doesn't have enough credits: Use redrectangle JSON
+                        // Left redrectangle: 24dp width (same size as sidedecoration2), plays once then stays static
+                        val leftRedRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.redrectangle))
+                        LottieAnimation(
+                            composition = leftRedRectangleComposition,
+                            iterations = 1, // Play once then stays static
+                            modifier = Modifier.width(24.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                    
+                    // Spacing between left decoration and credits icon: 16dp
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    // Credits icon: 24dp width, maintaining aspect ratio
+                    Image(
+                        painter = painterResource(id = R.drawable.creditsicon),
+                        contentDescription = "Credits",
+                        modifier = Modifier.width(24.dp),
+                        contentScale = ContentScale.Fit,
+                        colorFilter = ColorFilter.tint(
+                            if (canAfford) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                        )
+                    )
+                    
+                    // 8dp spacing between icon and label
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // Price label: 24sp, bold
+                    Text(
+                        text = price.toString(),
+                        fontFamily = Exo2,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (canAfford) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                    )
+                    
+                    // Spacing between price label and right decoration: 16dp
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    if (canAfford) {
+                        // When user has enough credits: Use sidedecoration2 JSON (rotated 180 degrees)
+                        // Right sidedecoration2: 24dp width, rotated 180 degrees, plays once then stays static
+                        val rightDecorationComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.sidedecoration2))
+                        LottieAnimation(
+                            composition = rightDecorationComposition,
+                            iterations = 1, // Play once then stays static
+                            modifier = Modifier
+                                .width(24.dp)
+                                .graphicsLayer {
+                                    rotationZ = 180f
+                                },
+                            contentScale = ContentScale.Fit
+                        )
+                    } else {
+                        // When user doesn't have enough credits: Use redrectangle JSON (rotated 180 degrees)
+                        // Right redrectangle: 24dp width (same size as sidedecoration2), rotated 180 degrees, plays once then stays static
+                        val rightRedRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.redrectangle))
+                        LottieAnimation(
+                            composition = rightRedRectangleComposition,
+                            iterations = 1, // Play once then stays static
+                            modifier = Modifier
+                                .width(24.dp)
+                                .graphicsLayer {
+                                    rotationZ = 180f
+                                },
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
             }
             
-            // Spacing from ship name to divider/trim line: 24dp
+            // Spacing from price container to divider/trim line: 24dp
             Spacer(modifier = Modifier.height(24.dp))
             }
         }
@@ -531,440 +606,187 @@ fun ShipDetailsScreen(
                     .padding(bottom = 120.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                // Spacing from divider (clip boundary top) to toggle: 24dp
+                // Spacing from divider to SPECS content: 24dp (removed toggle, so content starts here)
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                // Tab toggle: Positioned 24dp below divider, scrolls with content
-                // External container: 40dp height, 4dp internal padding, 16dp horizontal padding, 60dp corner radius, 1dp white stroke
-                Box(
+                // SPECS content (no toggle, no DETAILS tab)
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(60.dp))
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFFFFFFFF),
-                            shape = RoundedCornerShape(60.dp)
-                        )
-                        .padding(4.dp)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(0.dp)
-                    ) {
-                        // DETAILS tab
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(60.dp))
-                                .then(
-                                    if (selectedTab == ShipDetailsTab.DETAILS) {
-                                        Modifier.background(Color(0xFFFFFFFF)) // White background when selected
-                                    } else {
-                                        Modifier // No background when unselected
-                                    }
-                                )
-                                .clickable { selectedTab = ShipDetailsTab.DETAILS },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "DETAILS",
-                                fontFamily = Exo2,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.W400,
-                                color = if (selectedTab == ShipDetailsTab.DETAILS) {
-                                    Color(0xFF010102) // Dark color when selected
-                                } else {
-                                    Color(0xFFFFFFFF) // White when unselected
-                                },
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.offset(y = (-1).dp)
-                            )
-                        }
-                        
-                        // SPECS tab
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(60.dp))
-                                .then(
-                                    if (selectedTab == ShipDetailsTab.SPECS) {
-                                        Modifier.background(Color(0xFFFFFFFF)) // White background when selected
-                                    } else {
-                                        Modifier // No background when unselected
-                                    }
-                                )
-                                .clickable { selectedTab = ShipDetailsTab.SPECS },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "SPECS",
-                                fontFamily = Exo2,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.W400,
-                                color = if (selectedTab == ShipDetailsTab.SPECS) {
-                                    Color(0xFF010102) // Dark color when selected
-                                } else {
-                                    Color(0xFFFFFFFF) // White when unselected
-                                },
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.offset(y = (-1).dp)
-                            )
-                        }
-                    }
-                }
-                
-                // Spacing between toggle and content: 24dp
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Content based on selected tab
-                if (selectedTab == ShipDetailsTab.DETAILS) {
-                    // Two-row layout for ship details
-                    Column(
+                    // Spacing from divider to badge: 4dp (was spacing from toggle to badge)
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Badge: "Requires: Space license level X"
+                    // Container: 32dp tall, 24dp internal side padding, no stroke
+                    // Contains: Left rectangle JSON, label with bold "Space license level X", right rectangle JSON (rotated 180°)
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                            .height(32.dp)
+                            .padding(horizontal = 24.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Row 1: Type and Manufacturer
+                        // TODO: Replace with dynamic required level from ship model
+                        val requiredLevel = when (ship.id) {
+                            "b14_phantom" -> 1
+                            "type45c_shooting_star" -> 2
+                            "navakeshi_star_pouncer" -> 2
+                            "a300_albatross" -> 3
+                            "b7f_starforce" -> 4
+                            "navakeshi_star_crusher" -> 5
+                            "b15_specter" -> 6
+                            "n6_98_melina" -> 6
+                            "model3_tortoise_ccp" -> 8
+                            "h98_valkyrie" -> 9
+                            "navakeshi_star_ravager" -> 9
+                            "silver_lightning" -> 12
+                            "vulcani_legenda_f1" -> 12
+                            "force_of_nature" -> 15
+                            else -> 1 // Default placeholder
+                        }
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.Top
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Type
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(0.dp)
-                            ) {
-                                Text(
-                                    text = "Type",
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFFFFFFF)
-                                )
-                                Text(
-                                    text = ship.type,
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = Color(0xFFFFFFFF),
-                                    lineHeight = 18.sp
-                                )
-                            }
-                            
-                            // Manufacturer
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(0.dp)
-                            ) {
-                                Text(
-                                    text = "Manufacturer",
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFFFFFFF)
-                                )
-                                Text(
-                                    text = ship.manufacturer,
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = Color(0xFFFFFFFF),
-                                    lineHeight = 18.sp
-                                )
-                            }
-                        }
-                        
-                        // Row 2: Crew capacity and Dimensions
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            // Crew capacity
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(0.dp)
-                            ) {
-                                Text(
-                                    text = "Crew capacity",
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFFFFFFF)
-                                )
-                                Text(
-                                    text = "${ship.crewCapacity.pilots} pilots",
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = Color(0xFFFFFFFF),
-                                    lineHeight = 18.sp
-                                )
-                                Text(
-                                    text = "${ship.crewCapacity.crewMembers} crew members",
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = Color(0xFFFFFFFF),
-                                    lineHeight = 18.sp
-                                )
-                            }
-                            
-                            // Dimensions
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(0.dp)
-                            ) {
-                                Text(
-                                    text = "Dimensions",
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFFFFFFF)
-                                )
-                                Text(
-                                    text = "Length ${ship.dimensions.lengthMeters.toInt()} m (${ship.dimensions.lengthFeet.toInt()} feet)",
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = Color(0xFFFFFFFF),
-                                    lineHeight = 18.sp
-                                )
-                                Text(
-                                    text = "Width ${ship.dimensions.widthMeters.toInt()} m (${ship.dimensions.widthFeet.toInt()} feet)",
-                                    fontFamily = Exo2,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = Color(0xFFFFFFFF),
-                                    lineHeight = 18.sp
-                                )
-                            }
-                        }
-                    }
-                    
-                    // Ship's lore: Full width, 24px spacing from above
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(0.dp)
-                    ) {
-                        Text(
-                            text = "Ship's lore",
-                            fontFamily = Exo2,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFFFFFF)
-                        )
-                        Text(
-                            text = ship.lore,
-                            fontFamily = Exo2,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.W400,
-                            color = Color(0xFFFFFFFF),
-                            lineHeight = 18.sp
-                        )
-                    }
-                } else {
-                    // SPECS tab content
-                    // TODO: Logic to be implemented:
-                    // - Every ship will have 4 attributes:
-                    //   1. Required space license level (Int) - the level needed to equip the ship
-                    //   2. Acceleration (Int, 0-100) - ship acceleration value
-                    //   3. Speed (Int, 0-100) - ship speed value
-                    //   4. Stability (Int, 0-100) - ship stability value
-                    // - These values will be stored in the Ship model and retrieved dynamically
-                    // - For now, using placeholder values for ship 1 (b14_phantom):
-                    //   - Required level: 1
-                    //   - Acceleration: 24
-                    //   - Speed: 25
-                    //   - Stability: 29
-                    
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(0.dp)
-                    ) {
-                        // Spacing from toggle to badge: 4dp
-                        Spacer(modifier = Modifier.height(4.dp))
+                            // Left rectangle JSON: 8dp size, plays once then stays static
+                            val leftRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle))
+                            LottieAnimation(
+                                composition = leftRectangleComposition,
+                                iterations = 1, // Play once then stay static
+                                modifier = Modifier.size(8.dp),
+                                contentScale = ContentScale.Fit
+                            )
 
-                        // Badge: "Requires: Space license level X"
-                        // Container: 32dp tall, 24dp internal side padding, no stroke
-                        // Contains: Left rectangle JSON, label with bold "Space license level X", right rectangle JSON (rotated 180°)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(32.dp)
-                                .padding(horizontal = 24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            // TODO: Replace with dynamic required level from ship model
-                            val requiredLevel = when (ship.id) {
-                                "b14_phantom" -> 1
-                                "type45c_shooting_star" -> 2
-                                "navakeshi_star_pouncer" -> 2
-                                "a300_albatross" -> 3
-                                "b7f_starforce" -> 4
-                                "navakeshi_star_crusher" -> 5
-                                "b15_specter" -> 6
-                                "n6_98_melina" -> 6
-                                "model3_tortoise_ccp" -> 8
-                                "h98_valkyrie" -> 9
-                                "navakeshi_star_ravager" -> 9
-                                "silver_lightning" -> 12
-                                "vulcani_legenda_f1" -> 12
-                                "force_of_nature" -> 15
-                                else -> 1 // Default placeholder
-                            }
+                            // Spacing between left rectangle and label: 16dp
+                            Spacer(modifier = Modifier.width(16.dp))
 
+                            // Label: "Requires: " (regular) + "Space license level X" (bold)
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Left rectangle JSON: 8dp size, plays once then stays static
-                                val leftRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle))
-                                LottieAnimation(
-                                    composition = leftRectangleComposition,
-                                    iterations = 1, // Play once then stay static
-                                    modifier = Modifier.size(8.dp),
-                                    contentScale = ContentScale.Fit
+                                Text(
+                                    text = "Requires: ",
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.W400,
+                                    color = Color(0xFFFFFFFF),
+                                    modifier = Modifier.offset(y = (-1).dp)
                                 )
-
-                                // Spacing between left rectangle and label: 16dp
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                // Label: "Requires: " (regular) + "Space license level X" (bold)
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Requires: ",
-                                        fontFamily = Exo2,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.W400,
-                                        color = Color(0xFFFFFFFF),
-                                        modifier = Modifier.offset(y = (-1).dp)
-                                    )
-                                    Text(
-                                        text = "Space license level $requiredLevel",
-                                        fontFamily = Exo2,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFFFFFFF),
-                                        modifier = Modifier.offset(y = (-1).dp)
-                                    )
-                                }
-
-                                // Spacing between label and right rectangle: 16dp
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                // Right rectangle JSON: 8dp size, rotated 180 degrees, plays once then stays static
-                                val rightRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle))
-                                LottieAnimation(
-                                    composition = rightRectangleComposition,
-                                    iterations = 1, // Play once then stay static
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .graphicsLayer {
-                                            rotationZ = 180f
-                                        },
-                                    contentScale = ContentScale.Fit
+                                Text(
+                                    text = "Space license level $requiredLevel",
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFFFFF),
+                                    modifier = Modifier.offset(y = (-1).dp)
                                 )
                             }
-                        }
-                        
-                        // Spacing between badge and first attribute row: 16dp
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Attribute rows: Acceleration, Speed, Stability
-                        // Each row spaced 16dp apart
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            // TODO: Replace with dynamic values from ship model
-                            val accelerationValue = when (ship.id) {
-                                "b14_phantom" -> 24
-                                "type45c_shooting_star" -> 35
-                                "navakeshi_star_pouncer" -> 32
-                                "a300_albatross" -> 28
-                                "b7f_starforce" -> 38
-                                "navakeshi_star_crusher" -> 35
-                                "b15_specter" -> 32
-                                "n6_98_melina" -> 25
-                                "model3_tortoise_ccp" -> 14
-                                "h98_valkyrie" -> 38
-                                "navakeshi_star_ravager" -> 40
-                                "silver_lightning" -> 62
-                                "vulcani_legenda_f1" -> 68
-                                "force_of_nature" -> 80
-                                else -> 0
-                            }
-                            val speedValue = when (ship.id) {
-                                "b14_phantom" -> 25
-                                "type45c_shooting_star" -> 32
-                                "navakeshi_star_pouncer" -> 30
-                                "a300_albatross" -> 28
-                                "b7f_starforce" -> 38
-                                "navakeshi_star_crusher" -> 30
-                                "b15_specter" -> 30
-                                "n6_98_melina" -> 34
-                                "model3_tortoise_ccp" -> 16
-                                "h98_valkyrie" -> 34
-                                "navakeshi_star_ravager" -> 40
-                                "silver_lightning" -> 60
-                                "vulcani_legenda_f1" -> 72
-                                "force_of_nature" -> 72
-                                else -> 0
-                            }
-                            val stabilityValue = when (ship.id) {
-                                "b14_phantom" -> 29
-                                "type45c_shooting_star" -> 16
-                                "navakeshi_star_pouncer" -> 18
-                                "a300_albatross" -> 38
-                                "b7f_starforce" -> 19
-                                "navakeshi_star_crusher" -> 24
-                                "b15_specter" -> 36
-                                "n6_98_melina" -> 42
-                                "model3_tortoise_ccp" -> 74
-                                "h98_valkyrie" -> 49
-                                "navakeshi_star_ravager" -> 30
-                                "silver_lightning" -> 57
-                                "vulcani_legenda_f1" -> 18
-                                "force_of_nature" -> 45
-                                else -> 0
-                            }
-                            
-                            // Row 1: Acceleration
-                            AttributeRow(
-                                title = "Acceleration",
-                                value = accelerationValue,
-                                progress = accelerationValue / 100f // Convert 0-100 to 0-1 for progress bar
-                            )
-                            
-                            // Row 2: Speed
-                            AttributeRow(
-                                title = "Speed",
-                                value = speedValue,
-                                progress = speedValue / 100f
-                            )
-                            
-                            // Row 3: Stability
-                            AttributeRow(
-                                title = "Stability",
-                                value = stabilityValue,
-                                progress = stabilityValue / 100f
+
+                            // Spacing between label and right rectangle: 16dp
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            // Right rectangle JSON: 8dp size, rotated 180 degrees, plays once then stays static
+                            val rightRectangleComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.rectangle))
+                            LottieAnimation(
+                                composition = rightRectangleComposition,
+                                iterations = 1, // Play once then stay static
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .graphicsLayer {
+                                        rotationZ = 180f
+                                    },
+                                contentScale = ContentScale.Fit
                             )
                         }
+                    }
+                    
+                    // Spacing between badge and first attribute row: 16dp
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Attribute rows: Acceleration, Speed, Stability
+                    // Each row spaced 16dp apart
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // TODO: Replace with dynamic values from ship model
+                        val accelerationValue = when (ship.id) {
+                            "b14_phantom" -> 24
+                            "type45c_shooting_star" -> 35
+                            "navakeshi_star_pouncer" -> 32
+                            "a300_albatross" -> 28
+                            "b7f_starforce" -> 38
+                            "navakeshi_star_crusher" -> 35
+                            "b15_specter" -> 32
+                            "n6_98_melina" -> 25
+                            "model3_tortoise_ccp" -> 14
+                            "h98_valkyrie" -> 38
+                            "navakeshi_star_ravager" -> 40
+                            "silver_lightning" -> 62
+                            "vulcani_legenda_f1" -> 68
+                            "force_of_nature" -> 80
+                            else -> 0
+                        }
+                        val speedValue = when (ship.id) {
+                            "b14_phantom" -> 25
+                            "type45c_shooting_star" -> 32
+                            "navakeshi_star_pouncer" -> 30
+                            "a300_albatross" -> 28
+                            "b7f_starforce" -> 38
+                            "navakeshi_star_crusher" -> 30
+                            "b15_specter" -> 30
+                            "n6_98_melina" -> 34
+                            "model3_tortoise_ccp" -> 16
+                            "h98_valkyrie" -> 34
+                            "navakeshi_star_ravager" -> 40
+                            "silver_lightning" -> 60
+                            "vulcani_legenda_f1" -> 72
+                            "force_of_nature" -> 72
+                            else -> 0
+                        }
+                        val stabilityValue = when (ship.id) {
+                            "b14_phantom" -> 29
+                            "type45c_shooting_star" -> 16
+                            "navakeshi_star_pouncer" -> 18
+                            "a300_albatross" -> 38
+                            "b7f_starforce" -> 19
+                            "navakeshi_star_crusher" -> 24
+                            "b15_specter" -> 36
+                            "n6_98_melina" -> 42
+                            "model3_tortoise_ccp" -> 74
+                            "h98_valkyrie" -> 49
+                            "navakeshi_star_ravager" -> 30
+                            "silver_lightning" -> 57
+                            "vulcani_legenda_f1" -> 18
+                            "force_of_nature" -> 45
+                            else -> 0
+                        }
+                        
+                        // Row 1: Acceleration
+                        AttributeRow(
+                            title = "Acceleration",
+                            value = accelerationValue,
+                            progress = accelerationValue / 100f // Convert 0-100 to 0-1 for progress bar
+                        )
+                        
+                        // Row 2: Speed
+                        AttributeRow(
+                            title = "Speed",
+                            value = speedValue,
+                            progress = speedValue / 100f
+                        )
+                        
+                        // Row 3: Stability
+                        AttributeRow(
+                            title = "Stability",
+                            value = stabilityValue,
+                            progress = stabilityValue / 100f
+                        )
                     }
                 }
             }
@@ -985,7 +807,7 @@ fun ShipDetailsScreen(
             ) {
                 // Gradient overlay container: 48dp height, full width
                 // Gradient from 100% opacity black at bottom to 0% opacity black at top
-                // Positioned right above the button container
+                // Positioned right above the credits label
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1001,66 +823,70 @@ fun ShipDetailsScreen(
                 )
                 
                 // Button container: Full width, black background
-                // Contains single full-width button with 16dp padding on all sides
-                // Show "SELECT SHIP" button when ship is not the current ship
-                // Show "CHANGE SHIP" button when ship is the current ship and onChangeShip callback is provided
-                if (!isCurrentShip) {
-                    // "SELECT SHIP" button - shown when viewing a ship that is not the current ship
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFF000000)) // Black background at 100% opacity
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                // Contains credits label and button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF000000)) // Black background at 100% opacity
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(40.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = Color(0xFFFFFFFF),
-                                    shape = RoundedCornerShape(40.dp)
-                                )
-                                .clickable(onClick = onSelectShip),
-                            contentAlignment = Alignment.Center
+                        // Credits available label: 16dp above button
+                        // Format: "You have (amount) credits available"
+                        // "You have" is regular, "(amount) credits available" is bold
+                        // Left-aligned, respecting the 16dp horizontal padding
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
                         ) {
                             Text(
-                                text = "SELECT SHIP",
+                                text = "You have ",
                                 fontFamily = Exo2,
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.W400,
-                                color = Color(0xFFFFFFFF),
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.offset(y = (-1).dp)
+                                fontWeight = FontWeight.W400, // Regular
+                                color = if (canAfford) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                            )
+                            Text(
+                                text = "$userCredits credits available",
+                                fontFamily = Exo2,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (canAfford) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
                             )
                         }
-                    }
-                } else if (onChangeShip != null) {
-                    // "CHANGE SHIP" button - shown when viewing the current ship from CareerScreen
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFF000000)) // Black background at 100% opacity
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
-                    ) {
+                        
+                        // Purchase button
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(40.dp)
                                 .border(
                                     width = 1.dp,
-                                    color = Color(0xFFFFFFFF),
+                                    color = if (canAfford) Color(0xFFFFFFFF) else Color(0xFFF87F7F),
                                     shape = RoundedCornerShape(40.dp)
                                 )
-                                .clickable(onClick = onChangeShip),
+                                .then(
+                                    if (canAfford) {
+                                        Modifier.clickable(onClick = onPurchaseClick)
+                                    } else {
+                                        Modifier // Disabled when can't afford
+                                    }
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "CHANGE SHIP",
+                                text = if (canAfford) {
+                                    "Buy ship for $price credits"
+                                } else {
+                                    "NOT ENOUGH CREDITS"
+                                },
                                 fontFamily = Exo2,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.W400,
-                                color = Color(0xFFFFFFFF),
+                                color = if (canAfford) Color(0xFFFFFFFF) else Color(0xFFF87F7F),
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.offset(y = (-1).dp)
                             )
