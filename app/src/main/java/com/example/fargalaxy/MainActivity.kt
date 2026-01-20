@@ -8,6 +8,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import com.example.fargalaxy.ui.theme.FarGalaxyTheme
 import com.example.fargalaxy.ui.MainScreen
 
@@ -29,8 +32,21 @@ class MainActivity : ComponentActivity() {
         }
         
         setContent {
-            FarGalaxyTheme {
-                MainScreen()
+            // Override font scale to always be 1.0 (no scaling) to prevent system font size
+            // from breaking the UI design. This applies to all screens in the app.
+            val resources = resources
+            val displayMetrics = resources.displayMetrics
+            val density = displayMetrics.density
+            
+            CompositionLocalProvider(
+                LocalDensity provides Density(
+                    density = density,
+                    fontScale = 1.0f // Lock font scale to 1.0
+                )
+            ) {
+                FarGalaxyTheme {
+                    MainScreen()
+                }
             }
         }
     }

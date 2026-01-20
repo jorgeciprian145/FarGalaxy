@@ -79,6 +79,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track if StaryardDetailsScreen should be shown
     var showStaryardDetails by remember { mutableStateOf(false) }
     
+    // Track if EquipmentScreen should be shown
+    var showEquipment by remember { mutableStateOf(false) }
+    
     // Track the selected ship for staryard details
     var selectedShipForStaryardDetails by remember { mutableStateOf<Ship?>(null) }
     
@@ -213,6 +216,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
         showStaryard = false
     }
     
+    // Handle equipment navigation
+    val onEquipmentClick: () -> Unit = {
+        showEquipment = true
+    }
+    
+    // Handle back from equipment
+    val onBackFromEquipment: () -> Unit = {
+        showEquipment = false
+    }
+    
     // Handle ship click from StaryardScreen
     val onStaryardShipClick: (Ship) -> Unit = { ship ->
         selectedShipForStaryardDetails = ship
@@ -320,6 +333,18 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back button press
     BackHandler(enabled = true) {
         when {
+            // If StaryardDetailsScreen is shown, close it
+            showStaryardDetails -> {
+                onBackFromStaryardDetails()
+            }
+            // If StaryardScreen is shown, close it
+            showStaryard -> {
+                onBackFromStaryard()
+            }
+            // If EquipmentScreen is shown, close it
+            showEquipment -> {
+                onBackFromEquipment()
+            }
             // If FactionDetailsScreen is shown, close it
             showFactionDetails -> {
                 showFactionDetails = false
@@ -414,15 +439,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     // VaultScreen - content only (no background/noise/indicator)
                     VaultScreen(
                         onBackClick = { navigateToPage(1) }, // Navigate to GalaxyScreen
-                        onStaryardClick = onStaryardClick
+                        onStaryardClick = onStaryardClick,
+                        onEquipmentClick = onEquipmentClick
                     )
                 }
             }
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
-        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, or StaryardDetailsScreen is shown (they have their own backgrounds)
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails) {
+        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, or EquipmentScreen is shown (they have their own backgrounds)
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment) {
             Image(
                 painter = painterResource(id = R.drawable.noise_8bit),
                 contentDescription = null,
@@ -435,8 +461,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, or StaryardDetailsScreen is shown
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, or EquipmentScreen is shown
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -572,6 +598,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 userCredits = userCredits,
                 onBackClick = onBackFromStaryardDetails,
                 onPurchaseClick = onPurchaseClick
+            )
+        }
+        
+        // EquipmentScreen overlay - shown on top of everything when showEquipment is true
+        if (showEquipment) {
+            EquipmentScreen(
+                onBackClick = onBackFromEquipment
             )
         }
     }

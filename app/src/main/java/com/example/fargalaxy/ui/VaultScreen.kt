@@ -73,6 +73,7 @@ import com.example.fargalaxy.R
 fun VaultScreen(
     onBackClick: () -> Unit = {},
     onStaryardClick: () -> Unit = {},
+    onEquipmentClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -420,6 +421,7 @@ fun VaultScreen(
                 // Purchase section
                 PurchaseSection(
                     onStaryardClick = onStaryardClick,
+                    onEquipmentClick = onEquipmentClick,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -816,6 +818,7 @@ private fun SectorExplorationProgress(
 @Composable
 private fun PurchaseSection(
     onStaryardClick: () -> Unit = {},
+    onEquipmentClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -871,7 +874,8 @@ private fun PurchaseSection(
             PurchaseRow(
                 svgResId = R.drawable.equipment,
                 title = "Equipment",
-                subtitle = "Buy boosts & modifiers"
+                subtitle = "Buy boosts & modifiers",
+                onClick = onEquipmentClick
             )
             
             // Third row: Space Store
