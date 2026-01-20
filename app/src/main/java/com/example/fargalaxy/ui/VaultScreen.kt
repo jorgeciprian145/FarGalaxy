@@ -74,6 +74,7 @@ fun VaultScreen(
     onBackClick: () -> Unit = {},
     onStaryardClick: () -> Unit = {},
     onEquipmentClick: () -> Unit = {},
+    onStoreClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -422,6 +423,7 @@ fun VaultScreen(
                 PurchaseSection(
                     onStaryardClick = onStaryardClick,
                     onEquipmentClick = onEquipmentClick,
+                    onStoreClick = onStoreClick,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -819,6 +821,7 @@ private fun SectorExplorationProgress(
 private fun PurchaseSection(
     onStaryardClick: () -> Unit = {},
     onEquipmentClick: () -> Unit = {},
+    onStoreClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -882,7 +885,8 @@ private fun PurchaseSection(
             PurchaseRow(
                 svgResId = R.drawable.store,
                 title = "Space Store",
-                subtitle = "Browse crates & offers"
+                subtitle = "Browse crates & offers",
+                onClick = onStoreClick
             )
         }
     }

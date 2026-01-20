@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
@@ -63,6 +64,7 @@ import com.example.fargalaxy.R
 @Composable
 fun EquipmentScreen(
     onBackClick: () -> Unit = {},
+    onEquipmentClick: (String, Int, Int, String) -> Unit = { _, _, _, _ -> }, // name, imageResId, price, description
     modifier: Modifier = Modifier
 ) {
     // Scroll state
@@ -308,6 +310,15 @@ fun EquipmentScreen(
                                         shape = RoundedCornerShape(0.dp) // No corner radius for now
                                     )
                                     .padding(horizontal = 0.dp, vertical = 8.dp) // 0dp side padding, 8dp vertical padding
+                                    .clickable {
+                                        // First horizontal card: Emergency modulators
+                                        onEquipmentClick(
+                                            "Emergency modulators",
+                                            R.drawable.modulatorrender,
+                                            2500,
+                                            "Allows to exit the app 1 time without affecting the 'flawless' status. Can be used only one time."
+                                        )
+                                    }
                             ) {
                                 // Inner container: stroke, no fill, 32dp corner radius
                                 Box(
@@ -361,9 +372,9 @@ fun EquipmentScreen(
                                                 .weight(1f) // Stretches to fill remaining width
                                                 .padding(
                                                     start = 0.dp,
-                                                    top = 8.dp,
-                                                    end = 8.dp,
-                                                    bottom = 8.dp
+                                                    top = 16.dp,
+                                                    end = 16.dp,
+                                                    bottom = 16.dp
                                                 ),
                                             contentAlignment = Alignment.CenterStart
                                         ) {
@@ -507,6 +518,15 @@ fun EquipmentScreen(
                                         shape = RoundedCornerShape(0.dp) // No corner radius for now
                                     )
                                     .padding(horizontal = 0.dp, vertical = 8.dp) // 0dp side padding, 8dp vertical padding
+                                    .clickable {
+                                        // Second horizontal card: Deep space scanners
+                                        onEquipmentClick(
+                                            "Deep space scanners",
+                                            R.drawable.scannerrender,
+                                            2500,
+                                            "Reveals the conditions of the space for the day, allowing to make an informed decision on which starship to equip. Can be used only one time, and can only be used once per day."
+                                        )
+                                    }
                             ) {
                                 // Inner container: stroke, no fill, 32dp corner radius
                                 Box(
@@ -560,9 +580,9 @@ fun EquipmentScreen(
                                                 .weight(1f) // Stretches to fill remaining width
                                                 .padding(
                                                     start = 0.dp,
-                                                    top = 8.dp,
-                                                    end = 8.dp,
-                                                    bottom = 8.dp
+                                                    top = 16.dp,
+                                                    end = 16.dp,
+                                                    bottom = 16.dp
                                                 ),
                                             contentAlignment = Alignment.CenterStart
                                         ) {
@@ -692,7 +712,7 @@ fun EquipmentScreen(
                             Box(
                                 modifier = Modifier
                                     .width(singleColumnWidth)
-                                    .height(236.dp)
+                                    .wrapContentHeight() // Height adapts to content
                                     .background(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(
@@ -707,12 +727,21 @@ fun EquipmentScreen(
                                         shape = RoundedCornerShape(0.dp) // No corner radius for now
                                     )
                                     .padding(0.dp) // 0dp padding on all sides
+                                    .clickable {
+                                        // Left vertical card: Unstable cargo
+                                        onEquipmentClick(
+                                            "Unstable cargo",
+                                            R.drawable.cargorender,
+                                            2500,
+                                            "If the next travel is 'flawless' gives a 20% bonus to the XP and credits earned. But if the app is quit even once, all the XP and credits of the travel are lost. Can be used only one time."
+                                        )
+                                    }
                             ) {
                                 // Inner container: stroke, no fill, 32dp corner radius
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .fillMaxHeight()
+                                        .wrapContentHeight() // Height adapts to content
                                         .border(
                                             width = 1.dp,
                                             color = Color(0xFF6B6C6F),
@@ -722,8 +751,8 @@ fun EquipmentScreen(
                                     Column(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .fillMaxHeight(),
-                                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                                            .wrapContentHeight(),
+                                        verticalArrangement = Arrangement.spacedBy(0.dp) // No spacing - top padding handles it
                                     ) {
                                         // Top: 1:1 aspect ratio container
                                         Box(
@@ -751,13 +780,113 @@ fun EquipmentScreen(
                                             )
                                         }
                                         
-                                        // Bottom: Remaining space container
+                                        // Bottom: Content container with padding
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .weight(1f) // Stretches to fill remaining height
+                                                .wrapContentHeight()
+                                                .padding(horizontal = 8.dp, vertical = 16.dp) // 8dp side padding, 16dp vertical padding
                                         ) {
-                                            // Content will be added here later
+                                            Column(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalAlignment = Alignment.CenterHorizontally, // Center align all elements
+                                                verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between elements
+                                            ) {
+                                                // Price badge
+                                                Box(
+                                                    modifier = Modifier
+                                                        .wrapContentHeight()
+                                                        .background(
+                                                            color = Color(0xFF373A3E),
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .border(
+                                                            width = 1.dp,
+                                                            color = Color(0xFF6B6C6F),
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                    ) {
+                                                        Image(
+                                                            painter = painterResource(id = R.drawable.creditsicon),
+                                                            contentDescription = "Credits",
+                                                            modifier = Modifier.width(16.dp),
+                                                            contentScale = ContentScale.Fit,
+                                                            colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                        )
+                                                        Text(
+                                                            text = "2500",
+                                                            fontFamily = Exo2,
+                                                            fontSize = 14.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = Color(0xFFFFFFFF)
+                                                        )
+                                                    }
+                                                }
+                                                
+                                                // Title row: text (centered) + chevron (right-aligned)
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    // Title: 14sp, bold, 18sp line height - centered
+                                                    Text(
+                                                        text = "Unstable cargo",
+                                                        fontFamily = Exo2,
+                                                        fontSize = 14.sp,
+                                                        lineHeight = 18.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFFFFFFFF),
+                                                        textAlign = TextAlign.Center,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .align(Alignment.Center)
+                                                    )
+                                                    
+                                                    // Chevron container - right-aligned, 4dp from label
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .align(Alignment.CenterEnd)
+                                                            .padding(end = 4.dp), // 4dp distance from label
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Image(
+                                                            painter = painterResource(id = R.drawable.chevronsmall),
+                                                            contentDescription = "Chevron",
+                                                            modifier = Modifier.height(8.dp),
+                                                            contentScale = ContentScale.Fit,
+                                                            colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                        )
+                                                    }
+                                                }
+                                                
+                                                // BUY button - wraps content with 16dp side padding
+                                                Box(
+                                                    modifier = Modifier
+                                                        .wrapContentWidth() // Button hugs the label
+                                                        .height(24.dp)
+                                                        .border(
+                                                            width = 1.dp,
+                                                            color = Color(0xFFFFFFFF),
+                                                            shape = RoundedCornerShape(50.dp)
+                                                        ),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = "BUY",
+                                                        fontFamily = Exo2,
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.W400,
+                                                        color = Color(0xFFFFFFFF),
+                                                        modifier = Modifier
+                                                            .offset(y = (-1).dp)
+                                                            .padding(horizontal = 16.dp) // 16dp side padding
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -767,7 +896,7 @@ fun EquipmentScreen(
                             Box(
                                 modifier = Modifier
                                     .width(singleColumnWidth)
-                                    .height(236.dp)
+                                    .wrapContentHeight() // Height adapts to content
                                     .background(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(
@@ -782,12 +911,21 @@ fun EquipmentScreen(
                                         shape = RoundedCornerShape(0.dp) // No corner radius for now
                                     )
                                     .padding(0.dp) // 0dp padding on all sides
+                                    .clickable {
+                                        // Right vertical card: Experimental fuel
+                                        onEquipmentClick(
+                                            "Experimental fuel",
+                                            R.drawable.fuelrender,
+                                            2500,
+                                            "Reduces the duration of the travel by 10% at the expense of earning 5% less XP and credits. Trips finished with this boost active can have the 'flawless' status to them. Lasts 3 travels."
+                                        )
+                                    }
                             ) {
                                 // Inner container: stroke, no fill, 32dp corner radius
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .fillMaxHeight()
+                                        .wrapContentHeight() // Height adapts to content
                                         .border(
                                             width = 1.dp,
                                             color = Color(0xFF6B6C6F),
@@ -797,8 +935,8 @@ fun EquipmentScreen(
                                     Column(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .fillMaxHeight(),
-                                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                                            .wrapContentHeight(),
+                                        verticalArrangement = Arrangement.spacedBy(0.dp) // No spacing - top padding handles it
                                     ) {
                                         // Top: 1:1 aspect ratio container
                                         Box(
@@ -826,13 +964,113 @@ fun EquipmentScreen(
                                             )
                                         }
                                         
-                                        // Bottom: Remaining space container
+                                        // Bottom: Content container with padding
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .weight(1f) // Stretches to fill remaining height
+                                                .wrapContentHeight()
+                                                .padding(horizontal = 8.dp, vertical = 16.dp) // 8dp side padding, 16dp vertical padding
                                         ) {
-                                            // Content will be added here later
+                                            Column(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalAlignment = Alignment.CenterHorizontally, // Center align all elements
+                                                verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between elements
+                                            ) {
+                                                // Price badge
+                                                Box(
+                                                    modifier = Modifier
+                                                        .wrapContentHeight()
+                                                        .background(
+                                                            color = Color(0xFF373A3E),
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .border(
+                                                            width = 1.dp,
+                                                            color = Color(0xFF6B6C6F),
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                    ) {
+                                                        Image(
+                                                            painter = painterResource(id = R.drawable.creditsicon),
+                                                            contentDescription = "Credits",
+                                                            modifier = Modifier.width(16.dp),
+                                                            contentScale = ContentScale.Fit,
+                                                            colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                        )
+                                                        Text(
+                                                            text = "2500",
+                                                            fontFamily = Exo2,
+                                                            fontSize = 14.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = Color(0xFFFFFFFF)
+                                                        )
+                                                    }
+                                                }
+                                                
+                                                // Title row: text (centered) + chevron (right-aligned)
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    // Title: 14sp, bold, 18sp line height - centered
+                                                    Text(
+                                                        text = "Experimental fuel",
+                                                        fontFamily = Exo2,
+                                                        fontSize = 14.sp,
+                                                        lineHeight = 18.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFFFFFFFF),
+                                                        textAlign = TextAlign.Center,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .align(Alignment.Center)
+                                                    )
+                                                    
+                                                    // Chevron container - right-aligned, 4dp from label
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .align(Alignment.CenterEnd)
+                                                            .padding(end = 4.dp), // 4dp distance from label
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Image(
+                                                            painter = painterResource(id = R.drawable.chevronsmall),
+                                                            contentDescription = "Chevron",
+                                                            modifier = Modifier.height(8.dp),
+                                                            contentScale = ContentScale.Fit,
+                                                            colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                        )
+                                                    }
+                                                }
+                                                
+                                                // BUY button - wraps content with 16dp side padding
+                                                Box(
+                                                    modifier = Modifier
+                                                        .wrapContentWidth() // Button hugs the label
+                                                        .height(24.dp)
+                                                        .border(
+                                                            width = 1.dp,
+                                                            color = Color(0xFFFFFFFF),
+                                                            shape = RoundedCornerShape(50.dp)
+                                                        ),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = "BUY",
+                                                        fontFamily = Exo2,
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.W400,
+                                                        color = Color(0xFFFFFFFF),
+                                                        modifier = Modifier
+                                                            .offset(y = (-1).dp)
+                                                            .padding(horizontal = 16.dp) // 16dp side padding
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }

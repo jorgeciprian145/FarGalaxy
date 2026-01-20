@@ -82,6 +82,15 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track if EquipmentScreen should be shown
     var showEquipment by remember { mutableStateOf(false) }
     
+    // Track if EquipmentDetailsScreen should be shown
+    var showEquipmentDetails by remember { mutableStateOf(false) }
+    
+    // Track the selected equipment for details
+    var selectedEquipmentName by remember { mutableStateOf("") }
+    var selectedEquipmentImageResId by remember { mutableStateOf(0) }
+    var selectedEquipmentPrice by remember { mutableStateOf(0) }
+    var selectedEquipmentDescription by remember { mutableStateOf("") }
+    
     // Track the selected ship for staryard details
     var selectedShipForStaryardDetails by remember { mutableStateOf<Ship?>(null) }
     
@@ -226,6 +235,48 @@ fun MainScreen(modifier: Modifier = Modifier) {
         showEquipment = false
     }
     
+    // Track if StoreScreen should be shown
+    var showStore by remember { mutableStateOf(false) }
+    
+    // Handle store navigation
+    val onStoreClick: () -> Unit = {
+        showStore = true
+    }
+    
+    // Handle back from store
+    val onBackFromStore: () -> Unit = {
+        showStore = false
+    }
+    
+    // Handle equipment click from EquipmentScreen
+    val onEquipmentItemClick: (String, Int, Int, String) -> Unit = { name, imageResId, price, description ->
+        selectedEquipmentName = name
+        selectedEquipmentImageResId = imageResId
+        selectedEquipmentPrice = price
+        selectedEquipmentDescription = description
+        showEquipmentDetails = true
+    }
+    
+    // Handle back from equipment details
+    val onBackFromEquipmentDetails: () -> Unit = {
+        showEquipmentDetails = false
+        selectedEquipmentName = ""
+        selectedEquipmentImageResId = 0
+        selectedEquipmentPrice = 0
+        selectedEquipmentDescription = ""
+    }
+    
+    // Handle purchase click from EquipmentDetailsScreen
+    val onEquipmentPurchaseClick: () -> Unit = {
+        // TODO: Implement purchase logic
+        // For now, just close the details screen
+        showEquipmentDetails = false
+        selectedEquipmentName = ""
+        selectedEquipmentImageResId = 0
+        selectedEquipmentPrice = 0
+        selectedEquipmentDescription = ""
+    }
+    
     // Handle ship click from StaryardScreen
     val onStaryardShipClick: (Ship) -> Unit = { ship ->
         selectedShipForStaryardDetails = ship
@@ -333,6 +384,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back button press
     BackHandler(enabled = true) {
         when {
+            // If EquipmentDetailsScreen is shown, close it
+            showEquipmentDetails -> {
+                onBackFromEquipmentDetails()
+            }
             // If StaryardDetailsScreen is shown, close it
             showStaryardDetails -> {
                 onBackFromStaryardDetails()
@@ -344,6 +399,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
             // If EquipmentScreen is shown, close it
             showEquipment -> {
                 onBackFromEquipment()
+            }
+            // If StoreScreen is shown, close it
+            showStore -> {
+                onBackFromStore()
             }
             // If FactionDetailsScreen is shown, close it
             showFactionDetails -> {
@@ -440,15 +499,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     VaultScreen(
                         onBackClick = { navigateToPage(1) }, // Navigate to GalaxyScreen
                         onStaryardClick = onStaryardClick,
-                        onEquipmentClick = onEquipmentClick
+                        onEquipmentClick = onEquipmentClick,
+                        onStoreClick = onStoreClick
                     )
                 }
             }
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
-        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, or EquipmentScreen is shown (they have their own backgrounds)
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment) {
+        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, or StoreScreen is shown (they have their own backgrounds)
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore) {
             Image(
                 painter = painterResource(id = R.drawable.noise_8bit),
                 contentDescription = null,
@@ -461,8 +521,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, or EquipmentScreen is shown
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, or StoreScreen is shown
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -604,7 +664,28 @@ fun MainScreen(modifier: Modifier = Modifier) {
         // EquipmentScreen overlay - shown on top of everything when showEquipment is true
         if (showEquipment) {
             EquipmentScreen(
-                onBackClick = onBackFromEquipment
+                onBackClick = onBackFromEquipment,
+                onEquipmentClick = onEquipmentItemClick
+            )
+        }
+        
+        // StoreScreen overlay - shown on top of everything when showStore is true
+        if (showStore) {
+            StoreScreen(
+                onBackClick = onBackFromStore
+            )
+        }
+        
+        // EquipmentDetailsScreen overlay - shown on top of everything when showEquipmentDetails is true
+        if (showEquipmentDetails) {
+            EquipmentDetailsScreen(
+                equipmentName = selectedEquipmentName,
+                equipmentImageResId = selectedEquipmentImageResId,
+                price = selectedEquipmentPrice,
+                userCredits = userCredits,
+                description = selectedEquipmentDescription,
+                onBackClick = onBackFromEquipmentDetails,
+                onPurchaseClick = onEquipmentPurchaseClick
             )
         }
     }
