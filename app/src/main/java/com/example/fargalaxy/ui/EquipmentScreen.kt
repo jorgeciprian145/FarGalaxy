@@ -65,6 +65,7 @@ import com.example.fargalaxy.R
 fun EquipmentScreen(
     onBackClick: () -> Unit = {},
     onEquipmentClick: (String, Int, Int, String) -> Unit = { _, _, _, _ -> }, // name, imageResId, price, description
+    userCredits: Int = 0,
     modifier: Modifier = Modifier
 ) {
     // Scroll state
@@ -259,9 +260,8 @@ fun EquipmentScreen(
                             )
                             
                             // Credits amount label: 16sp, medium weight, white color
-                            // TODO: Replace with dynamic value matching VaultScreen
                             Text(
-                                text = "2600",
+                                text = userCredits.toString(),
                                 fontFamily = Exo2,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
@@ -420,12 +420,17 @@ fun EquipmentScreen(
                                                 }
 
                                                 // Bottom container: price label + BUY button
+                                                // Check if user can afford this item (price: 2500)
+                                                val canAffordCard1 = 2500 <= userCredits
+                                                val priceColorCard1 = if (canAffordCard1) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                                                val borderColorCard1 = if (canAffordCard1) Color(0xFF6B6C6F) else Color(0xFFF87F7F)
+                                                
                                                 Box(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .border(
                                                             width = 1.dp,
-                                                            color = Color(0xFF6B6C6F),
+                                                            color = borderColorCard1,
                                                             shape = RoundedCornerShape(50.dp)
                                                         )
                                                         .background(
@@ -448,7 +453,7 @@ fun EquipmentScreen(
                                                                 contentDescription = "Credits",
                                                                 modifier = Modifier.width(16.dp),
                                                                 contentScale = ContentScale.Fit,
-                                                                colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                                colorFilter = ColorFilter.tint(priceColorCard1)
                                                             )
 
                                                             Spacer(modifier = Modifier.width(4.dp))
@@ -458,7 +463,7 @@ fun EquipmentScreen(
                                                                 fontFamily = Exo2,
                                                                 fontSize = 16.sp,
                                                                 fontWeight = FontWeight.SemiBold,
-                                                                color = Color(0xFFFFFFFF)
+                                                                color = priceColorCard1
                                                             )
                                                         }
 
@@ -468,7 +473,7 @@ fun EquipmentScreen(
                                                                 .height(24.dp)
                                                                 .border(
                                                                     width = 1.dp,
-                                                                    color = Color(0xFFFFFFFF),
+                                                                    color = priceColorCard1,
                                                                     shape = RoundedCornerShape(50.dp)
                                                                 ),
                                                             contentAlignment = Alignment.Center
@@ -478,7 +483,7 @@ fun EquipmentScreen(
                                                                 fontFamily = Exo2,
                                                                 fontSize = 14.sp,
                                                                 fontWeight = FontWeight.W400,
-                                                                color = Color(0xFFFFFFFF),
+                                                                color = priceColorCard1,
                                                                 modifier = Modifier
                                                                     .offset(y = (-1).dp)
                                                                     .padding(horizontal = 16.dp)
@@ -628,12 +633,17 @@ fun EquipmentScreen(
                                                 }
 
                                                 // Bottom container: price label + BUY button
+                                                // Check if user can afford this item (price: 2500)
+                                                val canAffordCard2 = 2500 <= userCredits
+                                                val priceColorCard2 = if (canAffordCard2) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                                                val borderColorCard2 = if (canAffordCard2) Color(0xFF6B6C6F) else Color(0xFFF87F7F)
+                                                
                                                 Box(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .border(
                                                             width = 1.dp,
-                                                            color = Color(0xFF6B6C6F),
+                                                            color = borderColorCard2,
                                                             shape = RoundedCornerShape(50.dp)
                                                         )
                                                         .background(
@@ -656,7 +666,7 @@ fun EquipmentScreen(
                                                                 contentDescription = "Credits",
                                                                 modifier = Modifier.width(16.dp),
                                                                 contentScale = ContentScale.Fit,
-                                                                colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                                colorFilter = ColorFilter.tint(priceColorCard2)
                                                             )
 
                                                             Spacer(modifier = Modifier.width(4.dp))
@@ -666,7 +676,7 @@ fun EquipmentScreen(
                                                                 fontFamily = Exo2,
                                                                 fontSize = 16.sp,
                                                                 fontWeight = FontWeight.SemiBold,
-                                                                color = Color(0xFFFFFFFF)
+                                                                color = priceColorCard2
                                                             )
                                                         }
 
@@ -676,7 +686,7 @@ fun EquipmentScreen(
                                                                 .height(24.dp)
                                                                 .border(
                                                                     width = 1.dp,
-                                                                    color = Color(0xFFFFFFFF),
+                                                                    color = priceColorCard2,
                                                                     shape = RoundedCornerShape(50.dp)
                                                                 ),
                                                             contentAlignment = Alignment.Center
@@ -686,7 +696,7 @@ fun EquipmentScreen(
                                                                 fontFamily = Exo2,
                                                                 fontSize = 14.sp,
                                                                 fontWeight = FontWeight.W400,
-                                                                color = Color(0xFFFFFFFF),
+                                                                color = priceColorCard2,
                                                                 modifier = Modifier
                                                                     .offset(y = (-1).dp)
                                                                     .padding(horizontal = 16.dp)
@@ -793,6 +803,11 @@ fun EquipmentScreen(
                                                 verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between elements
                                             ) {
                                                 // Price badge
+                                                // Check if user can afford this item (price: 2500)
+                                                val canAffordCard3 = 2500 <= userCredits
+                                                val priceColorCard3 = if (canAffordCard3) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                                                val borderColorCard3 = if (canAffordCard3) Color(0xFF6B6C6F) else Color(0xFFF87F7F)
+                                                
                                                 Box(
                                                     modifier = Modifier
                                                         .wrapContentHeight()
@@ -802,7 +817,7 @@ fun EquipmentScreen(
                                                         )
                                                         .border(
                                                             width = 1.dp,
-                                                            color = Color(0xFF6B6C6F),
+                                                            color = borderColorCard3,
                                                             shape = RoundedCornerShape(8.dp)
                                                         )
                                                         .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -816,14 +831,14 @@ fun EquipmentScreen(
                                                             contentDescription = "Credits",
                                                             modifier = Modifier.width(16.dp),
                                                             contentScale = ContentScale.Fit,
-                                                            colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                            colorFilter = ColorFilter.tint(priceColorCard3)
                                                         )
                                                         Text(
                                                             text = "2500",
                                                             fontFamily = Exo2,
                                                             fontSize = 14.sp,
                                                             fontWeight = FontWeight.Medium,
-                                                            color = Color(0xFFFFFFFF)
+                                                            color = priceColorCard3
                                                         )
                                                     }
                                                 }
@@ -870,7 +885,7 @@ fun EquipmentScreen(
                                                         .height(24.dp)
                                                         .border(
                                                             width = 1.dp,
-                                                            color = Color(0xFFFFFFFF),
+                                                            color = priceColorCard3,
                                                             shape = RoundedCornerShape(50.dp)
                                                         ),
                                                     contentAlignment = Alignment.Center
@@ -880,7 +895,7 @@ fun EquipmentScreen(
                                                         fontFamily = Exo2,
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.W400,
-                                                        color = Color(0xFFFFFFFF),
+                                                        color = priceColorCard3,
                                                         modifier = Modifier
                                                             .offset(y = (-1).dp)
                                                             .padding(horizontal = 16.dp) // 16dp side padding
@@ -977,6 +992,11 @@ fun EquipmentScreen(
                                                 verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between elements
                                             ) {
                                                 // Price badge
+                                                // Check if user can afford this item (price: 2500)
+                                                val canAffordCard4 = 2500 <= userCredits
+                                                val priceColorCard4 = if (canAffordCard4) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                                                val borderColorCard4 = if (canAffordCard4) Color(0xFF6B6C6F) else Color(0xFFF87F7F)
+                                                
                                                 Box(
                                                     modifier = Modifier
                                                         .wrapContentHeight()
@@ -986,7 +1006,7 @@ fun EquipmentScreen(
                                                         )
                                                         .border(
                                                             width = 1.dp,
-                                                            color = Color(0xFF6B6C6F),
+                                                            color = borderColorCard4,
                                                             shape = RoundedCornerShape(8.dp)
                                                         )
                                                         .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -1000,14 +1020,14 @@ fun EquipmentScreen(
                                                             contentDescription = "Credits",
                                                             modifier = Modifier.width(16.dp),
                                                             contentScale = ContentScale.Fit,
-                                                            colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                            colorFilter = ColorFilter.tint(priceColorCard4)
                                                         )
                                                         Text(
                                                             text = "2500",
                                                             fontFamily = Exo2,
                                                             fontSize = 14.sp,
                                                             fontWeight = FontWeight.Medium,
-                                                            color = Color(0xFFFFFFFF)
+                                                            color = priceColorCard4
                                                         )
                                                     }
                                                 }
@@ -1054,7 +1074,7 @@ fun EquipmentScreen(
                                                         .height(24.dp)
                                                         .border(
                                                             width = 1.dp,
-                                                            color = Color(0xFFFFFFFF),
+                                                            color = priceColorCard4,
                                                             shape = RoundedCornerShape(50.dp)
                                                         ),
                                                     contentAlignment = Alignment.Center
@@ -1064,7 +1084,7 @@ fun EquipmentScreen(
                                                         fontFamily = Exo2,
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.W400,
-                                                        color = Color(0xFFFFFFFF),
+                                                        color = priceColorCard4,
                                                         modifier = Modifier
                                                             .offset(y = (-1).dp)
                                                             .padding(horizontal = 16.dp) // 16dp side padding

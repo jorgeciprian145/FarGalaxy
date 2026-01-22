@@ -66,6 +66,7 @@ import com.example.fargalaxy.R
 fun StoreScreen(
     onBackClick: () -> Unit = {},
     onStoreItemClick: (String, Int, Int, String) -> Unit = { _, _, _, _ -> }, // name, imageResId, price, description
+    userCredits: Int,
     modifier: Modifier = Modifier
 ) {
     // Scroll state
@@ -251,7 +252,7 @@ fun StoreScreen(
                             
                             // Credits amount label: 16sp, medium weight, white color
                             Text(
-                                text = "2600",
+                                text = userCredits.toString(),
                                 fontFamily = Exo2,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
@@ -301,12 +302,12 @@ fun StoreScreen(
                                 )
                                 .padding(horizontal = 0.dp, vertical = 8.dp) // 0dp side padding, 8dp vertical padding
                                 .clickable {
-                                    // First card: Mythical ship
+                                    // First card: Dying Star
                                     onStoreItemClick(
-                                        "Mythical ship offer",
-                                        R.drawable.store, // Placeholder - will be replaced with actual image
-                                        2500,
-                                        "Description for mythical ship offer" // Placeholder description
+                                        "Dying Star",
+                                        R.drawable.ship15render,
+                                        199, // $1.99 in cents for priceType detection
+                                        "Description for Dying Star" // Placeholder description
                                     )
                                 }
                         ) {
@@ -385,14 +386,14 @@ fun StoreScreen(
                                                 Column(
                                                     modifier = Modifier.weight(1f),
                                                     verticalArrangement = Arrangement.spacedBy(4.dp) // 4dp spacing between title and label
-                                                ) {
-                                                    // Title: 14sp, bold, 18sp line height
-                                                    Text(
+                                            ) {
+                                                // Title: 14sp, bold, 18sp line height
+                                                Text(
                                                         text = "Dying Star",
-                                                        fontFamily = Exo2,
-                                                        fontSize = 14.sp,
-                                                        lineHeight = 18.sp,
-                                                        fontWeight = FontWeight.Bold,
+                                                    fontFamily = Exo2,
+                                                    fontSize = 14.sp,
+                                                    lineHeight = 18.sp,
+                                                    fontWeight = FontWeight.Bold,
                                                         color = Color(0xFFFFFFFF)
                                                     )
                                                     
@@ -449,13 +450,13 @@ fun StoreScreen(
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     // Price label: $1.99 (no credits icon)
-                                                    Text(
+                                                        Text(
                                                         text = "$1.99",
-                                                        fontFamily = Exo2,
-                                                        fontSize = 16.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color = Color(0xFFFFFFFF)
-                                                    )
+                                                            fontFamily = Exo2,
+                                                            fontSize = 16.sp,
+                                                            fontWeight = FontWeight.SemiBold,
+                                                            color = Color(0xFFFFFFFF)
+                                                        )
 
                                                     // BUY button
                                                     Box(
@@ -514,12 +515,12 @@ fun StoreScreen(
                                 )
                                 .padding(horizontal = 0.dp, vertical = 8.dp) // 0dp side padding, 8dp vertical padding
                                 .clickable {
-                                    // Second card
+                                    // Second card: Interstellar credits pack
                                     onStoreItemClick(
-                                        "Store item 2",
-                                        R.drawable.store, // Placeholder
-                                        2500,
-                                        "Description for store item 2" // Placeholder description
+                                        "Interstellar credits pack",
+                                        R.drawable.creditsselection,
+                                        199, // $1.99 in cents for priceType detection
+                                        "Adds instantly 100000 interstellar credits to use for any purchase."
                                     )
                                 }
                         ) {
@@ -632,13 +633,13 @@ fun StoreScreen(
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     // Price label: $1.99 (no credits icon)
-                                                    Text(
+                                                        Text(
                                                         text = "$1.99",
-                                                        fontFamily = Exo2,
-                                                        fontSize = 16.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color = Color(0xFFFFFFFF)
-                                                    )
+                                                            fontFamily = Exo2,
+                                                            fontSize = 16.sp,
+                                                            fontWeight = FontWeight.SemiBold,
+                                                            color = Color(0xFFFFFFFF)
+                                                        )
 
                                                     // BUY button
                                                     Box(
@@ -697,12 +698,12 @@ fun StoreScreen(
                                 )
                                 .padding(horizontal = 0.dp, vertical = 8.dp) // 0dp side padding, 8dp vertical padding
                                 .clickable {
-                                    // Third card
+                                    // Third card: Elite Spacer's crate
                                     onStoreItemClick(
-                                        "Store item 3",
-                                        R.drawable.store, // Placeholder
-                                        2500,
-                                        "Description for store item 3" // Placeholder description
+                                        "Elite Spacer's crate",
+                                        R.drawable.elitecrateselection,
+                                        20000,
+                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (6% chance)\nLegendary ship card (20% chance)\nEpic ship card (30% chance)\nUncommon ship card (22% chance)\nEquipment part (30% chance)"
                                     )
                                 }
                         ) {
@@ -800,7 +801,7 @@ fun StoreScreen(
                                                     .fillMaxWidth()
                                                     .border(
                                                         width = 1.dp,
-                                                        color = Color(0xFF6B6C6F),
+                                                        color = if (20000 <= userCredits) Color(0xFF6B6C6F) else Color(0xFFF87F7F),
                                                         shape = RoundedCornerShape(50.dp)
                                                     )
                                                     .background(
@@ -809,6 +810,10 @@ fun StoreScreen(
                                                     )
                                                     .padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
                                             ) {
+                                                // Check if user can afford this item (price: 20000)
+                                                val canAffordCard3 = 20000 <= userCredits
+                                                val priceColorCard3 = if (canAffordCard3) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                                                
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -823,7 +828,7 @@ fun StoreScreen(
                                                             contentDescription = "Credits",
                                                             modifier = Modifier.width(16.dp),
                                                             contentScale = ContentScale.Fit,
-                                                            colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                            colorFilter = ColorFilter.tint(priceColorCard3)
                                                         )
 
                                                         Spacer(modifier = Modifier.width(4.dp))
@@ -833,7 +838,7 @@ fun StoreScreen(
                                                             fontFamily = Exo2,
                                                             fontSize = 16.sp,
                                                             fontWeight = FontWeight.SemiBold,
-                                                            color = Color(0xFFFFFFFF)
+                                                            color = priceColorCard3
                                                         )
                                                     }
 
@@ -843,7 +848,7 @@ fun StoreScreen(
                                                             .height(24.dp)
                                                             .border(
                                                                 width = 1.dp,
-                                                                color = Color(0xFFFFFFFF),
+                                                                color = priceColorCard3,
                                                                 shape = RoundedCornerShape(50.dp)
                                                             ),
                                                         contentAlignment = Alignment.Center
@@ -853,7 +858,7 @@ fun StoreScreen(
                                                             fontFamily = Exo2,
                                                             fontSize = 14.sp,
                                                             fontWeight = FontWeight.W400,
-                                                            color = Color(0xFFFFFFFF),
+                                                            color = priceColorCard3,
                                                             modifier = Modifier
                                                                 .offset(y = (-1).dp)
                                                                 .padding(horizontal = 16.dp)
@@ -895,12 +900,12 @@ fun StoreScreen(
                                 )
                                 .padding(0.dp) // 0dp padding on all sides
                                 .clickable {
-                                    // First vertical card
+                                    // First vertical card: Advanced Spacer's crate
                                     onStoreItemClick(
-                                        "Store item 4",
-                                        R.drawable.store, // Placeholder
-                                        2500,
-                                        "Description for store item 4" // Placeholder description
+                                        "Advanced Spacer's crate",
+                                        R.drawable.advancedcrateselection,
+                                        10000,
+                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (4% chance)\nLegendary ship card (6% chance)\nEpic ship card (20% chance)\nUncommon ship card (30% chance)\nEquipment part (40% chance)"
                                     )
                                 }
                         ) {
@@ -950,20 +955,25 @@ fun StoreScreen(
                                             horizontalAlignment = Alignment.CenterHorizontally, // Center align all elements
                                             verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between elements
                                         ) {
-                                            // Price badge
-                                            Box(
-                                                modifier = Modifier
-                                                    .wrapContentHeight()
-                                                    .background(
-                                                        color = Color(0xFF373A3E),
-                                                        shape = RoundedCornerShape(8.dp)
-                                                    )
-                                                    .border(
-                                                        width = 1.dp,
-                                                        color = Color(0xFF6B6C6F),
-                                                        shape = RoundedCornerShape(8.dp)
-                                                    )
-                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                // Price badge
+                                                // Check if user can afford this item (price: 10000)
+                                                val canAffordCard4 = 10000 <= userCredits
+                                                val priceColorCard4 = if (canAffordCard4) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                                                val borderColorCard4 = if (canAffordCard4) Color(0xFF6B6C6F) else Color(0xFFF87F7F)
+                                                
+                                                Box(
+                                                    modifier = Modifier
+                                                        .wrapContentHeight()
+                                                        .background(
+                                                            color = Color(0xFF373A3E),
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .border(
+                                                            width = 1.dp,
+                                                            color = borderColorCard4,
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
                                             ) {
                                                 Row(
                                                     verticalAlignment = Alignment.CenterVertically,
@@ -974,14 +984,14 @@ fun StoreScreen(
                                                         contentDescription = "Credits",
                                                         modifier = Modifier.width(16.dp),
                                                         contentScale = ContentScale.Fit,
-                                                        colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                        colorFilter = ColorFilter.tint(priceColorCard4)
                                                     )
                                                     Text(
                                                         text = "10000",
                                                         fontFamily = Exo2,
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.Medium,
-                                                        color = Color(0xFFFFFFFF)
+                                                        color = priceColorCard4
                                                     )
                                                 }
                                             }
@@ -1028,7 +1038,7 @@ fun StoreScreen(
                                                     .height(24.dp)
                                                     .border(
                                                         width = 1.dp,
-                                                        color = Color(0xFFFFFFFF),
+                                                        color = priceColorCard4,
                                                         shape = RoundedCornerShape(50.dp)
                                                     ),
                                                 contentAlignment = Alignment.Center
@@ -1038,7 +1048,7 @@ fun StoreScreen(
                                                     fontFamily = Exo2,
                                                     fontSize = 14.sp,
                                                     fontWeight = FontWeight.W400,
-                                                    color = Color(0xFFFFFFFF),
+                                                    color = priceColorCard4,
                                                     modifier = Modifier
                                                         .offset(y = (-1).dp)
                                                         .padding(horizontal = 16.dp) // 16dp side padding
@@ -1070,12 +1080,12 @@ fun StoreScreen(
                                 )
                                 .padding(0.dp) // 0dp padding on all sides
                                 .clickable {
-                                    // Second vertical card
+                                    // Second vertical card: Standard Spacer's crate
                                     onStoreItemClick(
-                                        "Store item 5",
-                                        R.drawable.store, // Placeholder
-                                        2500,
-                                        "Description for store item 5" // Placeholder description
+                                        "Standard Spacer's crate",
+                                        R.drawable.standardcrateselection,
+                                        5000,
+                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (2% chance)\nLegendary ship card (3% chance)\nEpic ship card (10% chance)\nUncommon ship card (35% chance)\nEquipment part (50% chance)"
                                     )
                                 }
                         ) {
@@ -1125,20 +1135,25 @@ fun StoreScreen(
                                             horizontalAlignment = Alignment.CenterHorizontally, // Center align all elements
                                             verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between elements
                                         ) {
-                                            // Price badge
-                                            Box(
-                                                modifier = Modifier
-                                                    .wrapContentHeight()
-                                                    .background(
-                                                        color = Color(0xFF373A3E),
-                                                        shape = RoundedCornerShape(8.dp)
-                                                    )
-                                                    .border(
-                                                        width = 1.dp,
-                                                        color = Color(0xFF6B6C6F),
-                                                        shape = RoundedCornerShape(8.dp)
-                                                    )
-                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                // Price badge
+                                                // Check if user can afford this item (price: 5000)
+                                                val canAffordCard5 = 5000 <= userCredits
+                                                val priceColorCard5 = if (canAffordCard5) Color(0xFFFFFFFF) else Color(0xFFF87F7F)
+                                                val borderColorCard5 = if (canAffordCard5) Color(0xFF6B6C6F) else Color(0xFFF87F7F)
+                                                
+                                                Box(
+                                                    modifier = Modifier
+                                                        .wrapContentHeight()
+                                                        .background(
+                                                            color = Color(0xFF373A3E),
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .border(
+                                                            width = 1.dp,
+                                                            color = borderColorCard5,
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
                                             ) {
                                                 Row(
                                                     verticalAlignment = Alignment.CenterVertically,
@@ -1149,14 +1164,14 @@ fun StoreScreen(
                                                         contentDescription = "Credits",
                                                         modifier = Modifier.width(16.dp),
                                                         contentScale = ContentScale.Fit,
-                                                        colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                                        colorFilter = ColorFilter.tint(priceColorCard5)
                                                     )
                                                     Text(
                                                         text = "5000",
                                                         fontFamily = Exo2,
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.Medium,
-                                                        color = Color(0xFFFFFFFF)
+                                                        color = priceColorCard5
                                                     )
                                                 }
                                             }
@@ -1203,7 +1218,7 @@ fun StoreScreen(
                                                     .height(24.dp)
                                                     .border(
                                                         width = 1.dp,
-                                                        color = Color(0xFFFFFFFF),
+                                                        color = priceColorCard5,
                                                         shape = RoundedCornerShape(50.dp)
                                                     ),
                                                 contentAlignment = Alignment.Center
@@ -1213,7 +1228,7 @@ fun StoreScreen(
                                                     fontFamily = Exo2,
                                                     fontSize = 14.sp,
                                                     fontWeight = FontWeight.W400,
-                                                    color = Color(0xFFFFFFFF),
+                                                    color = priceColorCard5,
                                                     modifier = Modifier
                                                         .offset(y = (-1).dp)
                                                         .padding(horizontal = 16.dp) // 16dp side padding
@@ -1225,9 +1240,9 @@ fun StoreScreen(
                             }
                         }
                     }
-                    }
                 }
             }
+        }
         }
     }
 }

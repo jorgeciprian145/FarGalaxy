@@ -789,6 +789,9 @@ fun StaryardDetailsScreen(
                         )
                     }
                 }
+                
+                // Extra spacing at bottom: 40dp to allow more scrolling
+                Spacer(modifier = Modifier.height(40.dp))
             }
         }
         

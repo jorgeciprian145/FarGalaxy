@@ -266,8 +266,8 @@ fun EquipmentDetailsScreen(
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Spacing between equipment image and name: 8dp
-                Spacer(modifier = Modifier.height(8.dp))
+                // Spacing between equipment image and name: 24dp
+                Spacer(modifier = Modifier.height(24.dp))
                 
                 // Equipment name: 21sp, Bold
                 Text(

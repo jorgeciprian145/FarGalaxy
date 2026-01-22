@@ -75,6 +75,7 @@ fun VaultScreen(
     onStaryardClick: () -> Unit = {},
     onEquipmentClick: () -> Unit = {},
     onStoreClick: () -> Unit = {},
+    userCredits: Int,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -406,7 +407,7 @@ fun VaultScreen(
                 
                 // Credits section
                 CreditsSection(
-                    creditsAmount = 2600, // TODO: Replace with dynamic value
+                    creditsAmount = userCredits, // TODO: Replace with dynamic value
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -1001,4 +1002,3 @@ private fun PurchaseRow(
         }
     }
 }
-

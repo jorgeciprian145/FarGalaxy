@@ -82,7 +82,7 @@ fun StaryardScreen(
     val availableShips = allShips.filter { it.id != "b14_phantom" }
     
     // User credits (placeholder - will be replaced with dynamic value later)
-    val userCredits = 2600
+    val userCredits = 2100
     
     // Ship prices for testing (first 4 ships < 2600, rest > 2600)
     val shipPrices = mapOf(
@@ -286,9 +286,9 @@ fun StaryardScreen(
                             )
                             
                             // Credits amount label: 16sp, medium weight, white color
-                            // TODO: Replace with dynamic value matching VaultScreen (currently 2600)
+                            // TODO: Replace with dynamic value matching VaultScreen (currently 2100)
                             Text(
-                                text = "2600",
+                                text = "2100",
                                 fontFamily = Exo2,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,

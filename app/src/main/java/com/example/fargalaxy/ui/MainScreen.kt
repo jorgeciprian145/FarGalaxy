@@ -91,6 +91,19 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var selectedEquipmentPrice by remember { mutableStateOf(0) }
     var selectedEquipmentDescription by remember { mutableStateOf("") }
     
+    // Track if StoreScreen should be shown
+    var showStore by remember { mutableStateOf(false) }
+    
+    // Track if StoreDetailsScreen should be shown
+    var showStoreDetails by remember { mutableStateOf(false) }
+    
+    // Track the selected store item for details
+    var selectedStoreItemName by remember { mutableStateOf("") }
+    var selectedStoreItemImageResId by remember { mutableStateOf(0) }
+    var selectedStoreItemPrice by remember { mutableStateOf("") }
+    var selectedStoreItemPriceType by remember { mutableStateOf("credits") }
+    var selectedStoreItemDescription by remember { mutableStateOf("") }
+    
     // Track the selected ship for staryard details
     var selectedShipForStaryardDetails by remember { mutableStateOf<Ship?>(null) }
     
@@ -98,7 +111,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var selectedShipPrice by remember { mutableStateOf(0) }
     
     // User credits (placeholder - will be replaced with dynamic value later)
-    val userCredits = 2600
+    val userCredits = 2100
     
     // Ship prices for testing (matching StaryardScreen)
     val shipPrices = mapOf(
@@ -235,9 +248,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
         showEquipment = false
     }
     
-    // Track if StoreScreen should be shown
-    var showStore by remember { mutableStateOf(false) }
-    
     // Handle store navigation
     val onStoreClick: () -> Unit = {
         showStore = true
@@ -246,6 +256,45 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back from store
     val onBackFromStore: () -> Unit = {
         showStore = false
+    }
+    
+    // Handle store item click from StoreScreen
+    val onStoreItemClick: (String, Int, Int, String) -> Unit = { name, imageResId, price, description ->
+        selectedStoreItemName = name
+        selectedStoreItemImageResId = imageResId
+        // Convert price Int to String and determine priceType
+        // Cards with price < 1000 are dollars ($1.99), others are credits
+        if (name == "Dying Star" || name == "Interstellar credits pack") {
+            selectedStoreItemPrice = "$1.99"
+            selectedStoreItemPriceType = "dollars"
+        } else {
+            selectedStoreItemPrice = price.toString()
+            selectedStoreItemPriceType = "credits"
+        }
+        selectedStoreItemDescription = description
+        showStoreDetails = true
+    }
+    
+    // Handle back from store details
+    val onBackFromStoreDetails: () -> Unit = {
+        showStoreDetails = false
+        selectedStoreItemName = ""
+        selectedStoreItemImageResId = 0
+        selectedStoreItemPrice = ""
+        selectedStoreItemPriceType = "credits"
+        selectedStoreItemDescription = ""
+    }
+    
+    // Handle purchase click from StoreDetailsScreen
+    val onStorePurchaseClick: () -> Unit = {
+        // TODO: Implement purchase logic
+        // For now, just close the details screen
+        showStoreDetails = false
+        selectedStoreItemName = ""
+        selectedStoreItemImageResId = 0
+        selectedStoreItemPrice = ""
+        selectedStoreItemPriceType = "credits"
+        selectedStoreItemDescription = ""
     }
     
     // Handle equipment click from EquipmentScreen
@@ -384,6 +433,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Handle back button press
     BackHandler(enabled = true) {
         when {
+            // If StoreDetailsScreen is shown, close it
+            showStoreDetails -> {
+                onBackFromStoreDetails()
+            }
             // If EquipmentDetailsScreen is shown, close it
             showEquipmentDetails -> {
                 onBackFromEquipmentDetails()
@@ -500,15 +553,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onBackClick = { navigateToPage(1) }, // Navigate to GalaxyScreen
                         onStaryardClick = onStaryardClick,
                         onEquipmentClick = onEquipmentClick,
-                        onStoreClick = onStoreClick
+                        onStoreClick = onStoreClick,
+                        userCredits = userCredits
                     )
                 }
             }
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
-        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, or StoreScreen is shown (they have their own backgrounds)
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore) {
+        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, or StoreDetailsScreen is shown (they have their own backgrounds)
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails) {
             Image(
                 painter = painterResource(id = R.drawable.noise_8bit),
                 contentDescription = null,
@@ -521,8 +575,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, or StoreScreen is shown
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, or StoreDetailsScreen is shown
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -663,17 +717,48 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // EquipmentScreen overlay - shown on top of everything when showEquipment is true
         if (showEquipment) {
-            EquipmentScreen(
-                onBackClick = onBackFromEquipment,
-                onEquipmentClick = onEquipmentItemClick
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                EquipmentScreen(
+                    onBackClick = onBackFromEquipment,
+                    onEquipmentClick = onEquipmentItemClick,
+                    userCredits = userCredits
+                )
+                
+                // Block pointer events when EquipmentDetailsScreen is shown
+                if (showEquipmentDetails) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                // Consume all pointer events to prevent interaction with EquipmentScreen
+                                detectTapGestures { }
+                            }
+                    )
+                }
+            }
         }
         
         // StoreScreen overlay - shown on top of everything when showStore is true
         if (showStore) {
-            StoreScreen(
-                onBackClick = onBackFromStore
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                StoreScreen(
+                    onBackClick = onBackFromStore,
+                    onStoreItemClick = onStoreItemClick,
+                    userCredits = userCredits
+                )
+                
+                // Block pointer events when StoreDetailsScreen is shown
+                if (showStoreDetails) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                // Consume all pointer events to prevent interaction with StoreScreen
+                                detectTapGestures { }
+                            }
+                    )
+                }
+            }
         }
         
         // EquipmentDetailsScreen overlay - shown on top of everything when showEquipmentDetails is true
@@ -686,6 +771,20 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 description = selectedEquipmentDescription,
                 onBackClick = onBackFromEquipmentDetails,
                 onPurchaseClick = onEquipmentPurchaseClick
+            )
+        }
+        
+        // StoreDetailsScreen overlay - shown on top of everything when showStoreDetails is true
+        if (showStoreDetails) {
+            StoreDetailsScreen(
+                itemName = selectedStoreItemName,
+                itemImageResId = selectedStoreItemImageResId,
+                price = selectedStoreItemPrice,
+                priceType = selectedStoreItemPriceType,
+                userCredits = userCredits,
+                description = selectedStoreItemDescription,
+                onBackClick = onBackFromStoreDetails,
+                onPurchaseClick = onStorePurchaseClick
             )
         }
     }
