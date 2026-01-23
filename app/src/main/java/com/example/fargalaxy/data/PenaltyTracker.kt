@@ -37,6 +37,7 @@ object PenaltyTracker {
     private var wasScreenOnWhenBackgrounded = false // Track screen state when app went to background
     private var gracePeriodJob: kotlinx.coroutines.Job? = null
     private var cancellationCheckJob: kotlinx.coroutines.Job? = null
+    private var screenMonitorJob: kotlinx.coroutines.Job? = null // Monitor screen state while in background
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     // Callback for trip cancellation (when user is away for >20 seconds or has 5+ penalties)
@@ -89,15 +90,18 @@ object PenaltyTracker {
         wasScreenOnWhenBackgrounded = false
         gracePeriodJob?.cancel()
         cancellationCheckJob?.cancel()
+        screenMonitorJob?.cancel()
         
         // Start checking for trip cancellation (if user is away for >20 seconds)
+        // Only cancel if screen was on when app went to background (user switched apps),
+        // not if phone was locked or sleeping
         cancellationCheckJob = scope.launch {
             while (isTracking) {
                 delay(1000) // Check every second
-                if (isAppInBackground && backgroundStartTime > 0) {
+                if (isAppInBackground && backgroundStartTime > 0 && wasScreenOnWhenBackgrounded) {
                     val timeAway = System.currentTimeMillis() - backgroundStartTime
                     if (timeAway > 20000) { // 20 seconds
-                        // User has been away for more than 20 seconds, cancel trip
+                        // User has been away for more than 20 seconds (and screen was on), cancel trip
                         onTripCancelled?.invoke("timeout")
                         break
                     }
@@ -116,6 +120,7 @@ object PenaltyTracker {
         wasScreenOnWhenBackgrounded = false
         gracePeriodJob?.cancel()
         cancellationCheckJob?.cancel()
+        screenMonitorJob?.cancel()
     }
     
     /**
@@ -144,6 +149,22 @@ object PenaltyTracker {
             // Capture screen state at the moment app goes to background
             // This is important because the screen might go to sleep during the grace period
             wasScreenOnWhenBackgrounded = isScreenInteractive()
+            
+            // Start monitoring screen state continuously while app is in background
+            // If screen goes off after app went to background, treat it as if phone was locked
+            // (user accidentally minimized app but then locked phone - no penalty)
+            screenMonitorJob?.cancel()
+            screenMonitorJob = scope.launch {
+                while (isAppInBackground && isTracking) {
+                    delay(500) // Check screen state every 500ms
+                    if (!isScreenInteractive()) {
+                        // Screen went off after app went to background - user locked phone
+                        // Treat as if phone was locked from the start (no penalties, no cancellation)
+                        wasScreenOnWhenBackgrounded = false
+                        gracePeriodJob?.cancel() // Cancel any pending penalty
+                    }
+                }
+            }
             
             // Start grace period: wait 5 seconds before counting penalty
             gracePeriodJob?.cancel()
@@ -176,6 +197,7 @@ object PenaltyTracker {
             isAppInBackground = false
             backgroundStartTime = 0L
             gracePeriodJob?.cancel()
+            screenMonitorJob?.cancel() // Stop monitoring screen state when app comes to foreground
         }
     }
     
