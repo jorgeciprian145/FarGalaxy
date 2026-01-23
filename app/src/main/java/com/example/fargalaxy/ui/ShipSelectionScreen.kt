@@ -84,10 +84,25 @@ fun ShipSelectionScreen(
     val allShips = ShipRepository.getAllShips()
     val currentShip = ShipRepository.getCurrentShip()
     
-    // Ensure current ship is always first, then add other ships
+    // Group ships by rarity, with current ship first
+    // Rarity order: COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHICAL
+    val rarityOrder = listOf(
+        ShipRarity.COMMON,
+        ShipRarity.UNCOMMON,
+        ShipRarity.RARE,
+        ShipRarity.EPIC,
+        ShipRarity.LEGENDARY,
+        ShipRarity.MYTHICAL
+    )
+    
     val availableShips = if (allShips.isNotEmpty()) {
         val otherShips = allShips.filter { it.id != currentShip.id }
-        listOf(currentShip) + otherShips
+        // Group other ships by rarity
+        val groupedByRarity = rarityOrder.map { rarity ->
+            otherShips.filter { it.rarity == rarity }
+        }.flatten()
+        // Current ship first, then grouped by rarity
+        listOf(currentShip) + groupedByRarity
     } else {
         allShips
     }
@@ -449,6 +464,9 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "silver_lightning" -> R.drawable.ship12selectionscreen
         "vulcani_legenda_f1" -> R.drawable.ship13selectionscreen
         "force_of_nature" -> R.drawable.ship14selectionscreen
+        "dying_star" -> R.drawable.ship15selectionscreen
+        "asn_ag94_centurion" -> R.drawable.ship16selectionscreen
+        "isc_m450_phoenix" -> R.drawable.ship17selectionscreen
         "legendary_ship" -> R.drawable.ship12selectionscreen
         else -> R.drawable.ship1selectionscreen // Fallback
     }

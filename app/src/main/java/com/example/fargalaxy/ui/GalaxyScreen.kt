@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -48,7 +50,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import android.graphics.RenderEffect as AndroidRenderEffect
+import android.graphics.Shader
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -315,16 +323,25 @@ fun TimeLabel(
     isTraveling: Boolean = false,
     isPreparingLaunch: Boolean = false,
     launchCountdown: Int = 3,
+    isTestMode: Boolean = false, // TODO: REMOVE TESTING CODE
     modifier: Modifier = Modifier
 ) {
     // Determine the text to display based on state
+    // TODO: REMOVE TESTING CODE - Show "TEST" when in test mode
     val displayText = when {
         isPreparingLaunch -> "Launching in $launchCountdown"
         isTraveling -> {
             val remainingMinutes = (remainingSeconds + 59) / 60 // Round up to nearest minute
             "$remainingMinutes mins remaining"
         }
-        else -> "$selectedMinutes mins"
+        else -> {
+            // TODO: REMOVE TESTING CODE - Show "TEST" when in test mode
+            if (selectedMinutes == 5 && isTestMode) {
+                "TEST"
+            } else {
+                "$selectedMinutes mins"
+            }
+        }
     }
     
     Text(
@@ -351,6 +368,7 @@ fun TimeControlsBar(
     isTraveling: Boolean = false,
     isPreparingLaunch: Boolean = false,
     launchCountdown: Int = 3,
+    isTestMode: Boolean = false, // TODO: REMOVE TESTING CODE
     modifier: Modifier = Modifier,
     onMinusClick: () -> Unit = {},
     onPlusClick: () -> Unit = {}
@@ -383,7 +401,8 @@ fun TimeControlsBar(
             remainingSeconds = remainingSeconds,
             isTraveling = isTraveling,
             isPreparingLaunch = isPreparingLaunch,
-            launchCountdown = launchCountdown
+            launchCountdown = launchCountdown,
+            isTestMode = isTestMode // TODO: REMOVE TESTING CODE
         )
         
         // Only show buttons when not traveling or preparing
@@ -469,6 +488,148 @@ fun LaunchButton(
 }
 
 /**
+ * TravelSuccessModal composable - displays a success modal when travel completes.
+ * Shows an overlay with blur, a container with gradient background, title, label, button, and JSON animation.
+ */
+@Composable
+fun TravelSuccessModal(
+    onContinueClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    // Track JSON height for offset calculation
+    var jsonHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
+    
+    // Load JSON composition
+    val jsonComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.modalcheck))
+    
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        // Blur and overlay: Blurs the content behind and applies dark overlay with 96% opacity
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    renderEffect = AndroidRenderEffect.createBlurEffect(
+                        16f,
+                        16f,
+                        Shader.TileMode.CLAMP
+                    ).asComposeRenderEffect()
+                }
+                .background(Color.Black.copy(alpha = 0.96f))
+        )
+        
+        // Modal Container with JSON on top
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            // Modal Container
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF373A3E), // Top color
+                                Color(0xFF2B2E32)  // Bottom color
+                            )
+                        ),
+                        shape = RoundedCornerShape(32.dp) // 32dp corner radius
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF6B6C6F),
+                        shape = RoundedCornerShape(32.dp) // 32dp corner radius
+                    )
+                    .padding(
+                        top = 72.dp,
+                        bottom = 24.dp,
+                        start = 24.dp,
+                        end = 24.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Title: "Success!" - bold, 28dp
+                Text(
+                    text = "Success!",
+                    fontFamily = Exo2,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                
+                // Spacing: 4dp between title and label
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Label: "You completed this session" - regular, 16dp
+                Text(
+                    text = "You completed this session",
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                
+                // Spacing: 16dp between label and button
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Button: "CONTINUE" - same format as LAUNCH button (primary style)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(80.dp))
+                        .background(Color(0xFFFFFFFF)) // White background (primary style)
+                        .clickable(onClick = onContinueClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "CONTINUE",
+                        fontFamily = Exo2,
+                        fontSize = 24.sp,
+                        lineHeight = 24.sp,
+                        color = Color(0xFF010102), // Dark text (primary style)
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = (-2).dp)
+                    )
+                }
+            }
+            
+            // JSON Animation: Positioned right above the container (bottom edge at container top), then offset down by 50% of its height
+            // Width is 70% of screen width
+            val configuration = LocalConfiguration.current
+            val screenWidth = with(density) { configuration.screenWidthDp.dp }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .width(screenWidth * 0.7f) // 70% of screen width
+                    .onSizeChanged { size ->
+                        jsonHeight = with(density) { size.height.toDp() }
+                    }
+                    .offset(y = -jsonHeight + jsonHeight / 2) // Move up by full height (so bottom aligns with container top), then offset down by 50%
+            ) {
+                LottieAnimation(
+                    composition = jsonComposition,
+                    iterations = 1, // Play only once
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
+    }
+}
+
+/**
  * Helper function to get the ship image resource ID for GalaxyScreen based on ship ID.
  * Maps ship IDs to their corresponding ship images (ship1, ship2, etc.).
  */
@@ -488,6 +649,9 @@ private fun getGalaxyShipImageResId(shipId: String): Int {
         "silver_lightning" -> R.drawable.ship12
         "vulcani_legenda_f1" -> R.drawable.ship13
         "force_of_nature" -> R.drawable.ship14
+        "dying_star" -> R.drawable.ship15
+        "asn_ag94_centurion" -> R.drawable.ship16
+        "isc_m450_phoenix" -> R.drawable.ship17
         "legendary_ship" -> R.drawable.ship1 // Fallback
         else -> R.drawable.ship1 // Default fallback
     }
@@ -511,6 +675,9 @@ private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "silver_lightning" -> 191.dp // Ship12: 10% bigger than 174.dp (174 * 1.1 = 191.4)
         "vulcani_legenda_f1" -> 136.dp // Ship13: 20% bigger than 113.dp (113 * 1.2 = 135.6)
         "force_of_nature" -> 130.dp // Ship14: 15% bigger than 113.dp (113 * 1.15 = 129.95)
+        "dying_star" -> 208.dp // Ship15: 60% larger than 130.dp (130 * 1.6 = 208)
+        "asn_ag94_centurion" -> 162.dp // Ship16: 10% smaller than 180.dp (180 * 0.9 = 162)
+        "isc_m450_phoenix" -> 234.dp // Ship17: 30% larger than 180.dp (180 * 1.3 = 234)
         else -> 113.dp // Default height
     }
 }
@@ -535,6 +702,9 @@ private fun getImpulseImageResId(shipId: String): Int {
         "silver_lightning" -> R.drawable.impulse12
         "vulcani_legenda_f1" -> R.drawable.impulse13
         "force_of_nature" -> R.drawable.impulse14
+        "dying_star" -> R.drawable.impulse15
+        "asn_ag94_centurion" -> R.drawable.impulse16
+        "isc_m450_phoenix" -> R.drawable.impulse17
         "legendary_ship" -> R.drawable.impulse1 // Fallback
         else -> R.drawable.impulse1 // Default fallback
     }
@@ -557,8 +727,11 @@ private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
         "navakeshi_star_ravager" -> 1200.dp // Impulse11: Larger than ship6, similar to mid-tier EPIC ships
         "h98_valkyrie" -> 1386.dp // Impulse10: 10% bigger than 1260.dp (1260 * 1.1 = 1386)
         "silver_lightning" -> 1118.dp // Impulse13: 10% bigger than 1016.dp (1016 * 1.1 = 1117.6)
-        "vulcani_legenda_f1" -> 726.dp // Impulse14: 20% bigger than 600.dp (600 * 1.2 = 720, or 660 * 1.1 = 726)
-        "force_of_nature" -> 690.dp // Impulse15: 15% bigger than 600.dp (600 * 1.15 = 690)
+        "vulcani_legenda_f1" -> 726.dp // Impulse13: 20% bigger than 600.dp (600 * 1.2 = 720, or 660 * 1.1 = 726)
+        "force_of_nature" -> 690.dp // Impulse14: 15% bigger than 600.dp (600 * 1.15 = 690)
+        "dying_star" -> 1104.dp // Impulse15: 60% larger than 690.dp (690 * 1.6 = 1104)
+        "asn_ag94_centurion" -> 945.dp // Impulse16: 10% smaller than 1050.dp (1050 * 0.9 = 945)
+        "isc_m450_phoenix" -> 1300.dp // Impulse17: 30% larger than 1000.dp (1000 * 1.3 = 1300)
         else -> 600.dp // Default width
     }
 }
@@ -580,8 +753,11 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "navakeshi_star_ravager" -> 200.dp // Impulse11: Larger than ship6, similar to mid-tier EPIC ships
         "h98_valkyrie" -> 231.dp // Impulse10: 10% bigger than 210.dp (210 * 1.1 = 231)
         "silver_lightning" -> 186.dp // Impulse13: 10% bigger than 169.dp (169 * 1.1 = 185.9)
-        "vulcani_legenda_f1" -> 121.dp // Impulse14: 20% bigger than 100.dp (100 * 1.2 = 120, or 110 * 1.1 = 121)
-        "force_of_nature" -> 115.dp // Impulse15: 15% bigger than 100.dp (100 * 1.15 = 115)
+        "vulcani_legenda_f1" -> 121.dp // Impulse13: 20% bigger than 100.dp (100 * 1.2 = 120, or 110 * 1.1 = 121)
+        "force_of_nature" -> 115.dp // Impulse14: 15% bigger than 100.dp (100 * 1.15 = 115)
+        "dying_star" -> 184.dp // Impulse15: 60% larger than 115.dp (115 * 1.6 = 184)
+        "asn_ag94_centurion" -> 157.5.dp // Impulse16: 10% smaller than 175.dp (175 * 0.9 = 157.5)
+        "isc_m450_phoenix" -> 214.5.dp // Impulse17: 30% larger than 165.dp (165 * 1.3 = 214.5)
         else -> 100.dp // Default height
     }
 }
@@ -603,6 +779,10 @@ private fun getImpulseHorizontalOffset(shipId: String): androidx.compose.ui.unit
         "model3_tortoise_ccp" -> (-72).dp // Ship9: Model 3 "Tortoise" CCP - moved 40% to the right from default (-120 + 48 = -72)
         "navakeshi_star_ravager" -> (-102).dp // Ship11: Navakeshi Star Ravager - moved 15% to the right from default (-120 + 18 = -102)
         "h98_valkyrie" -> (-120).dp // Ship10: H-98 Valkyrie
+        "force_of_nature" -> (-120).dp // Ship14: Force of nature
+        "dying_star" -> (-120).dp // Ship15: Dying Star
+        "asn_ag94_centurion" -> (-112).dp // Ship16: ASN AG94 Centurion - 8dp to the right from default (-120 + 8 = -112)
+        "isc_m450_phoenix" -> (-110).dp // Ship17: ISC M450 Phoenix - 10dp to the right from default (-120 + 10 = -110)
         "legendary_ship" -> (-120).dp // Legendary ship fallback
         else -> (-120).dp // Default offset
     }
@@ -943,6 +1123,15 @@ fun GalaxyScreen(
     // launchCountdown: The countdown number displayed during launch preparation (3, 2, 1)
     var launchCountdown by remember { mutableStateOf(3) }
     
+    // showTravelSuccessModal: Controls visibility of the success modal when travel completes
+    var showTravelSuccessModal by remember { mutableStateOf(false) }
+    
+    // Track if travel was cancelled (to avoid showing modal if cancelled)
+    var wasTravelCancelled by remember { mutableStateOf(false) }
+    
+    // TODO: REMOVE TESTING CODE - Track if in test mode (10 seconds)
+    var isTestMode by remember { mutableStateOf(false) }
+    
     // Notify parent about idle state changes
     LaunchedEffect(isPreparingLaunch, isTraveling) {
         val isIdle = !isPreparingLaunch && !isTraveling
@@ -953,15 +1142,32 @@ fun GalaxyScreen(
     // Only works when not traveling (buttons are disabled during travel)
     fun onIncrement() {
         if (!isTraveling) {
-            selectedMinutes = (selectedMinutes + 5).coerceAtMost(60)
+            // TODO: REMOVE TESTING CODE - Exit test mode when incrementing
+            if (isTestMode) {
+                isTestMode = false
+                selectedMinutes = 5
+            } else {
+                selectedMinutes = (selectedMinutes + 5).coerceAtMost(60)
+            }
         }
     }
 
     // Handler: Decrement selectedMinutes by 5, clamped to minimum of 5
     // Only works when not traveling (buttons are disabled during travel)
+    // TODO: REMOVE TESTING CODE - Allow going below 5 to enter test mode (10 seconds)
     fun onDecrement() {
         if (!isTraveling) {
-            selectedMinutes = (selectedMinutes - 5).coerceAtLeast(5)
+            if (selectedMinutes == 5 && !isTestMode) {
+                // At 5 minutes, go to test mode (10 seconds)
+                isTestMode = true
+                selectedMinutes = 5 // Keep at 5 for display, but will use 10 seconds
+            } else if (isTestMode) {
+                // Already in test mode, go back to 5 minutes
+                isTestMode = false
+                selectedMinutes = 5
+            } else {
+                selectedMinutes = (selectedMinutes - 5).coerceAtLeast(5)
+            }
         }
     }
     
@@ -978,10 +1184,12 @@ fun GalaxyScreen(
             // Start preparation instead of immediate launch
             isPreparingLaunch = true
             launchCountdown = 3 // Initialize countdown
+            wasTravelCancelled = false // Reset cancelled flag
         } else {
             // Stop travel: Cancel countdown
             isTraveling = false
             isInitialRingAppearance = false // Reset for next launch
+            wasTravelCancelled = true // Mark as cancelled
         }
     }
     
@@ -990,13 +1198,23 @@ fun GalaxyScreen(
     // Automatically stops when remainingSeconds reaches 0 or isTraveling becomes false
     LaunchedEffect(isTraveling) {
         if (isTraveling) {
+            wasTravelCancelled = false // Reset cancelled flag when travel starts
+            // TODO: REMOVE TESTING CODE - Use 10 seconds in test mode
+            val travelDuration = if (isTestMode) 10 else selectedMinutes * 60
+            remainingSeconds = travelDuration
             // Continue countdown while traveling and time remains
             while (isTraveling && remainingSeconds > 0) {
                 delay(1_000) // Wait 1 second
                 remainingSeconds -= 1 // Decrement remaining time by 1 second
             }
             // Auto-stop when countdown completes
-            isTraveling = false
+            // Show modal only if travel completed naturally (not cancelled)
+            if (remainingSeconds <= 0 && !wasTravelCancelled) {
+                isTraveling = false
+                showTravelSuccessModal = true
+            } else {
+                isTraveling = false
+            }
         }
     }
     
@@ -1025,7 +1243,8 @@ fun GalaxyScreen(
             if (isPreparingLaunch) {
                 isPreparingLaunch = false
                 isTraveling = true
-                remainingSeconds = selectedMinutes * 60
+                // TODO: REMOVE TESTING CODE - Use 10 seconds in test mode
+                remainingSeconds = if (isTestMode) 10 else selectedMinutes * 60
                 isInitialRingAppearance = true // Trigger initial drawing animation
                 launchCountdown = 3 // Reset for next time
             }
@@ -1173,6 +1392,22 @@ fun GalaxyScreen(
                     contentScale = ContentScale.Fit
                 )
             }
+            
+            // Solar flare effect layer: Only for ship15 (Dying Star)
+            // Same dimensions, positioning, and scaling behavior as ship image
+            // Positioned on top of the ship image
+            // Works for both idle and traveling states
+            if (currentShip.id == "dying_star") {
+                val solarFlareComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.shipsolarflare2))
+                LottieAnimation(
+                    composition = solarFlareComposition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(getGalaxyShipHeight(currentShip.id)),
+                    contentScale = ContentScale.Fit
+                )
+            }
         }
 
         // Top gradient overlay: Covers 20% of screen height, creating a fade effect at the top.
@@ -1287,6 +1522,7 @@ fun GalaxyScreen(
                 isTraveling = isTraveling,
                 isPreparingLaunch = isPreparingLaunch,
                 launchCountdown = launchCountdown,
+                isTestMode = isTestMode, // TODO: REMOVE TESTING CODE
                 onMinusClick = ::onDecrement,
                 onPlusClick = ::onIncrement
             )
@@ -1297,6 +1533,15 @@ fun GalaxyScreen(
                 onClick = ::onLaunchToggle,
                 isTraveling = isTraveling,
                 isPreparingLaunch = isPreparingLaunch
+            )
+        }
+
+        // Travel Success Modal: Shown when travel completes without cancellation
+        if (showTravelSuccessModal) {
+            TravelSuccessModal(
+                onContinueClick = {
+                    showTravelSuccessModal = false
+                }
             )
         }
 

@@ -316,6 +316,21 @@ fun StoreDetailsScreen(
                             },
                         contentScale = ContentScale.Fit
                     )
+                    
+                    // Solar flare effect layer: Only for "Dying Star" (ship15)
+                    // Same dimensions, positioning, and scaling behavior as item render image
+                    // Positioned on top of the item image
+                    if (itemName == "Dying Star") {
+                        val solarFlareComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.shipsolarflare))
+                        LottieAnimation(
+                            composition = solarFlareComposition,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
             }
             

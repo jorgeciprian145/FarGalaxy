@@ -348,6 +348,78 @@ object ShipRepository {
             acceleration = 125f,
             warpConverters = 200f,
             uniqueTrait = null
+        ),
+        Ship(
+            id = "dying_star",
+            name = "Dying Star",
+            manufacturer = "Eternal Infinitum (according to what was deciphered)",
+            type = "Unknown",
+            rarity = ShipRarity.MYTHICAL,
+            imageResId = R.drawable.ship15,
+            renderImageResId = R.drawable.ship15render,
+            dimensions = ShipDimensions(
+                lengthMeters = 43f,
+                lengthFeet = 141f, // 43m * 3.28084 = 141.08ft ≈ 141ft
+                widthMeters = 32f,
+                widthFeet = 105f // 32m * 3.28084 = 104.99ft ≈ 105ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 4
+            ),
+            lore = "Fragments of recovered data suggest that the Dying Star was commissioned by a powerful ruler from a technologically advanced civilization now lost to time. The vessel's hull is believed to have been forged using exotic matter extracted from the core of a collapsing star, a process so extreme that no surviving records describe it in full. What remains indicates a construction method that pushed both material science and energy containment far beyond known limits.\n\nResidual stellar radiation is still detectable throughout the ship's structure, constantly feeding its internal systems. This persistent output is thought to be self-regulating, allowing the vessel to operate without a conventional reactor. Pilots report subtle but continuous fluctuations in gravity and energy flow, reinforcing the theory that the ship is not merely powered by stellar remnants, but actively bound to them.",
+            speed = 200f,
+            acceleration = 170f,
+            warpConverters = 150f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "asn_ag94_centurion",
+            name = "ASN AG94 Centurion",
+            manufacturer = "Karnyx Armory Division",
+            type = "Hypertravel starfighter",
+            rarity = ShipRarity.UNCOMMON,
+            imageResId = R.drawable.ship16,
+            renderImageResId = R.drawable.ship16render,
+            dimensions = ShipDimensions(
+                lengthMeters = 43f,
+                lengthFeet = 141f, // 43m * 3.28084 = 141.08ft ≈ 141ft
+                widthMeters = 36f,
+                widthFeet = 118f // 36m * 3.28084 = 118.11ft ≈ 118ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 1
+            ),
+            lore = "The ASN approved an exclusivity contract with Karnyx to develop a nimble and fast starfighter, intended to serve both as the first line of defense for capital vessels and as a frontline assault craft.\n\nThe Centurion quickly proved itself highly effective in both roles. Its low production and maintenance costs, combined with strong performance and well-balanced specifications, led to its rapid adoption across the fleet. Today, it stands as the most widely deployed starfighter in Alliance service.",
+            speed = 120f,
+            acceleration = 60f,
+            warpConverters = 85f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "isc_m450_phoenix",
+            name = "ISC M450 Phoenix",
+            manufacturer = "Soren Shipworks",
+            type = "Hypertravel starfighter",
+            rarity = ShipRarity.EPIC,
+            imageResId = R.drawable.ship17,
+            renderImageResId = R.drawable.ship17render,
+            dimensions = ShipDimensions(
+                lengthMeters = 35f,
+                lengthFeet = 115f, // 35m * 3.28084 = 114.83ft ≈ 115ft
+                widthMeters = 38f,
+                widthFeet = 125f // 38m * 3.28084 = 124.67ft ≈ 125ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 1
+            ),
+            lore = "The Phoenix is the ISC's answer to the Alliance's Centurion. Following the sustained success of their neighbor's frontline starfighter, the ISC recognized the strategic value of deploying a comparable craft within their own fleet. Soren Shipworks was selected to lead its development.\n\nAfter years of refinement and iteration, the Phoenix finally emerged. A highly versatile vessel, it delivers outstanding performance both in the defense of capital ships and in direct assault operations, earning its place as a cornerstone of ISC space combat doctrine.",
+            speed = 150f,
+            acceleration = 75f,
+            warpConverters = 100f,
+            uniqueTrait = null
         )
     )
     

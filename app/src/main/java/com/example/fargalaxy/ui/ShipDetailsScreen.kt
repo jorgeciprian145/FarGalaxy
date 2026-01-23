@@ -397,6 +397,21 @@ fun ShipDetailsScreen(
                             contentScale = ContentScale.Fit
                         )
                     }
+                    
+                    // Solar flare effect layer: Only for ship15 (Dying Star)
+                    // Same dimensions, positioning, and scaling behavior as ship render image
+                    // Positioned on top of the ship image
+                    if (ship.id == "dying_star") {
+                        val solarFlareComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.shipsolarflare))
+                        LottieAnimation(
+                            composition = solarFlareComposition,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
             }
             
@@ -814,14 +829,17 @@ fun ShipDetailsScreen(
                                 "a300_albatross" -> 3
                                 "b7f_starforce" -> 4
                                 "navakeshi_star_crusher" -> 5
+                                "asn_ag94_centurion" -> 3
                                 "b15_specter" -> 6
                                 "n6_98_melina" -> 6
                                 "model3_tortoise_ccp" -> 8
                                 "h98_valkyrie" -> 9
                                 "navakeshi_star_ravager" -> 9
+                                "isc_m450_phoenix" -> 9
                                 "silver_lightning" -> 12
                                 "vulcani_legenda_f1" -> 12
                                 "force_of_nature" -> 15
+                                "dying_star" -> 15
                                 else -> 1 // Default placeholder
                             }
 
@@ -899,14 +917,17 @@ fun ShipDetailsScreen(
                                 "a300_albatross" -> 28
                                 "b7f_starforce" -> 38
                                 "navakeshi_star_crusher" -> 35
+                                "asn_ag94_centurion" -> 35
                                 "b15_specter" -> 32
                                 "n6_98_melina" -> 25
                                 "model3_tortoise_ccp" -> 14
                                 "h98_valkyrie" -> 38
                                 "navakeshi_star_ravager" -> 40
+                                "isc_m450_phoenix" -> 40
                                 "silver_lightning" -> 62
                                 "vulcani_legenda_f1" -> 68
                                 "force_of_nature" -> 80
+                                "dying_star" -> 68
                                 else -> 0
                             }
                             val speedValue = when (ship.id) {
@@ -916,14 +937,17 @@ fun ShipDetailsScreen(
                                 "a300_albatross" -> 28
                                 "b7f_starforce" -> 38
                                 "navakeshi_star_crusher" -> 30
+                                "asn_ag94_centurion" -> 32
                                 "b15_specter" -> 30
                                 "n6_98_melina" -> 34
                                 "model3_tortoise_ccp" -> 16
                                 "h98_valkyrie" -> 34
                                 "navakeshi_star_ravager" -> 40
+                                "isc_m450_phoenix" -> 36
                                 "silver_lightning" -> 60
                                 "vulcani_legenda_f1" -> 72
                                 "force_of_nature" -> 72
+                                "dying_star" -> 64
                                 else -> 0
                             }
                             val stabilityValue = when (ship.id) {
@@ -933,14 +957,17 @@ fun ShipDetailsScreen(
                                 "a300_albatross" -> 38
                                 "b7f_starforce" -> 19
                                 "navakeshi_star_crusher" -> 24
+                                "asn_ag94_centurion" -> 30
                                 "b15_specter" -> 36
                                 "n6_98_melina" -> 42
                                 "model3_tortoise_ccp" -> 74
                                 "h98_valkyrie" -> 49
                                 "navakeshi_star_ravager" -> 30
+                                "isc_m450_phoenix" -> 32
                                 "silver_lightning" -> 57
                                 "vulcani_legenda_f1" -> 18
                                 "force_of_nature" -> 45
+                                "dying_star" -> 60
                                 else -> 0
                             }
                             
