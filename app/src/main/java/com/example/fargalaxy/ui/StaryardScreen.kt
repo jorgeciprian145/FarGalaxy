@@ -77,28 +77,33 @@ fun StaryardScreen(
     // Get density to convert dp to pixels
     val density = LocalDensity.current
     
-    // Get all ships and filter out ship1 (b14_phantom) - the starting ship
+    // Get all ships and filter to only show unlocked ships that are NOT owned (excluding starting ship b14_phantom)
+    // Ships that are already owned should not appear in the staryard
     val allShips = ShipRepository.getAllShips()
-    val availableShips = allShips.filter { it.id != "b14_phantom" }
+    val availableShips = allShips.filter { 
+        it.id != "b14_phantom" && 
+        com.example.fargalaxy.data.GameStateRepository.isShipUnlocked(it.id) &&
+        !com.example.fargalaxy.data.GameStateRepository.isShipOwned(it.id)
+    }
     
-    // User credits (placeholder - will be replaced with dynamic value later)
-    val userCredits = 2100
+    // Read credits from global repository
+    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
     
-    // Ship prices for testing (first 4 ships < 2600, rest > 2600)
+    // Ship prices based on focus time unlock requirements
     val shipPrices = mapOf(
-        "type45c_shooting_star" to 1500,
-        "navakeshi_star_pouncer" to 1800,
-        "a300_albatross" to 2000,
-        "b7f_starforce" to 2400,
-        "navakeshi_star_crusher" to 3000,
-        "b15_specter" to 3500,
-        "n6_98_melina" to 4000,
-        "model3_tortoise_ccp" to 4500,
-        "h98_valkyrie" to 5000,
-        "navakeshi_star_ravager" to 5500,
-        "silver_lightning" to 6000,
-        "vulcani_legenda_f1" to 6500,
-        "force_of_nature" to 7000
+        "type45c_shooting_star" to 2500, // ship2: 15 mins
+        "navakeshi_star_pouncer" to 5000, // ship3: 25 mins
+        "a300_albatross" to 8500, // ship4: 35 mins
+        "b7f_starforce" to 12000, // ship5: 50 mins
+        "navakeshi_star_crusher" to 15000, // ship6: 80 mins
+        "b15_specter" to 20000, // ship7: 105 mins
+        "n6_98_melina" to 26000, // ship8: 150 mins
+        "model3_tortoise_ccp" to 32000, // ship9: 200 mins
+        "h98_valkyrie" to 38000, // ship10: 250 mins
+        "navakeshi_star_ravager" to 45000, // ship11: 300 mins
+        "silver_lightning" to 60000, // ship12: 350 mins
+        "vulcani_legenda_f1" to 65000, // ship13: 450 mins
+        "force_of_nature" to 80000 // ship14: 600 mins
     )
     
     // Calculate if content is being clipped (scroll position >= 16dp means content moved up past initial spacer)
@@ -286,9 +291,8 @@ fun StaryardScreen(
                             )
                             
                             // Credits amount label: 16sp, medium weight, white color
-                            // TODO: Replace with dynamic value matching VaultScreen (currently 2100)
                             Text(
-                                text = "2100",
+                                text = userCredits.toString(),
                                 fontFamily = Exo2,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,

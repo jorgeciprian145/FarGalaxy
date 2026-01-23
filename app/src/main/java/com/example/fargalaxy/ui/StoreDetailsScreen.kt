@@ -96,7 +96,7 @@ private fun getMythicalBadgeContainerColor(): Color {
  * @param itemImageResId The drawable resource ID for the item image
  * @param price The price of the item (can be in credits or dollars)
  * @param priceType The type of price ("credits" or "dollars")
- * @param userCredits The user's current credits
+ * Note: userCredits is read from UserDataRepository
  * @param description The description text for the item
  * @param onBackClick Callback when the back button is clicked
  * @param onPurchaseClick Callback when the purchase button is clicked
@@ -108,12 +108,13 @@ fun StoreDetailsScreen(
     itemImageResId: Int,
     price: String,
     priceType: String = "credits", // "credits" or "dollars"
-    userCredits: Int = 0,
     description: String = "Placeholder description text. This is where the item description will be displayed.",
     onBackClick: () -> Unit = {},
     onPurchaseClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Read credits from global repository
+    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
     // Determine if user can afford the item (only for credit-priced items)
     val canAfford = if (priceType == "credits") {
         price.toIntOrNull()?.let { it <= userCredits } ?: false
@@ -149,9 +150,15 @@ fun StoreDetailsScreen(
     // Name/price Column: tracked via onSizeChanged (namePriceHeight)
     // Column has -28dp offset, so visual position is adjusted
     // Spacing to divider/trim line: 24dp (divider should be 24dp below price container)
-    // Additional offset: 56dp to move divider down (prevents it from appearing on top of price)
-    // Total offset from statusBarsPadding: 64.dp + itemImageHeightDp + namePriceHeight + 24.dp + 56.dp
-    val clipBoundaryTop = 64.dp + itemImageHeightDp + namePriceHeight + 24.dp + 56.dp
+    // For ship (Dying Star): Move divider down by 40dp
+    // For other items (crates): Move divider down by 40dp - 32dp = 8dp (move up by 32dp relative to ship)
+    val isShip = itemName == "Dying Star"
+    val dividerOffset = if (isShip) {
+        40.dp // Ship: keep current position
+    } else {
+        8.dp // Other items: move up by 32dp (40dp - 32dp = 8dp)
+    }
+    val clipBoundaryTop = 64.dp + itemImageHeightDp + namePriceHeight + 24.dp + dividerOffset
     
     Box(
         modifier = modifier.fillMaxSize()

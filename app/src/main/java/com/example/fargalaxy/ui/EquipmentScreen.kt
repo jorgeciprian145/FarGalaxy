@@ -65,9 +65,10 @@ import com.example.fargalaxy.R
 fun EquipmentScreen(
     onBackClick: () -> Unit = {},
     onEquipmentClick: (String, Int, Int, String) -> Unit = { _, _, _, _ -> }, // name, imageResId, price, description
-    userCredits: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    // Read credits from global repository
+    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
     // Scroll state
     val scrollState = rememberScrollState()
     

@@ -31,11 +31,17 @@ import androidx.compose.material3.Text
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -352,6 +358,46 @@ fun TimeLabel(
         color = Color(0xFFFFFFFF),
         modifier = modifier
     )
+}
+
+/**
+ * PenaltyCounter composable - displays the penalty counter with icon and label.
+ * Shows "(value) Penalties suffered" with a penalty icon.
+ * 
+ * @param penaltyCount The current penalty count
+ * @param modifier Modifier for the component
+ */
+@Composable
+fun PenaltyCounter(
+    penaltyCount: Int = 0,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Penalty icon: 32dp size
+        Image(
+            painter = painterResource(id = R.drawable.penaltyicon),
+            contentDescription = "Penalties",
+            modifier = Modifier.size(32.dp),
+            contentScale = ContentScale.Fit
+        )
+        
+        // 4dp spacing between icon and label
+        Spacer(modifier = Modifier.width(4.dp))
+        
+        // Label: "#/5 penalties" - 18sp, regular weight
+        Text(
+            text = "$penaltyCount/5 penalties",
+            fontFamily = Exo2,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.W400, // Regular
+            color = Color(0xFFFFFFFF),
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
 /**
@@ -1082,6 +1128,7 @@ fun CountdownRing(
  * @param activeScreen The currently active screen for indicator display
  * @param onCareerClick Callback for career icon click
  * @param onCollectionClick Callback for collection icon click
+ * @param onRewardsScreenVisibilityChange Callback to notify parent when rewards screen visibility changes
  */
 @Composable
 fun GalaxyScreen(
@@ -1090,7 +1137,10 @@ fun GalaxyScreen(
     isIdleCallback: (Boolean) -> Unit = {},
     activeScreen: ActiveScreen = ActiveScreen.CENTER,
     onCareerClick: () -> Unit = {},
-    onCollectionClick: () -> Unit = {}
+    onCollectionClick: () -> Unit = {},
+    onRewardsScreenVisibilityChange: (Boolean) -> Unit = {},
+    onShipUnlockedScreenVisibilityChange: (Boolean) -> Unit = {},
+    onLocationDiscoveredScreenVisibilityChange: (Boolean) -> Unit = {}
 ) {
     // State management: All state is saved across configuration changes (screen rotation, etc.)
     // selectedMinutes: The time duration selected by the user (range: 5-60, step: 5)
@@ -1120,22 +1170,133 @@ fun GalaxyScreen(
     // When true, shows 3-second countdown before actual travel begins
     var isPreparingLaunch by remember { mutableStateOf(false) }
     
+    // penaltyCount: Current penalty count for the active travel session
+    // Resets to 0 when travel starts, increments when app goes to background (with grace period)
+    var penaltyCount by remember { mutableStateOf(0) }
+    
     // launchCountdown: The countdown number displayed during launch preparation (3, 2, 1)
     var launchCountdown by remember { mutableStateOf(3) }
     
     // showTravelSuccessModal: Controls visibility of the success modal when travel completes
     var showTravelSuccessModal by remember { mutableStateOf(false) }
     
+    // showTravelCanceledModal: Controls visibility of the cancellation modal when travel is canceled
+    var showTravelCanceledModal by remember { mutableStateOf(false) }
+    var cancellationReason by remember { mutableStateOf("timeout") } // "timeout" or "penalties"
+    
+    // showRewardsScreen: Controls visibility of the rewards screen
+    var showRewardsScreen by remember { mutableStateOf(false) }
+    
+    // travelMinutes: The duration of the completed travel (for rewards calculation)
+    var travelMinutes by remember { mutableStateOf(0) }
+    
     // Track if travel was cancelled (to avoid showing modal if cancelled)
     var wasTravelCancelled by remember { mutableStateOf(false) }
     
+    // Track travel session start time to calculate elapsed focus time
+    var travelStartTime by remember { mutableStateOf(0L) } // System time in milliseconds
+    
     // TODO: REMOVE TESTING CODE - Track if in test mode (10 seconds)
     var isTestMode by remember { mutableStateOf(false) }
+    
+    // Track app lifecycle to recalculate timer when app resumes
+    var appLifecycleState by remember { mutableStateOf(Lifecycle.Event.ON_ANY) }
+    
+    // Periodic timer trigger: Updates every second to force recalculation
+    // This ensures the timer continues even when app is in background
+    var timerTrigger by remember { mutableStateOf(0L) }
+    LaunchedEffect(isTraveling) {
+        if (isTraveling) {
+            while (isTraveling) {
+                delay(1000) // Update every second
+                timerTrigger = System.currentTimeMillis() // Trigger recomposition
+            }
+        }
+    }
+    
+    // Calculate remaining time based on elapsed time (works even when app is in background)
+    // This derived state recalculates whenever travelStartTime or timerTrigger changes
+    val calculatedRemainingSeconds = derivedStateOf {
+        if (isTraveling && travelStartTime > 0) {
+            val travelDurationSeconds = if (isTestMode) 10 else selectedMinutes * 60
+            val travelDurationMillis = travelDurationSeconds * 1000L
+            val elapsedMillis = System.currentTimeMillis() - travelStartTime
+            ((travelDurationMillis - elapsedMillis) / 1000).toInt().coerceAtLeast(0)
+        } else {
+            remainingSeconds
+        }
+    }
+    
+    // Update remainingSeconds from calculated value (ensures it stays in sync)
+    // This LaunchedEffect ensures the timer continues even when app is in background
+    LaunchedEffect(calculatedRemainingSeconds.value, isTraveling, timerTrigger) {
+        if (isTraveling && travelStartTime > 0) {
+            remainingSeconds = calculatedRemainingSeconds.value
+            
+            // Check if travel completed
+            if (remainingSeconds <= 0 && !wasTravelCancelled) {
+                isTraveling = false
+                travelMinutes = if (isTestMode) {
+                    0
+                } else {
+                    selectedMinutes
+                }
+                showTravelSuccessModal = true
+                com.example.fargalaxy.data.PenaltyTracker.stopTracking()
+                penaltyCount = 0
+            }
+        }
+    }
+    
+    // Observe app lifecycle to detect when app resumes and trigger timer recalculation
+    DisposableEffect(Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            appLifecycleState = event
+            // When app resumes and we're traveling, trigger timer recalculation
+            // This ensures the timer continues even if it was paused in background
+            if (event == Lifecycle.Event.ON_START && isTraveling && travelStartTime > 0) {
+                timerTrigger = System.currentTimeMillis() // Force recalculation
+            }
+        }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+        onDispose {
+            ProcessLifecycleOwner.get().lifecycle.removeObserver(observer)
+        }
+    }
+    
+    // Track unlocked ships/locations before session starts (to detect newly unlocked items)
+    var unlockedShipsBeforeSession by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var unlockedLocationsBeforeSession by remember { mutableStateOf<Set<String>>(emptySet()) }
+    
+    // Track newly unlocked ships/locations during this session
+    var newlyUnlockedShips by remember { mutableStateOf<List<String>>(emptyList()) }
+    var newlyDiscoveredLocations by remember { mutableStateOf<List<String>>(emptyList()) }
+    
+    // Track which unlock/discovery screen to show
+    var showShipUnlockedScreen by remember { mutableStateOf(false) }
+    var showLocationDiscoveredScreen by remember { mutableStateOf(false) }
+    var currentShipUnlockedIndex by remember { mutableStateOf(0) }
+    var currentLocationDiscoveredIndex by remember { mutableStateOf(0) }
     
     // Notify parent about idle state changes
     LaunchedEffect(isPreparingLaunch, isTraveling) {
         val isIdle = !isPreparingLaunch && !isTraveling
         isIdleCallback(isIdle)
+    }
+    
+    // Notify parent about rewards screen visibility
+    LaunchedEffect(showRewardsScreen) {
+        onRewardsScreenVisibilityChange(showRewardsScreen)
+    }
+    
+    // Notify parent about ship unlocked screen visibility
+    LaunchedEffect(showShipUnlockedScreen) {
+        onShipUnlockedScreenVisibilityChange(showShipUnlockedScreen)
+    }
+    
+    // Notify parent about location discovered screen visibility
+    LaunchedEffect(showLocationDiscoveredScreen) {
+        onLocationDiscoveredScreenVisibilityChange(showLocationDiscoveredScreen)
     }
     
     // Handler: Increment selectedMinutes by 5, clamped to maximum of 60
@@ -1185,35 +1346,127 @@ fun GalaxyScreen(
             isPreparingLaunch = true
             launchCountdown = 3 // Initialize countdown
             wasTravelCancelled = false // Reset cancelled flag
+            
+            // Store current unlocked ships/locations before session starts
+            val allShips = com.example.fargalaxy.data.ShipRepository.getAllShips()
+            unlockedShipsBeforeSession = allShips
+                .filter { com.example.fargalaxy.data.GameStateRepository.isShipUnlocked(it.id) }
+                .map { it.id }
+                .toSet()
+            
+            val allLocations = com.example.fargalaxy.data.LocationRepository.getAllLocations()
+            unlockedLocationsBeforeSession = allLocations
+                .filter { com.example.fargalaxy.data.GameStateRepository.isLocationUnlocked(it.id) }
+                .map { it.id }
+                .toSet()
         } else {
             // Stop travel: Cancel countdown
             isTraveling = false
             isInitialRingAppearance = false // Reset for next launch
             wasTravelCancelled = true // Mark as cancelled
+            // Stop penalty tracking when travel is cancelled
+            com.example.fargalaxy.data.PenaltyTracker.stopTracking()
+            penaltyCount = 0 // Reset penalty count
+            
+            // Calculate elapsed focus time when cancelled and add it
+            if (travelStartTime > 0) {
+                val elapsedMillis = System.currentTimeMillis() - travelStartTime
+                val elapsedMinutes = (elapsedMillis / 60_000).toInt() // Convert to minutes
+                
+                // Add focus time (always, even when cancelled)
+                if (elapsedMinutes > 0) {
+                    com.example.fargalaxy.data.UserDataRepository.addFocusTime(elapsedMinutes)
+                    // Sync unlocked ships based on new focus time
+                    com.example.fargalaxy.data.GameStateRepository.syncUnlockedShipsFromFocusTime()
+                }
+                
+                // Reset start time
+                travelStartTime = 0L
+            }
         }
     }
     
-    // Countdown timer: Second-based countdown that runs when isTraveling is true
-    // Uses LaunchedEffect to run a coroutine that decrements remainingSeconds every second
-    // Automatically stops when remainingSeconds reaches 0 or isTraveling becomes false
+    // Initialize travel start time and penalty tracking when travel begins
+    // This LaunchedEffect only sets up the initial state
     LaunchedEffect(isTraveling) {
-        if (isTraveling) {
+        if (isTraveling && travelStartTime == 0L) {
             wasTravelCancelled = false // Reset cancelled flag when travel starts
-            // TODO: REMOVE TESTING CODE - Use 10 seconds in test mode
-            val travelDuration = if (isTestMode) 10 else selectedMinutes * 60
-            remainingSeconds = travelDuration
-            // Continue countdown while traveling and time remains
-            while (isTraveling && remainingSeconds > 0) {
-                delay(1_000) // Wait 1 second
-                remainingSeconds -= 1 // Decrement remaining time by 1 second
+            travelStartTime = System.currentTimeMillis() // Record start time
+            
+            // Start penalty tracking when travel begins
+            // Set up callback for trip cancellation (if user is away for >20 seconds or has 5+ penalties)
+            com.example.fargalaxy.data.PenaltyTracker.onTripCancelled = { reason ->
+                // Cancel the trip
+                wasTravelCancelled = true
+                isTraveling = false
+                cancellationReason = reason // Store the cancellation reason
+                com.example.fargalaxy.data.PenaltyTracker.stopTracking()
+                penaltyCount = 0
+                
+                // Calculate elapsed focus time and add it (even when cancelled)
+                if (travelStartTime > 0) {
+                    val elapsedMillis = System.currentTimeMillis() - travelStartTime
+                    val elapsedMinutes = (elapsedMillis / 60_000).toInt()
+                    val focusTimeMinutes = if (elapsedMillis > 0 && elapsedMinutes == 0) {
+                        1
+                    } else {
+                        elapsedMinutes
+                    }
+                    if (focusTimeMinutes > 0) {
+                        com.example.fargalaxy.data.UserDataRepository.addFocusTime(focusTimeMinutes)
+                        com.example.fargalaxy.data.GameStateRepository.syncUnlockedShipsFromFocusTime()
+                        com.example.fargalaxy.data.GameStateRepository.syncUnlockedLocationsFromFocusTime()
+                    }
+                    travelStartTime = 0L
+                }
+                
+                // Show cancellation modal
+                showTravelCanceledModal = true
             }
-            // Auto-stop when countdown completes
-            // Show modal only if travel completed naturally (not cancelled)
-            if (remainingSeconds <= 0 && !wasTravelCancelled) {
-                isTraveling = false
-                showTravelSuccessModal = true
-            } else {
-                isTraveling = false
+            com.example.fargalaxy.data.PenaltyTracker.startTracking()
+        } else if (!isTraveling && travelStartTime > 0L) {
+            // Travel ended - stop penalty tracking and reset
+            com.example.fargalaxy.data.PenaltyTracker.stopTracking()
+            penaltyCount = 0 // Reset penalty count
+            
+            // Calculate elapsed focus time and add it to counters (regardless of completion)
+            // This happens when travel ends (either completed or cancelled)
+            // Always use actual elapsed time, not selected time
+            if (travelStartTime > 0) {
+                val elapsedMillis = System.currentTimeMillis() - travelStartTime
+                val elapsedMinutes = (elapsedMillis / 60_000).toInt() // Convert to minutes
+                
+                // Add focus time (always, regardless of completion)
+                // Minimum 1 minute if any time was spent (even if less than 1 minute)
+                val focusTimeMinutes = if (elapsedMillis > 0 && elapsedMinutes == 0) {
+                    1 // Less than 1 minute but some time was spent
+                } else {
+                    elapsedMinutes
+                }
+                if (focusTimeMinutes > 0) {
+                    com.example.fargalaxy.data.UserDataRepository.addFocusTime(focusTimeMinutes)
+                    // Sync unlocked ships and locations based on new focus time
+                    com.example.fargalaxy.data.GameStateRepository.syncUnlockedShipsFromFocusTime()
+                    com.example.fargalaxy.data.GameStateRepository.syncUnlockedLocationsFromFocusTime()
+                    
+                    // Detect newly unlocked ships and locations
+                    val allShips = com.example.fargalaxy.data.ShipRepository.getAllShips()
+                    val unlockedShipsAfter = allShips
+                        .filter { com.example.fargalaxy.data.GameStateRepository.isShipUnlocked(it.id) }
+                        .map { it.id }
+                        .toSet()
+                    newlyUnlockedShips = (unlockedShipsAfter - unlockedShipsBeforeSession).toList()
+                    
+                    val allLocations = com.example.fargalaxy.data.LocationRepository.getAllLocations()
+                    val unlockedLocationsAfter = allLocations
+                        .filter { com.example.fargalaxy.data.GameStateRepository.isLocationUnlocked(it.id) }
+                        .map { it.id }
+                        .toSet()
+                    newlyDiscoveredLocations = (unlockedLocationsAfter - unlockedLocationsBeforeSession).toList()
+                }
+                
+                // Reset start time
+                travelStartTime = 0L
             }
         }
     }
@@ -1224,6 +1477,16 @@ fun GalaxyScreen(
         if (isInitialRingAppearance) {
             delay(5000) // Wait for 5 second animation to complete
             isInitialRingAppearance = false
+        }
+    }
+    
+    // Update penalty count periodically while traveling (uses timerTrigger to update even in background)
+    LaunchedEffect(isTraveling, timerTrigger) {
+        if (isTraveling) {
+            penaltyCount = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
+        } else {
+            // Reset penalty count when travel stops
+            penaltyCount = 0
         }
     }
     
@@ -1454,7 +1717,13 @@ fun GalaxyScreen(
                 .statusBarsPadding()
                 .padding(top = 48.dp)
                 .fillMaxWidth()
-                .height(51.dp),
+                .then(
+                    if (isTraveling) {
+                        Modifier.wrapContentHeight() // Allow content to expand when showing penalty counter
+                    } else {
+                        Modifier.height(51.dp) // Fixed height for other states
+                    }
+                ),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -1471,16 +1740,32 @@ fun GalaxyScreen(
                     )
                 }
                 isTraveling -> {
-                    // Show "In travel" label when traveling
-                    // Uses same font style as TimeLabel (Exo2 Regular, 24.sp, white color)
-                    Text(
-                        text = "In travel",
-                        fontFamily = Exo2,
-                        fontSize = 24.sp,
-                        lineHeight = 24.sp,
-                        color = Color(0xFFFFFFFF),
-                        textAlign = TextAlign.Center
-                    )
+                    // Show "In travel" label and penalty counter when traveling
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
+                        // "In travel" label
+                        // Uses same font style as TimeLabel (Exo2 Regular, 24.sp, white color)
+                        Text(
+                            text = "In travel",
+                            fontFamily = Exo2,
+                            fontSize = 24.sp,
+                            lineHeight = 24.sp,
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        // 24dp spacing below "In travel" label
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Penalty counter: SVG icon + label
+                        PenaltyCounter(
+                            penaltyCount = penaltyCount,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
                 else -> {
                     // Show navigation controls when idle - buttons only (indicator is in MainScreen)
@@ -1537,10 +1822,73 @@ fun GalaxyScreen(
         }
 
         // Travel Success Modal: Shown when travel completes without cancellation
-        if (showTravelSuccessModal) {
+        if (showTravelSuccessModal && !showRewardsScreen) {
             TravelSuccessModal(
                 onContinueClick = {
                     showTravelSuccessModal = false
+                    showRewardsScreen = true
+                }
+            )
+        }
+        
+        // Travel Canceled Modal: Shown when trip is canceled (due to being away for >20 seconds or 5+ penalties)
+        if (showTravelCanceledModal) {
+            TravelCanceledModal(
+                cancellationReason = cancellationReason,
+                onContinueClick = {
+                    showTravelCanceledModal = false
+                }
+            )
+        }
+        
+        // Rewards Screen: Shown after modal continue is clicked
+        if (showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen) {
+            RewardsScreen(
+                travelMinutes = travelMinutes,
+                onContinueClick = {
+                    showRewardsScreen = false
+                    // After rewards screen, show ship unlock screens first, then location discovery screens
+                    if (newlyUnlockedShips.isNotEmpty()) {
+                        showShipUnlockedScreen = true
+                        currentShipUnlockedIndex = 0
+                    } else if (newlyDiscoveredLocations.isNotEmpty()) {
+                        showLocationDiscoveredScreen = true
+                        currentLocationDiscoveredIndex = 0
+                    }
+                }
+            )
+        }
+        
+        // Ship Unlocked Screen: Shown after rewards screen if ships were unlocked
+        if (showShipUnlockedScreen && currentShipUnlockedIndex < newlyUnlockedShips.size) {
+            ShipUnlockedScreen(
+                shipId = newlyUnlockedShips[currentShipUnlockedIndex],
+                onContinueClick = {
+                    currentShipUnlockedIndex++
+                    if (currentShipUnlockedIndex >= newlyUnlockedShips.size) {
+                        showShipUnlockedScreen = false
+                        // After all ships, show location discovery screens if any
+                        if (newlyDiscoveredLocations.isNotEmpty()) {
+                            showLocationDiscoveredScreen = true
+                            currentLocationDiscoveredIndex = 0
+                        }
+                    }
+                }
+            )
+        }
+        
+        // Location Discovered Screen: Shown after ship unlock screens (or after rewards if no ships)
+        if (showLocationDiscoveredScreen && currentLocationDiscoveredIndex < newlyDiscoveredLocations.size) {
+            LocationDiscoveredScreen(
+                locationId = newlyDiscoveredLocations[currentLocationDiscoveredIndex],
+                onContinueClick = {
+                    currentLocationDiscoveredIndex++
+                    if (currentLocationDiscoveredIndex >= newlyDiscoveredLocations.size) {
+                        showLocationDiscoveredScreen = false
+                        // Reset for next session
+                        newlyUnlockedShips = emptyList()
+                        newlyDiscoveredLocations = emptyList()
+                    }
                 }
             )
         }

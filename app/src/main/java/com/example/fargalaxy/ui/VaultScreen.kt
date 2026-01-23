@@ -75,9 +75,10 @@ fun VaultScreen(
     onStaryardClick: () -> Unit = {},
     onEquipmentClick: () -> Unit = {},
     onStoreClick: () -> Unit = {},
-    userCredits: Int,
     modifier: Modifier = Modifier
 ) {
+    // Read credits from global repository
+    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
     Box(modifier = modifier.fillMaxSize()) {
         // Top gradient overlay: Covers 20% of screen height, creating a fade effect at the top.
         // Gradient transitions from solid black at the top to transparent at the bottom.
@@ -262,9 +263,27 @@ fun VaultScreen(
                 // 12dp spacing between bottom label and counter composable
                 Spacer(modifier = Modifier.height(4.dp))
                 
+                // Calculate sector completion percentage
+                // 100% = all ships owned + all locations discovered
+                val allShips = com.example.fargalaxy.data.ShipRepository.getAllShips()
+                val allLocations = com.example.fargalaxy.data.LocationRepository.getAllLocations()
+                val ownedShipsCount = allShips.count { ship -> 
+                    com.example.fargalaxy.data.GameStateRepository.isShipUnlocked(ship.id) 
+                }
+                val discoveredLocationsCount = allLocations.count { location -> 
+                    com.example.fargalaxy.data.GameStateRepository.isLocationUnlocked(location.id) 
+                }
+                val totalItems = allShips.size + allLocations.size
+                val completedItems = ownedShipsCount + discoveredLocationsCount
+                val completionProgress = if (totalItems > 0) {
+                    completedItems.toFloat() / totalItems.toFloat()
+                } else {
+                    0f
+                }
+                
                 // Sector Exploration Progress Counter
                 SectorExplorationProgress(
-                    progress = 0.25f, // TODO: Replace with dynamic value (placeholder: 25%)
+                    progress = completionProgress,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -317,8 +336,10 @@ fun VaultScreen(
                                 verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between labels
                             ) {
                                 // Top label: Bold, 32sp
+                                // Read dynamic value from UserDataRepository
+                                val sectorFocusTime = com.example.fargalaxy.data.UserDataRepository.totalFocusTimeInSectorMinutes
                                 Text(
-                                    text = "45 m", // TODO: Replace with dynamic value
+                                    text = "$sectorFocusTime m",
                                     fontFamily = Exo2,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 32.sp,
@@ -346,7 +367,7 @@ fun VaultScreen(
                             ) {
                                 // Top label: Bold, 32sp
                                 Text(
-                                    text = "8", // TODO: Replace with dynamic value
+                                    text = completedItems.toString(), // TODO: Replace with dynamic value
                                     fontFamily = Exo2,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 32.sp,

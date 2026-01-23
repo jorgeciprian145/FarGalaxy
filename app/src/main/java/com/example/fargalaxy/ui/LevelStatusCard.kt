@@ -2,10 +2,13 @@ package com.example.fargalaxy.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,19 +16,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.fargalaxy.R
 
 /**
  * LevelStatusCard composable - displays the complete level card with badge and license information.
  * 
  * This composable combines two main elements:
- * 1. A responsive SVG badge on the left (level1badge) - displays the level number in a diamond shape
+ * 1. A responsive SVG badge on the left (levelbadge) - displays the level number in a diamond shape
  * 2. The SpaceLicenseCard on the right - displays XP, progress, and level information
  * 
  * Layout behavior:
@@ -73,19 +80,51 @@ fun LevelStatusCard(
         horizontalArrangement = Arrangement.spacedBy((-12).dp), // Negative spacing creates overlap
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left section: Responsive SVG badge
+        // Left section: Responsive SVG badge with level number overlay
         // The badge height is 0.7% taller than the SpaceLicenseCard
         // Width maintains aspect ratio based on the height
         if (cardHeight != null) {
             val badgeHeight = cardHeight!! * 1.007f // 0.7% taller than card
-            Image(
-                painter = painterResource(id = R.drawable.level1badge),
-                contentDescription = "Level $level badge",
+            val badgeWidth = badgeHeight * badgeAspectRatio
+            
+            // Determine font size based on number of digits
+            val levelString = level.toString()
+            val fontSize = when (levelString.length) {
+                1 -> 45.sp // 1 digit (1-9)
+                2 -> 40.sp // 2 digits (10-99)
+                3 -> 32.sp // 3 digits (100+)
+                else -> 32.sp // Fallback for 4+ digits
+            }
+            val lineHeight = fontSize
+            
+            // Box to overlay text on top of badge image
+            Box(
                 modifier = Modifier
-                    .width(badgeHeight * badgeAspectRatio)
-                    .height(badgeHeight), // 0.7% taller than the card
-                contentScale = ContentScale.FillBounds // Fill the exact size specified
-            )
+                    .width(badgeWidth)
+                    .height(badgeHeight),
+                contentAlignment = Alignment.Center
+            ) {
+                // Badge SVG image
+                Image(
+                    painter = painterResource(id = R.drawable.levelbadge),
+                    contentDescription = "Level $level badge",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
+                    contentScale = ContentScale.FillBounds // Fill the exact size specified
+                )
+                
+                // Level number text overlay - centered on badge
+                Text(
+                    text = levelString,
+                    fontSize = fontSize,
+                    lineHeight = lineHeight,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF151829),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
         }
         
         // Right section: Responsive SpaceLicenseCard

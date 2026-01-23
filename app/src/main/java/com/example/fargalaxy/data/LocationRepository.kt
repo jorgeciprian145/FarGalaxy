@@ -430,6 +430,11 @@ object LocationRepository {
     )
     
     /**
+     * Get all locations in the repository.
+     */
+    fun getAllLocations(): List<Location> = locations
+    
+    /**
      * Get all discovered locations.
      * TODO: Filter to only show discovered locations when discovery system is implemented
      */

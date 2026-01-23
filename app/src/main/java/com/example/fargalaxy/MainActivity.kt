@@ -20,7 +20,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         // Set navigation bar to solid black
-        // Note: navigationBarColor is deprecated but still functional and needed for solid black background
+        // Note: Using window.navigationBarColor directly (deprecated but functional)
+        // In edge-to-edge mode, the color is controlled via WindowInsetsControllerCompat
+        @Suppress("DEPRECATION")
         window.navigationBarColor = Color.BLACK
         
         // Enable blur effect for navigation bar (Android 12+)
@@ -30,6 +32,15 @@ class MainActivity : ComponentActivity() {
             windowInsetsController?.isAppearanceLightNavigationBars = false
             // Note: enableEdgeToEdge() already sets window.setDecorFitsSystemWindows(false)
         }
+        
+        // Initialize repositories with persistence
+        com.example.fargalaxy.data.UserDataRepository.initialize(this)
+        com.example.fargalaxy.data.ShipRepository.initialize(this)
+        com.example.fargalaxy.data.GameStateRepository.initialize(this)
+        com.example.fargalaxy.data.PenaltyTracker.initialize(this)
+        
+        // TODO: REMOVE TESTING CODE - Reset progress with test values (14 mins focus time, 3000 credits)
+        com.example.fargalaxy.data.GameStateRepository.resetProgress()
         
         setContent {
             // Override font scale to always be 1.0 (no scaling) to prevent system font size

@@ -78,12 +78,14 @@ fun EquipmentDetailsScreen(
     equipmentName: String,
     equipmentImageResId: Int,
     price: Int,
-    userCredits: Int,
     description: String,
     onBackClick: () -> Unit = {},
     onPurchaseClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Read credits from global repository
+    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
+    
     // Determine if user can afford the equipment
     val canAfford = price <= userCredits
     // Scroll state to track when content is being clipped

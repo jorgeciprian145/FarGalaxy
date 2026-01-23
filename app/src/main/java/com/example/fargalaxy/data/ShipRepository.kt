@@ -435,6 +435,21 @@ object ShipRepository {
     
     // Store the current ship ID (defaults to first ship)
     private var currentShipId: String = ships.first().id
+    private var prefs: android.content.SharedPreferences? = null
+    private const val PREFS_NAME = "ship_prefs"
+    private const val KEY_CURRENT_SHIP_ID = "current_ship_id"
+    
+    /**
+     * Initialize the repository with a context.
+     * Should be called once from MainActivity.onCreate().
+     */
+    fun initialize(context: android.content.Context) {
+        if (prefs == null) {
+            prefs = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+            // Load saved ship ID
+            currentShipId = prefs!!.getString(KEY_CURRENT_SHIP_ID, ships.first().id) ?: ships.first().id
+        }
+    }
     
     /**
      * Get the currently selected ship.
@@ -447,6 +462,7 @@ object ShipRepository {
     fun setCurrentShip(shipId: String) {
         if (ships.any { it.id == shipId }) {
             currentShipId = shipId
+            prefs?.edit()?.putString(KEY_CURRENT_SHIP_ID, shipId)?.apply()
         }
     }
 }

@@ -43,8 +43,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import android.widget.Toast
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -88,7 +92,7 @@ fun CareerScreen(
     onShipSelectionClick: () -> Unit = {},
     onLocationsClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    totalTravelMinutes: Int = 45, // TODO: Connect to actual data source
+    totalTravelMinutes: Int = 0, // Will be read from UserDataRepository
     isPageActive: Boolean = true,
     scrollToTopTrigger: Int = 0,
     modifier: Modifier = Modifier
@@ -145,10 +149,12 @@ fun CareerScreen(
     // Get ship counts for starships progress display
     val allShips = ShipRepository.getAllShips()
     val totalShipsCount = allShips.size
-    // Unlocked ships: Currently all ships are shown in ShipSelectionScreen, so all ships are unlocked
-    // TODO: In the future, filter to only unlocked ships when unlock system is implemented
-    val unlockedShipsCount = allShips.size
-    val starshipsCountText = "$unlockedShipsCount/$totalShipsCount"
+    // Count only owned ships (ships that appear in ShipSelectionScreen - selectable)
+    // This is different from "unlocked" ships which appear in StaryardScreen (purchasable)
+    val ownedShipsCount = allShips.count { ship ->
+        com.example.fargalaxy.data.GameStateRepository.isShipOwned(ship.id)
+    }
+    val starshipsCountText = "$ownedShipsCount/$totalShipsCount"
     
     // Calculate if content is being clipped (scroll position >= 8dp means content moved up past initial spacer)
     // When scrolled 8dp or more, content reaches the clip boundary at 115dp
@@ -272,8 +278,10 @@ fun CareerScreen(
                 Spacer(modifier = Modifier.height(0.dp))
                 
                 // Total Focus Time Counter - NEW COMPONENT
+                // Read dynamic value from UserDataRepository
+                val totalFocusTime = com.example.fargalaxy.data.UserDataRepository.totalFocusTimeMinutes
                 TotalTimeTravelingCounter(
-                    totalMinutes = totalTravelMinutes,
+                    totalMinutes = totalFocusTime,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -282,8 +290,11 @@ fun CareerScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // Stats section: 3 columns with current streak, sessions this month, and total sessions
-                // TODO: Replace placeholder values with dynamic data
-                // Placeholder values: currentStreak = "3 d", sessionsThisMonth = "2", totalSessions = "3"
+                // Read dynamic values from UserDataRepository
+                val currentStreak = com.example.fargalaxy.data.UserDataRepository.currentStreakDays
+                val sessionsThisMonth = com.example.fargalaxy.data.UserDataRepository.sessionsThisMonth
+                val totalSessions = com.example.fargalaxy.data.UserDataRepository.totalSessions
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -291,21 +302,19 @@ fun CareerScreen(
                     horizontalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between columns
                 ) {
                     // Column 1: Current streak
-                    // TODO: Replace placeholder with dynamic currentStreak value
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between value and label
                     ) {
                         // Value: Bold, 32sp
-                        // TODO: This will be a dynamic value - current streak of days
-                        // TODO: Adjust spacing between number and "d" by changing spacedBy value
+                        // Dynamic value - current streak of days
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp), // Adjust spacing between "3" and "d"
+                            horizontalArrangement = Arrangement.spacedBy(4.dp), // Adjust spacing between number and "d"
                             verticalAlignment = Alignment.Bottom
                         ) {
                             Text(
-                                text = "3",
+                                text = currentStreak.toString(),
                                 fontFamily = Exo2,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 32.sp,
@@ -320,7 +329,6 @@ fun CareerScreen(
                             )
                         }
                         // Label: Regular, 14sp
-                        // TODO: Adjust lineHeight value as needed for desired line spacing
                         Text(
                             text = "Current\nstreak",
                             fontFamily = Exo2,
@@ -333,16 +341,15 @@ fun CareerScreen(
                     }
                     
                     // Column 2: Sessions this month
-                    // TODO: Replace placeholder with dynamic sessionsThisMonth value
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between value and label
                     ) {
                         // Value: Bold, 32sp
-                        // TODO: This will be a dynamic value - number of completed travels this month
+                        // Dynamic value - number of completed travels this month
                         Text(
-                            text = "2",
+                            text = sessionsThisMonth.toString(),
                             fontFamily = Exo2,
                             fontWeight = FontWeight.Bold,
                             fontSize = 32.sp,
@@ -350,7 +357,6 @@ fun CareerScreen(
                             textAlign = TextAlign.Center
                         )
                         // Label: Regular, 14sp
-                        // TODO: Adjust lineHeight value as needed for desired line spacing
                         Text(
                             text = "Sessions\nthis month",
                             fontFamily = Exo2,
@@ -363,16 +369,15 @@ fun CareerScreen(
                     }
                     
                     // Column 3: Total sessions
-                    // TODO: Replace placeholder with dynamic totalSessions value
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between value and label
                     ) {
                         // Value: Bold, 32sp
-                        // TODO: This will be a dynamic value - total number of sessions since app download
+                        // Dynamic value - total number of sessions since app download
                         Text(
-                            text = "3",
+                            text = totalSessions.toString(),
                             fontFamily = Exo2,
                             fontWeight = FontWeight.Bold,
                             fontSize = 32.sp,
@@ -380,7 +385,6 @@ fun CareerScreen(
                             textAlign = TextAlign.Center
                         )
                         // Label: Regular, 14sp
-                        // TODO: Adjust lineHeight value as needed for desired line spacing
                         Text(
                             text = "Total\nsessions",
                             fontFamily = Exo2,
@@ -398,15 +402,35 @@ fun CareerScreen(
                 
                 // LevelStatusCard: combines the badge and SpaceLicenseCard into a single component
                 // Card has 8px left margin and 16px right margin, full width otherwise
+                // Uses dynamic values from UserDataRepository
+                // Long-press to toggle test mode (developer feature)
+                val context = LocalContext.current
                 LevelStatusCard(
                     title = "Space license",
-                    xpCurrent = 320,
-                    xpToNext = 680,
-                    level = 1,
-                    progress = 320f / (320f + 680f), // 320 / 1000 = 0.32
+                    xpCurrent = com.example.fargalaxy.data.UserDataRepository.userXP,
+                    xpToNext = com.example.fargalaxy.data.UserDataRepository.getXPToNextLevel(),
+                    level = com.example.fargalaxy.data.UserDataRepository.getCurrentLevel(),
+                    progress = com.example.fargalaxy.data.UserDataRepository.getCurrentLevelProgress(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 8.dp, end = 16.dp)
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    // Toggle test mode
+                                    val newTestMode = !com.example.fargalaxy.data.GameStateRepository.isTestMode
+                                    com.example.fargalaxy.data.GameStateRepository.isTestMode = newTestMode
+                                    
+                                    // Show toast message
+                                    val message = if (newTestMode) {
+                                        "Test mode ON"
+                                    } else {
+                                        "Test mode OFF"
+                                    }
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
                 )
                 
                 // 24.dp spacing between level card and horizontal divider
@@ -455,9 +479,12 @@ fun CareerScreen(
                 
                 // ProgressSection: Contains the progress items row (no title shown, handled separately above)
                 // Calculate location counts from repository
-                val discoveredLocations = LocationRepository.getDiscoveredLocations()
-                val discoveredLocationsCount = discoveredLocations.size
-                val totalLocationsCount = LocationRepository.getTotalLocationsCount()
+                val allLocations = LocationRepository.getAllLocations()
+                val totalLocationsCount = allLocations.size
+                // Count only unlocked locations
+                val discoveredLocationsCount = allLocations.count { location ->
+                    com.example.fargalaxy.data.GameStateRepository.isLocationUnlocked(location.id)
+                }
                 val locationsCountText = "$discoveredLocationsCount/$totalLocationsCount"
                 
                 ProgressSection(

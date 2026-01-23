@@ -150,15 +150,26 @@ fun SpaceLicenseCard(
                 color = textColor
             )
             
-            // Main XP text - "320 XP"
-            Text(
-                text = "$xpCurrent XP",
-                fontFamily = Exo2,
-                fontWeight = FontWeight.Bold, // Bold
-                fontSize = 20.sp,
-                lineHeight = 24.sp, // Explicit line height to control spacing
-                color = textColor
-            )
+            // Main XP text - "320 XP" (using animated counter for smooth transitions)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                AnimatedNumberCounter(
+                    targetValue = xpCurrent,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
+                Text(
+                    text = "XP",
+                    fontFamily = Exo2,
+                    fontWeight = FontWeight.Bold, // Bold
+                    fontSize = 20.sp,
+                    lineHeight = 24.sp, // Explicit line height to control spacing
+                    color = textColor
+                )
+            }
             
             // Progress bar
             ProgressBar(
@@ -185,15 +196,26 @@ fun SpaceLicenseCard(
                     color = textColor
                 )
                 
-                // Right label - "680 XP to LVL 2"
-                Text(
-                    text = "$xpToNext XP to LVL ${level + 1}",
-                    fontFamily = Exo2,
-                    fontWeight = FontWeight.W400, // Regular
-                    fontSize = 14.sp,
-                    lineHeight = 18.sp, // Explicit line height to control spacing
-                    color = textColor
-                )
+                // Right label - "680 XP to LVL 2" (using animated counter for XP value)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    AnimatedNumberCounter(
+                        targetValue = xpToNext,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W400,
+                        color = textColor
+                    )
+                    Text(
+                        text = "XP to LVL ${level + 1}",
+                        fontFamily = Exo2,
+                        fontWeight = FontWeight.W400, // Regular
+                        fontSize = 14.sp,
+                        lineHeight = 18.sp, // Explicit line height to control spacing
+                        color = textColor
+                    )
+                }
             }
         }
     }
@@ -236,7 +258,7 @@ fun ProgressBar(
                 .fillMaxHeight()
                 .background(
                     color = foregroundColor,
-                    shape = RoundedCornerShape(4.dp) // Match background rounded corners
+                    shape = RoundedCornerShape(20.dp) // 20dp corner radius for the fill
                 )
         )
     }

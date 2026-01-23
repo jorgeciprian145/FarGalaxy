@@ -79,10 +79,15 @@ fun ShipSelectionScreen(
     shouldResetScroll: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // Get list of available ships (for now, using all ships from repository)
-    // TODO: Filter to only show unlocked ships
+    // Get list of available ships - filter to only show unlocked ships
     val allShips = ShipRepository.getAllShips()
     val currentShip = ShipRepository.getCurrentShip()
+    
+    // Filter to only unlocked ships (test mode shows all, real mode shows only unlocked)
+    // Filter to show only owned ships (purchased and selectable)
+    val unlockedShips = allShips.filter { 
+        com.example.fargalaxy.data.GameStateRepository.isShipOwned(it.id) 
+    }
     
     // Group ships by rarity, with current ship first
     // Rarity order: COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHICAL
@@ -95,8 +100,8 @@ fun ShipSelectionScreen(
         ShipRarity.MYTHICAL
     )
     
-    val availableShips = if (allShips.isNotEmpty()) {
-        val otherShips = allShips.filter { it.id != currentShip.id }
+    val availableShips = if (unlockedShips.isNotEmpty()) {
+        val otherShips = unlockedShips.filter { it.id != currentShip.id }
         // Group other ships by rarity
         val groupedByRarity = rarityOrder.map { rarity ->
             otherShips.filter { it.rarity == rarity }
@@ -104,7 +109,7 @@ fun ShipSelectionScreen(
         // Current ship first, then grouped by rarity
         listOf(currentShip) + groupedByRarity
     } else {
-        allShips
+        unlockedShips
     }
     
     val shipsCount = availableShips.size

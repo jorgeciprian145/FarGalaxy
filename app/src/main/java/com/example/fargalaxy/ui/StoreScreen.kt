@@ -66,9 +66,10 @@ import com.example.fargalaxy.R
 fun StoreScreen(
     onBackClick: () -> Unit = {},
     onStoreItemClick: (String, Int, Int, String) -> Unit = { _, _, _, _ -> }, // name, imageResId, price, description
-    userCredits: Int,
     modifier: Modifier = Modifier
 ) {
+    // Read credits from global repository
+    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
     // Scroll state
     val scrollState = rememberScrollState()
     

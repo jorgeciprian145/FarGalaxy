@@ -58,6 +58,19 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // This will be updated by GalaxyScreen
     var isGalaxyIdle by remember { mutableStateOf(true) }
     
+    // Track if rewards screen is shown (to hide indicator)
+    var isRewardsScreenShown by remember { mutableStateOf(false) }
+    
+    // Track if ship unlocked screen is shown (to hide indicator and block pager)
+    var isShipUnlockedScreenShown by remember { mutableStateOf(false) }
+    
+    // Track if location discovered screen is shown (to hide indicator and block pager)
+    var isLocationDiscoveredScreenShown by remember { mutableStateOf(false) }
+    
+    // Track if ship acquired screen is shown (to hide indicator and block pager)
+    var showShipAcquiredScreen by remember { mutableStateOf(false) }
+    var acquiredShipId by remember { mutableStateOf<String?>(null) }
+    
     // Track active screen based on current page
     var activeScreen by remember { mutableStateOf(ActiveScreen.CENTER) }
     
@@ -110,24 +123,25 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track the price of the selected ship for staryard details
     var selectedShipPrice by remember { mutableStateOf(0) }
     
-    // User credits (placeholder - will be replaced with dynamic value later)
-    val userCredits = 2100
+    // User credits - read from global repository
+    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
     
     // Ship prices for testing (matching StaryardScreen)
+    // Ship prices based on focus time unlock requirements (must match StaryardScreen.kt)
     val shipPrices = mapOf(
-        "type45c_shooting_star" to 1500,
-        "navakeshi_star_pouncer" to 1800,
-        "a300_albatross" to 2000,
-        "b7f_starforce" to 2400,
-        "navakeshi_star_crusher" to 3000,
-        "b15_specter" to 3500,
-        "n6_98_melina" to 4000,
-        "model3_tortoise_ccp" to 4500,
-        "h98_valkyrie" to 5000,
-        "navakeshi_star_ravager" to 5500,
-        "silver_lightning" to 6000,
-        "vulcani_legenda_f1" to 6500,
-        "force_of_nature" to 7000
+        "type45c_shooting_star" to 2500, // ship2: 15 mins
+        "navakeshi_star_pouncer" to 5000, // ship3: 25 mins
+        "a300_albatross" to 8500, // ship4: 35 mins
+        "b7f_starforce" to 12000, // ship5: 50 mins
+        "navakeshi_star_crusher" to 15000, // ship6: 80 mins
+        "b15_specter" to 20000, // ship7: 105 mins
+        "n6_98_melina" to 26000, // ship8: 150 mins
+        "model3_tortoise_ccp" to 32000, // ship9: 200 mins
+        "h98_valkyrie" to 38000, // ship10: 250 mins
+        "navakeshi_star_ravager" to 45000, // ship11: 300 mins
+        "silver_lightning" to 60000, // ship12: 350 mins
+        "vulcani_legenda_f1" to 65000, // ship13: 450 mins
+        "force_of_nature" to 80000 // ship14: 600 mins
     )
     
     // Track if FactionDetailsScreen should be shown
@@ -145,8 +159,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track the selected location for details
     var selectedLocationForDetails by remember { mutableStateOf<com.example.fargalaxy.model.Location?>(null) }
     
-    // Track the current ship
+    // Track the current ship - always read fresh from repository to ensure it's up to date
+    // This ensures that after resetProgress() or other repository changes, we get the latest ship
     var currentShip by remember { mutableStateOf<Ship>(ShipRepository.getCurrentShip()) }
+    
+    // Update currentShip when repository changes (e.g., after resetProgress or app restart)
+    // Use a small delay to ensure repositories are fully initialized after resetProgress()
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(100) // Delay to ensure resetProgress() has completed
+        currentShip = ShipRepository.getCurrentShip() // Always update to ensure we have the latest ship
+    }
     
     // Track the selected ship for details (separate from currentShip)
     var selectedShipForDetails by remember { mutableStateOf<Ship?>(null) }
@@ -342,11 +364,26 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle purchase click from StaryardDetailsScreen
     val onPurchaseClick: () -> Unit = {
-        // TODO: Implement purchase logic
-        // For now, just close the details screen
+        // Mark ship as owned when purchased and deduct credits
+        selectedShipForStaryardDetails?.let { ship ->
+            // Deduct credits
+            com.example.fargalaxy.data.UserDataRepository.addCredits(-selectedShipPrice)
+            // Mark ship as owned
+            com.example.fargalaxy.data.GameStateRepository.ownShip(ship.id)
+            // Show ship acquired modal
+            acquiredShipId = ship.id
+            showShipAcquiredScreen = true
+        }
+        // Close the details screen
         showStaryardDetails = false
         selectedShipForStaryardDetails = null
         selectedShipPrice = 0
+    }
+    
+    // Handle continue click from ShipAcquiredScreen
+    val onShipAcquiredContinueClick: () -> Unit = {
+        showShipAcquiredScreen = false
+        acquiredShipId = null
     }
     
     // Handle location click from LocationsScreen
@@ -532,7 +569,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onShipSelectionClick = onShipSelectionClick,
                         onLocationsClick = onLocationsClick,
                         onBackClick = { navigateToPage(1) }, // Navigate to GalaxyScreen
-                        totalTravelMinutes = 45, // TODO: Connect to actual data source
+                        totalTravelMinutes = 0, // Not used anymore, CareerScreen reads from UserDataRepository
                         isPageActive = pagerState.currentPage == 0 && !showShipDetails && !showShipSelection && !showLocations && !showLocationDetails, // Track when page is active and overlays are closed
                         scrollToTopTrigger = scrollToTopTrigger
                     )
@@ -544,7 +581,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         isIdleCallback = { idle -> isGalaxyIdle = idle },
                         activeScreen = activeScreen,
                         onCareerClick = onCareerClick,
-                        onCollectionClick = onCollectionClick
+                        onCollectionClick = onCollectionClick,
+                        onRewardsScreenVisibilityChange = { isShown -> isRewardsScreenShown = isShown },
+                        onShipUnlockedScreenVisibilityChange = { isShown -> isShipUnlockedScreenShown = isShown },
+                        onLocationDiscoveredScreenVisibilityChange = { isShown -> isLocationDiscoveredScreenShown = isShown }
                     )
                 }
                 2 -> {
@@ -553,8 +593,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onBackClick = { navigateToPage(1) }, // Navigate to GalaxyScreen
                         onStaryardClick = onStaryardClick,
                         onEquipmentClick = onEquipmentClick,
-                        onStoreClick = onStoreClick,
-                        userCredits = userCredits
+                        onStoreClick = onStoreClick
                     )
                 }
             }
@@ -575,8 +614,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, or StoreDetailsScreen is shown
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, StoreDetailsScreen, RewardsScreen, ShipUnlockedScreen, LocationDiscoveredScreen, or ShipAcquiredScreen is shown
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !isRewardsScreenShown && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -709,7 +748,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
             StaryardDetailsScreen(
                 ship = selectedShipForStaryardDetails!!,
                 price = selectedShipPrice,
-                userCredits = userCredits,
                 onBackClick = onBackFromStaryardDetails,
                 onPurchaseClick = onPurchaseClick
             )
@@ -720,8 +758,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             Box(modifier = Modifier.fillMaxSize()) {
                 EquipmentScreen(
                     onBackClick = onBackFromEquipment,
-                    onEquipmentClick = onEquipmentItemClick,
-                    userCredits = userCredits
+                    onEquipmentClick = onEquipmentItemClick
                 )
                 
                 // Block pointer events when EquipmentDetailsScreen is shown
@@ -743,8 +780,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             Box(modifier = Modifier.fillMaxSize()) {
                 StoreScreen(
                     onBackClick = onBackFromStore,
-                    onStoreItemClick = onStoreItemClick,
-                    userCredits = userCredits
+                    onStoreItemClick = onStoreItemClick
                 )
                 
                 // Block pointer events when StoreDetailsScreen is shown
@@ -767,7 +803,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 equipmentName = selectedEquipmentName,
                 equipmentImageResId = selectedEquipmentImageResId,
                 price = selectedEquipmentPrice,
-                userCredits = userCredits,
                 description = selectedEquipmentDescription,
                 onBackClick = onBackFromEquipmentDetails,
                 onPurchaseClick = onEquipmentPurchaseClick
@@ -781,10 +816,17 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 itemImageResId = selectedStoreItemImageResId,
                 price = selectedStoreItemPrice,
                 priceType = selectedStoreItemPriceType,
-                userCredits = userCredits,
                 description = selectedStoreItemDescription,
                 onBackClick = onBackFromStoreDetails,
                 onPurchaseClick = onStorePurchaseClick
+            )
+        }
+        
+        // ShipAcquiredScreen overlay - shown on top of everything when showShipAcquiredScreen is true
+        if (showShipAcquiredScreen && acquiredShipId != null) {
+            ShipAcquiredScreen(
+                shipId = acquiredShipId!!,
+                onContinueClick = onShipAcquiredContinueClick
             )
         }
     }

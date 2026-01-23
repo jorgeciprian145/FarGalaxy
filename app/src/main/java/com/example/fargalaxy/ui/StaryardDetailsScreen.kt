@@ -175,11 +175,13 @@ private fun formatShipNameForDisplay(shipId: String, shipName: String, screenWid
 fun StaryardDetailsScreen(
     ship: Ship,
     price: Int,
-    userCredits: Int,
     onBackClick: () -> Unit = {},
     onPurchaseClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Read credits from global repository
+    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
+    
     // Determine if user can afford the ship
     val canAfford = price <= userCredits
     // Scroll state to track when content is being clipped
