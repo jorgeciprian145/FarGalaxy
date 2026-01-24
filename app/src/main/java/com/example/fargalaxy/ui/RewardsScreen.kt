@@ -182,7 +182,7 @@ fun RewardsScreen(
     // Sound: starts exactly when XP animation starts (3s), ends exactly when XP animation ends (3.5s)
     // Total sound duration: 500ms (XP animation duration)
     LaunchedEffect(Unit) {
-        val xpMediaPlayer = MediaPlayer.create(context, R.raw.clicking)
+        val xpMediaPlayer = MediaPlayer.create(context, R.raw.charge)
         xpMediaPlayer?.let { player ->
             try {
                 // Wait until XP animation starts (at 3s)

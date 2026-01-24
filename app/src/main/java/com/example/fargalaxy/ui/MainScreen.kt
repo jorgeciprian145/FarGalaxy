@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.ShipRepository
 import com.example.fargalaxy.model.Ship
+import com.example.fargalaxy.utils.playMouseClickSound
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -218,6 +219,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle ship details navigation from CareerScreen
     val onViewShipClick: () -> Unit = {
+        playMouseClickSound(context, coroutineScope)
         isFromCareerScreen = true
         selectedShipForDetails = null // Clear any previous selection
         showShipDetails = true
@@ -230,6 +232,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle ship selection navigation
     val onShipSelectionClick: () -> Unit = {
+        playMouseClickSound(context, coroutineScope)
         shouldResetShipSelectionScroll = true // Reset scroll when opening from CareerScreen
         showShipSelection = true
     }
@@ -241,6 +244,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle locations navigation
     val onLocationsClick: () -> Unit = {
+        playMouseClickSound(context, coroutineScope)
         shouldResetLocationsScroll = true // Reset scroll when opening from CareerScreen
         showLocations = true
     }
@@ -252,6 +256,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle staryard navigation
     val onStaryardClick: () -> Unit = {
+        playMouseClickSound(context, coroutineScope)
         showStaryard = true
     }
     
@@ -262,6 +267,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle equipment navigation
     val onEquipmentClick: () -> Unit = {
+        playMouseClickSound(context, coroutineScope)
         showEquipment = true
     }
     
@@ -272,6 +278,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle store navigation
     val onStoreClick: () -> Unit = {
+        playMouseClickSound(context, coroutineScope)
         showStore = true
     }
     
@@ -282,6 +289,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle store item click from StoreScreen
     val onStoreItemClick: (String, Int, Int, String) -> Unit = { name, imageResId, price, description ->
+        playMouseClickSound(context, coroutineScope)
         selectedStoreItemName = name
         selectedStoreItemImageResId = imageResId
         // Convert price Int to String and determine priceType
@@ -321,6 +329,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle equipment click from EquipmentScreen
     val onEquipmentItemClick: (String, Int, Int, String) -> Unit = { name, imageResId, price, description ->
+        playMouseClickSound(context, coroutineScope)
         selectedEquipmentName = name
         selectedEquipmentImageResId = imageResId
         selectedEquipmentPrice = price
@@ -350,6 +359,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle ship click from StaryardScreen
     val onStaryardShipClick: (Ship) -> Unit = { ship ->
+        playMouseClickSound(context, coroutineScope)
         selectedShipForStaryardDetails = ship
         selectedShipPrice = shipPrices[ship.id] ?: 0
         showStaryardDetails = true
@@ -382,12 +392,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle continue click from ShipAcquiredScreen
     val onShipAcquiredContinueClick: () -> Unit = {
+        playMouseClickSound(context, coroutineScope)
         showShipAcquiredScreen = false
         acquiredShipId = null
     }
     
     // Handle location click from LocationsScreen
     val onLocationClick: (com.example.fargalaxy.model.Location) -> Unit = { location ->
+        playMouseClickSound(context, coroutineScope)
         selectedLocationForDetails = location
         showLocationDetails = true
         // Don't hide LocationsScreen - keep it in composition to preserve scroll position
@@ -420,6 +432,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle ship click from ShipSelectionScreen
     val onShipClick: (Ship) -> Unit = { ship ->
+        playMouseClickSound(context, coroutineScope)
         isFromCareerScreen = false // Not from CareerScreen
         selectedShipForDetails = ship
         showShipDetails = true
@@ -441,6 +454,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle "CHANGE SHIP" button click - navigate to ship selection screen
     val onChangeShip: () -> Unit = {
+        playMouseClickSound(context, coroutineScope)
         showShipDetails = false
         isFromCareerScreen = false
         shouldResetShipSelectionScroll = false // Don't reset scroll when coming from ShipDetailsScreen
@@ -451,6 +465,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val onSelectShip: () -> Unit = {
         val shipToSelect = selectedShipForDetails
         if (shipToSelect != null) {
+            playMouseClickSound(context, coroutineScope)
             // Update the current ship in repository
             ShipRepository.setCurrentShip(shipToSelect.id)
             // Update local state
@@ -658,6 +673,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 location = selectedLocationForDetails!!,
                 onBackClick = onBackFromLocationDetails,
                 onFactionBadgeClick = { faction ->
+                    playMouseClickSound(context, coroutineScope)
                     selectedFactionForDetails = faction
                     showFactionDetails = true
                 }

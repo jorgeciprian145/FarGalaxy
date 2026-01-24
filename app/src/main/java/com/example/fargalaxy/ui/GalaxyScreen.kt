@@ -80,6 +80,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import com.example.fargalaxy.model.Ship
+import com.example.fargalaxy.utils.playMouseClickSound
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -1888,8 +1889,51 @@ fun GalaxyScreen(
 
         // Travel Success Modal: Shown when travel completes without cancellation
         if (showTravelSuccessModal && !showRewardsScreen) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
+            
+            // Play victory sound when modal appears
+            LaunchedEffect(showTravelSuccessModal) {
+                if (showTravelSuccessModal) {
+                    val victoryPlayer = MediaPlayer.create(context, R.raw.victory)
+                    victoryPlayer?.let { player ->
+                        try {
+                            player.setVolume(1f, 1f)
+                            player.start()
+                            
+                            // Play in background - launch a coroutine to handle cleanup after sound finishes
+                            coroutineScope.launch {
+                                // Get duration in milliseconds
+                                val duration = player.duration
+                                if (duration > 0) {
+                                    delay(duration.toLong())
+                                }
+                                
+                                // Clean up after sound finishes
+                                try {
+                                    if (player.isPlaying) {
+                                        player.stop()
+                                    }
+                                    player.release()
+                                } catch (e: Exception) {
+                                    // Ignore cleanup errors
+                                }
+                            }
+                        } catch (e: Exception) {
+                            // If starting fails, try to release
+                            try {
+                                player.release()
+                            } catch (e2: Exception) {
+                                // Ignore release errors
+                            }
+                        }
+                    }
+                }
+            }
+            
             TravelSuccessModal(
                 onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
                     showTravelSuccessModal = false
                     showRewardsScreen = true
                 }
@@ -1898,9 +1942,12 @@ fun GalaxyScreen(
         
         // Travel Canceled Modal: Shown when trip is canceled (due to being away for >20 seconds or 5+ penalties)
         if (showTravelCanceledModal) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
             TravelCanceledModal(
                 cancellationReason = cancellationReason,
                 onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
                     showTravelCanceledModal = false
                 }
             )
@@ -1908,9 +1955,12 @@ fun GalaxyScreen(
         
         // Rewards Screen: Shown after modal continue is clicked
         if (showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
             RewardsScreen(
                 travelMinutes = travelMinutes,
                 onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
                     showRewardsScreen = false
                     // After rewards screen, show ship unlock screens first, then location discovery screens
                     if (newlyUnlockedShips.isNotEmpty()) {
@@ -1926,9 +1976,12 @@ fun GalaxyScreen(
         
         // Ship Unlocked Screen: Shown after rewards screen if ships were unlocked
         if (showShipUnlockedScreen && currentShipUnlockedIndex < newlyUnlockedShips.size) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
             ShipUnlockedScreen(
                 shipId = newlyUnlockedShips[currentShipUnlockedIndex],
                 onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
                     currentShipUnlockedIndex++
                     if (currentShipUnlockedIndex >= newlyUnlockedShips.size) {
                         showShipUnlockedScreen = false
@@ -1944,9 +1997,12 @@ fun GalaxyScreen(
         
         // Location Discovered Screen: Shown after ship unlock screens (or after rewards if no ships)
         if (showLocationDiscoveredScreen && currentLocationDiscoveredIndex < newlyDiscoveredLocations.size) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
             LocationDiscoveredScreen(
                 locationId = newlyDiscoveredLocations[currentLocationDiscoveredIndex],
                 onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
                     currentLocationDiscoveredIndex++
                     if (currentLocationDiscoveredIndex >= newlyDiscoveredLocations.size) {
                         showLocationDiscoveredScreen = false
