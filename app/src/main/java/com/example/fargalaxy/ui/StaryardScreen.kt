@@ -212,118 +212,120 @@ fun StaryardScreen(
                 .fillMaxHeight()
                 .clipToBounds() // Clip content that goes above this boundary
         ) {
-            // Scrollable content column: Content can scroll up and get clipped at the boundary
-            // Initially, content starts 16dp below clip line (via spacer)
-            // Column fills available height to enable proper scrolling
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .verticalScroll(scrollState)
-                    .navigationBarsPadding() // Account for navigation bar height
-                    .padding(bottom = 32.dp), // Allow last row to be 32dp above bottom bar
-                verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control
-            ) {
-                // Initial spacer: Push content down 4dp from clip line
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Label: "Purchase unlocked starships" - center aligned, 14sp, regular weight
-                Text(
-                    text = "Purchase unlocked starships",
-                    fontFamily = Exo2,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.W400, // Regular
-                    color = Color(0xFFFFFFFF),
-                    textAlign = TextAlign.Center,
+            if (availableShips.isEmpty()) {
+                // Empty state: Show centered message when no ships are available
+                // Vertically centered to the screen
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-                
-                // 16dp spacing below label
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Container: Ships count on left, credits on right
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxHeight()
+                        .navigationBarsPadding() // Account for navigation bar height
+                        .padding(horizontal = 24.dp), // 24dp side padding
+                    contentAlignment = Alignment.Center // Center horizontally and vertically
                 ) {
-                    // Left: Ships count label - bold, 20sp
                     Text(
-                        text = "${availableShips.size} unlocked ships",
+                        text = "Unlocked ships will appear here for you to buy",
                         fontFamily = Exo2,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFFFFF)
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W400, // Regular
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center
                     )
-                    
-                    // Right: Credits container
-                    // Height: 32dp, padding: 16dp, border: 1dp #6B6C6F, background: #373A3E, corner radius: 8dp
-                    Box(
-                        modifier = Modifier
-                            .height(32.dp)
-                            .background(
-                                color = Color(0xFF373A3E), // Background fill
-                                shape = RoundedCornerShape(8.dp) // 8dp corner radius
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = Color(0xFF6B6C6F), // Border color
-                                shape = RoundedCornerShape(8.dp) // 8dp corner radius
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 16.dp), // 16dp internal padding
-                            horizontalArrangement = Arrangement.spacedBy(8.dp), // 8dp spacing between icon and label
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Credits icon: 24dp width, maintaining aspect ratio (on the left)
-                            Image(
-                                painter = painterResource(id = R.drawable.creditsicon),
-                                contentDescription = "Credits",
-                                modifier = Modifier.width(24.dp), // 24dp width, maintaining aspect ratio
-                                contentScale = ContentScale.Fit,
-                                colorFilter = ColorFilter.tint(Color(0xFFFFFFFF)) // White tint for icon
-                            )
-                            
-                            // Credits amount label: 16sp, medium weight, white color
-                            Text(
-                                text = userCredits.toString(),
-                                fontFamily = Exo2,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFFFFFFFF) // White color
-                            )
-                        }
-                    }
                 }
-                
-                // 16dp spacing below the ships count/credits row
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Ship grid or empty state
-                if (availableShips.isEmpty()) {
-                    // Empty state: Show centered message when no ships are available
-                    Box(
+            } else {
+                // Scrollable content column: Content can scroll up and get clipped at the boundary
+                // Initially, content starts 16dp below clip line (via spacer)
+                // Column fills available height to enable proper scrolling
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .verticalScroll(scrollState)
+                        .navigationBarsPadding() // Account for navigation bar height
+                        .padding(bottom = 32.dp), // Allow last row to be 32dp above bottom bar
+                    verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control
+                ) {
+                    // Initial spacer: Push content down 4dp from clip line
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    // Label: "Purchase unlocked starships" - center aligned, 14sp, regular weight
+                    Text(
+                        text = "Purchase unlocked starships",
+                        fontFamily = Exo2,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W400, // Regular
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp), // 24dp side padding
-                        contentAlignment = Alignment.Center // Center horizontally and vertically
+                            .padding(horizontal = 16.dp)
+                    )
+                    
+                    // 16dp spacing below label
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Container: Ships count on left, credits on right
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Left: Ships count label - bold, 20sp
                         Text(
-                            text = "Unlocked ships will appear here for you to buy",
+                            text = "${availableShips.size} unlocked ships",
                             fontFamily = Exo2,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.W400, // Regular
-                            color = Color(0xFFFFFFFF),
-                            textAlign = TextAlign.Center
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFFFFFF)
                         )
+                        
+                        // Right: Credits container
+                        // Height: 32dp, padding: 16dp, border: 1dp #6B6C6F, background: #373A3E, corner radius: 8dp
+                        Box(
+                            modifier = Modifier
+                                .height(32.dp)
+                                .background(
+                                    color = Color(0xFF373A3E), // Background fill
+                                    shape = RoundedCornerShape(8.dp) // 8dp corner radius
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFF6B6C6F), // Border color
+                                    shape = RoundedCornerShape(8.dp) // 8dp corner radius
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp), // 16dp internal padding
+                                horizontalArrangement = Arrangement.spacedBy(8.dp), // 8dp spacing between icon and label
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Credits icon: 24dp width, maintaining aspect ratio (on the left)
+                                Image(
+                                    painter = painterResource(id = R.drawable.creditsicon),
+                                    contentDescription = "Credits",
+                                    modifier = Modifier.width(24.dp), // 24dp width, maintaining aspect ratio
+                                    contentScale = ContentScale.Fit,
+                                    colorFilter = ColorFilter.tint(Color(0xFFFFFFFF)) // White tint for icon
+                                )
+                                
+                                // Credits amount label: 16sp, medium weight, white color
+                                Text(
+                                    text = userCredits.toString(),
+                                    fontFamily = Exo2,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFFFFFFFF) // White color
+                                )
+                            }
+                        }
                     }
-                } else {
+                    
+                    // 16dp spacing below the ships count/credits row
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
                     // Ship grid: Rows of 1:1 containers, 2 per row, 8dp gap between containers
                     // 16dp side padding, containers maintain 1:1 ratio even when alone in a row
                     BoxWithConstraints(

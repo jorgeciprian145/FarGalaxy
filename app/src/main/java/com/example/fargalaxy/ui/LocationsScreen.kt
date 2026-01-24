@@ -313,7 +313,7 @@ fun LocationsScreen(
                     contentAlignment = Alignment.Center // Center horizontally and vertically
                 ) {
                     Text(
-                        text = "Start having focus sessions to explore the galaxy and discover amazing locations. Discovered locations will appear here",
+                        text = "Discovered locations will appear here",
                         fontFamily = Exo2,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.W400, // Regular
