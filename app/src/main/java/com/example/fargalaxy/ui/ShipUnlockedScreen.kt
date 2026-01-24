@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Column
@@ -14,13 +15,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,8 +37,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,14 +46,12 @@ import android.graphics.RenderEffect as AndroidRenderEffect
 import android.graphics.Shader
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.data.ShipRepository
-import com.example.fargalaxy.model.Ship
 
 /**
  * ShipUnlockedScreen composable - displays when a ship is unlocked during a travel session.
- * Shows the ship render image on top of an award background JSON animation.
+ * Uses the same structure as RewardsScreen top portion, but with awardbackground JSON + ship image.
  */
 @Composable
 fun ShipUnlockedScreen(
@@ -64,9 +59,9 @@ fun ShipUnlockedScreen(
     onContinueClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
     val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
+    val screenWidth = with(density) { configuration.screenWidthDp.dp }
     
     // Get ship data
     val ship = ShipRepository.getAllShips().find { it.id == shipId }
@@ -82,12 +77,15 @@ fun ShipUnlockedScreen(
         modifier = modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                // Block all pointer events to prevent pager scrolling
-                detectTapGestures { }
+                // Block drag gestures (swipes) to prevent pager scrolling
+                // This allows taps on the CONTINUE button to still work
+                detectDragGestures { change, dragAmount ->
+                    // Consume all drag gestures to prevent pager scrolling
+                }
             },
         contentAlignment = Alignment.Center
     ) {
-        // Blur and overlay: Same as TravelSuccessModal (96% opacity black overlay)
+        // Blur and overlay: Same as RewardsScreen (96% opacity black overlay)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -101,99 +99,101 @@ fun ShipUnlockedScreen(
                 .background(Color.Black.copy(alpha = 0.96f))
         )
         
-        // Main content container: JSON+image and title+label, centered on screen
-        // Container stretches full width, elements inside follow original constraints
+        // Main layout: Button at bottom, content container centered vertically
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp) // 16dp side padding
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // JSON background: 85% of screen width
-            Box(
-                modifier = Modifier
-                    .width(screenWidth * 0.85f)
-                    .onSizeChanged { size ->
-                        with(density) {
-                            jsonWidth = size.width.toDp()
-                            jsonHeight = size.height.toDp()
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                // JSON animation (plays once)
-                if (jsonComposition != null) {
-                    LottieAnimation(
-                        composition = jsonComposition,
-                        iterations = 1, // Play only once
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Fit
-                    )
-                }
-                
-                // Ship render image: 80% of JSON width, maintaining aspect ratio
-                // Vertically and horizontally centered on JSON
-                if (ship != null) {
-                    Image(
-                        painter = painterResource(id = ship.renderImageResId),
-                        contentDescription = ship.name,
-                        modifier = Modifier
-                            .width(jsonWidth * 0.8f)
-                            .wrapContentHeight(),
-                        contentScale = ContentScale.Fit
-                    )
-                }
-            }
+            // Spacer to push content container to center
+            Spacer(modifier = Modifier.weight(1f))
             
-            // Title and label: Same format as TravelSuccessModal
-            // Labels respect 16dp side padding
+            // Content container: JSON + title + label, vertically centered
+            // Maintains 24dp spacing between JSON and title
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .wrapContentHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Title: "New ship unlocked" - bold, 28sp
+                // JSON Animation with ship image: awardbackground + ship render
+                Box(
+                    modifier = Modifier
+                        .width(screenWidth * 0.85f) // 85% of screen width (awardbackground size)
+                        .onSizeChanged { size ->
+                            with(density) {
+                                jsonWidth = size.width.toDp()
+                                jsonHeight = size.height.toDp()
+                            }
+                        }
+                ) {
+                    // JSON animation (plays once)
+                    if (jsonComposition != null) {
+                        LottieAnimation(
+                            composition = jsonComposition,
+                            iterations = 1, // Play only once
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                    
+                    // Ship render image: 80% of JSON width, maintaining aspect ratio
+                    // Vertically and horizontally centered on JSON
+                    if (ship != null) {
+                        Image(
+                            painter = painterResource(id = ship.renderImageResId),
+                            contentDescription = ship.name,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .width(jsonWidth * 0.8f)
+                                .wrapContentHeight(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+                
+                // 24dp spacing between JSON and title (maintains current spacing)
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Title: "New ship unlocked" - bold, 28sp (same format as RewardsScreen)
                 Text(
                     text = "New ship unlocked",
                     fontFamily = Exo2,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFFFFFF),
+                    color = Color.White,
                     textAlign = TextAlign.Center
                 )
+                
+                // 4dp spacing between title and label (same as RewardsScreen)
+                Spacer(modifier = Modifier.height(4.dp))
                 
                 // Label: "Available to be bought in the Staryard" - regular, 16sp
                 Text(
                     text = "Available to be bought in the Staryard",
                     fontFamily = Exo2,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.W400, // Regular
-                    color = Color(0xFFFFFFFF),
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White,
                     textAlign = TextAlign.Center
                 )
             }
-        }
-        
-        // Continue button at bottom: Same format as TravelSuccessModal button
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(bottom = 24.dp)
-        ) {
-            // Button: "CONTINUE" - same format as LAUNCH button (primary style)
+            
+            // Spacer to push button to bottom
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Continue button at bottom: Same format as RewardsScreen button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .padding(horizontal = 24.dp)
                     .clip(RoundedCornerShape(80.dp))
-                    .background(Color(0xFFFFFFFF)) // White fill
+                    .background(Color(0xFFFFFFFF))
                     .clickable(onClick = onContinueClick),
                 contentAlignment = Alignment.Center
             ) {
@@ -202,7 +202,7 @@ fun ShipUnlockedScreen(
                     fontFamily = Exo2,
                     fontSize = 24.sp,
                     lineHeight = 24.sp,
-                    color = Color(0xFF010102), // Dark text
+                    color = Color(0xFF010102),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .align(Alignment.Center)

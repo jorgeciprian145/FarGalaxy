@@ -31,6 +31,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +50,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import android.widget.Toast
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -575,12 +580,39 @@ private fun TotalTimeTravelingCounter(
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     
     // Track SVG width to calculate available space for center content
     var leftSvgWidth by remember { mutableStateOf(0.dp) }
     var rightSvgWidth by remember { mutableStateOf(0.dp) }
     
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+                // Secret test feature: Long press for 5 seconds to reset progress
+                detectTapGestures(
+                    onPress = {
+                        val startTime = System.currentTimeMillis()
+                        
+                        // Launch coroutine to check if 5 seconds have passed
+                        val resetJob = scope.launch {
+                            delay(5000) // Wait 5 seconds
+                            // Still pressed after 5 seconds, reset progress
+                            com.example.fargalaxy.data.GameStateRepository.resetProgress()
+                            Toast.makeText(context, "progress has been reset", Toast.LENGTH_SHORT).show()
+                        }
+                        
+                        // Wait for release
+                        tryAwaitRelease()
+                        
+                        // Cancel the reset job if released before 5 seconds
+                        resetJob.cancel()
+                    }
+                )
+            }
+    ) {
         val totalWidth = maxWidth
         val sidePadding = 16.dp
         val internalPadding = 12.dp

@@ -70,8 +70,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.media.MediaPlayer
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -1492,18 +1494,81 @@ fun GalaxyScreen(
     
     // Launch preparation countdown: 3-second countdown before actual travel begins
     // Decrements launchCountdown every second (3, 2, 1)
+    // Get context for MediaPlayer
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    
     // After countdown completes, automatically starts travel if not cancelled
     LaunchedEffect(isPreparingLaunch) {
         if (isPreparingLaunch) {
             launchCountdown = 3 // Reset to 3
             while (isPreparingLaunch && launchCountdown > 0) {
-                delay(1000) // Wait 1 second
+                // Play beep sound for current countdown number (3, 2, or 1)
+                val beepPlayer = MediaPlayer.create(context, R.raw.beep)
+                beepPlayer?.let { player ->
+                    try {
+                        player.setVolume(1f, 1f)
+                        player.start()
+                        
+                        // Play for 1 second (duration the number is on screen)
+                        delay(1000)
+                        
+                        player.stop()
+                        player.release()
+                    } catch (e: Exception) {
+                        try {
+                            if (player.isPlaying) {
+                                player.stop()
+                            }
+                            player.release()
+                        } catch (e2: Exception) {
+                            // Ignore release errors
+                        }
+                    }
+                }
+                
                 if (isPreparingLaunch) { // Check if still preparing (not cancelled)
                     launchCountdown--
                 }
             }
-            // After countdown completes, start travel if still preparing
+            // After countdown completes, play starship sound in parallel and start travel if still preparing
             if (isPreparingLaunch) {
+                // Start starship sound in parallel (don't wait for it to finish)
+                val starshipPlayer = MediaPlayer.create(context, R.raw.starship)
+                starshipPlayer?.let { player ->
+                    try {
+                        player.setVolume(1f, 1f)
+                        player.start()
+                        
+                        // Play in background - launch a coroutine to handle cleanup after sound finishes
+                        coroutineScope.launch {
+                            // Get duration in milliseconds
+                            val duration = player.duration
+                            if (duration > 0) {
+                                delay(duration.toLong())
+                            }
+                            
+                            // Clean up after sound finishes
+                            try {
+                                if (player.isPlaying) {
+                                    player.stop()
+                                }
+                                player.release()
+                            } catch (e: Exception) {
+                                // Ignore cleanup errors
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // If starting fails, try to release
+                        try {
+                            player.release()
+                        } catch (e2: Exception) {
+                            // Ignore release errors
+                        }
+                    }
+                }
+                
+                // Start travel immediately (don't wait for sound)
                 isPreparingLaunch = false
                 isTraveling = true
                 // TODO: REMOVE TESTING CODE - Use 10 seconds in test mode
@@ -1544,7 +1609,7 @@ fun GalaxyScreen(
 
             // Launch coroutine to show speed effect after 3 seconds
             val job = speedEffectScope.launch {
-                // delay(3000) // Wait 3 seconds
+                delay(3000) // Wait 3 seconds
                 // Only show if this is still the current travel session
                 // (check by comparing session IDs, not isTraveling which might be stale)
                 if (travelSessionId == currentSessionId) {

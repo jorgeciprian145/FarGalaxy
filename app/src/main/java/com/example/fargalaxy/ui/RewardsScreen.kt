@@ -57,6 +57,8 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.UserDataRepository
 import kotlinx.coroutines.delay
+import android.media.MediaPlayer
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * AnimatedNumberCounter composable - displays a number that animates from old value to new value.
@@ -167,9 +169,85 @@ fun RewardsScreen(
     // Animated credits value (starts at current, animates to new)
     var animatedCredits by remember { mutableStateOf(currentCredits) }
     
+    // Get context for MediaPlayer
+    val context = LocalContext.current
+    
     // Record completed session when RewardsScreen appears (session completed successfully)
     LaunchedEffect(Unit) {
         UserDataRepository.recordCompletedSession()
+    }
+    
+    // Sound playback for XP animation
+    // XP animation: starts at 3s (2000ms + 1000ms delay), duration 500ms, ends at 3.5s
+    // Sound: starts exactly when XP animation starts (3s), ends exactly when XP animation ends (3.5s)
+    // Total sound duration: 500ms (XP animation duration)
+    LaunchedEffect(Unit) {
+        val xpMediaPlayer = MediaPlayer.create(context, R.raw.clicking)
+        xpMediaPlayer?.let { player ->
+            try {
+                // Wait until XP animation starts (at 3s)
+                delay(3000)
+                
+                // Prepare player: set looping in case file is shorter than needed
+                player.isLooping = true
+                player.setVolume(1f, 1f) // Start at full volume
+                player.start()
+                
+                // Play at full volume during XP animation (500ms)
+                delay(500)
+                
+                // Stop and release exactly when XP animation ends
+                player.stop()
+                player.release()
+            } catch (e: Exception) {
+                // Handle any errors silently
+                try {
+                    if (player.isPlaying) {
+                        player.stop()
+                    }
+                    player.release()
+                } catch (e2: Exception) {
+                    // Ignore release errors
+                }
+            }
+        }
+    }
+    
+    // Sound playback - only for credits animation
+    // Credits animation: starts at 4.5s (3.5s + 1s gap), duration 500ms, ends at 5s
+    // Sound: starts at 5.2s (0.7s after credits animation starts), ends when credits animation ends (5s)
+    // Note: Sound starts after credits animation has already started
+    // Total sound duration: 500ms (credits animation only)
+    LaunchedEffect(Unit) {
+        val creditsMediaPlayer = MediaPlayer.create(context, R.raw.coins)
+        creditsMediaPlayer?.let { player ->
+            try {
+                // Wait until 5.2s (0.7s after credits animation starts at 4.5s)
+                delay(5200)
+                
+                // Prepare player: set looping in case file is shorter than needed
+                player.isLooping = true
+                player.setVolume(1f, 1f) // Start at full volume
+                player.start()
+                
+                // Play at full volume during credits animation (500ms)
+                delay(500)
+                
+                // Stop and release exactly when credits animation ends
+                player.stop()
+                player.release()
+            } catch (e: Exception) {
+                // Handle any errors silently
+                try {
+                    if (player.isPlaying) {
+                        player.stop()
+                    }
+                    player.release()
+                } catch (e2: Exception) {
+                    // Ignore release errors
+                }
+            }
+        }
     }
     
     // Start XP animation after 2 seconds (card appears immediately, animation starts after delay)

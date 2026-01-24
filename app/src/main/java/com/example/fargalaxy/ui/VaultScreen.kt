@@ -365,9 +365,9 @@ fun VaultScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(0.dp) // 0dp spacing between labels
                             ) {
-                                // Top label: Bold, 32sp
+                                // Top label: Bold, 32sp - Dynamic value (owned ships + discovered locations)
                                 Text(
-                                    text = completedItems.toString(), // TODO: Replace with dynamic value
+                                    text = completedItems.toString(),
                                     fontFamily = Exo2,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 32.sp,

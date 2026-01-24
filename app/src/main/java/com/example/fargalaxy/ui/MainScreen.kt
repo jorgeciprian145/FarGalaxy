@@ -464,8 +464,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
     }
     
-    // Disable user scrolling when not idle
-    val userScrollEnabled = isGalaxyIdle
+    // Disable user scrolling when not idle or when overlay screens are shown
+    val userScrollEnabled = isGalaxyIdle && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen
     
     // Handle back button press
     BackHandler(enabled = true) {

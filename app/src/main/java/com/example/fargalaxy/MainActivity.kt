@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
         com.example.fargalaxy.data.GameStateRepository.initialize(this)
         com.example.fargalaxy.data.PenaltyTracker.initialize(this)
         
-        // TODO: REMOVE TESTING CODE - Reset progress with test values (14 mins focus time, 3000 credits)
+        // TODO: REMOVE TESTING CODE - Reset progress to zero for testing ship unlock
         com.example.fargalaxy.data.GameStateRepository.resetProgress()
         
         setContent {

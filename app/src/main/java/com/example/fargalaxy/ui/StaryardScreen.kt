@@ -81,7 +81,7 @@ fun StaryardScreen(
     // Ships that are already owned should not appear in the staryard
     val allShips = ShipRepository.getAllShips()
     val availableShips = allShips.filter { 
-        it.id != "b14_phantom" && 
+        it.id != "b14_phantom" && // Exclude starting ship
         com.example.fargalaxy.data.GameStateRepository.isShipUnlocked(it.id) &&
         !com.example.fargalaxy.data.GameStateRepository.isShipOwned(it.id)
     }
@@ -305,37 +305,57 @@ fun StaryardScreen(
                 // 16dp spacing below the ships count/credits row
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Ship grid: Rows of 1:1 containers, 2 per row, 8dp gap between containers
-                // 16dp side padding, containers maintain 1:1 ratio even when alone in a row
-                BoxWithConstraints(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val containerWidth = (maxWidth - 32.dp - 8.dp) / 2 // (screen width - 32dp padding - 8dp spacing) / 2
-                    
-                    // Group ships into rows (chunks of 2)
-                    val rows = availableShips.chunked(2)
-                    
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
+                // Ship grid or empty state
+                if (availableShips.isEmpty()) {
+                    // Empty state: Show centered message when no ships are available
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp), // 24dp side padding
+                        contentAlignment = Alignment.Center // Center horizontally and vertically
                     ) {
-                        rows.forEach { rowShips ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp), // 16dp side padding
-                                horizontalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between containers
-                            ) {
-                                rowShips.forEach { ship ->
-                                    val shipPrice = shipPrices[ship.id] ?: 0
-                                    StaryardShipContainer(
-                                        ship = ship,
-                                        price = shipPrice,
-                                        userCredits = userCredits,
-                                        containerWidth = containerWidth,
-                                        onShipClick = { onShipClick(ship) },
-                                        modifier = Modifier.width(containerWidth)
-                                    )
+                        Text(
+                            text = "Unlocked ships will appear here for you to buy",
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W400, // Regular
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    // Ship grid: Rows of 1:1 containers, 2 per row, 8dp gap between containers
+                    // 16dp side padding, containers maintain 1:1 ratio even when alone in a row
+                    BoxWithConstraints(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val containerWidth = (maxWidth - 32.dp - 8.dp) / 2 // (screen width - 32dp padding - 8dp spacing) / 2
+                        
+                        // Group ships into rows (chunks of 2)
+                        val rows = availableShips.chunked(2)
+                        
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
+                        ) {
+                            rows.forEach { rowShips ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp), // 16dp side padding
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between containers
+                                ) {
+                                    rowShips.forEach { ship ->
+                                        val shipPrice = shipPrices[ship.id] ?: 0
+                                        StaryardShipContainer(
+                                            ship = ship,
+                                            price = shipPrice,
+                                            userCredits = userCredits,
+                                            containerWidth = containerWidth,
+                                            onShipClick = { onShipClick(ship) },
+                                            modifier = Modifier.width(containerWidth)
+                                        )
+                                    }
                                 }
                             }
                         }
