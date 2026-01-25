@@ -111,8 +111,8 @@ fun LevelStatusCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight(),
-                    contentScale = ContentScale.FillBounds // Fill the exact size specified
-                )
+                contentScale = ContentScale.FillBounds // Fill the exact size specified
+            )
                 
                 // Level number text overlay - centered on badge
                 Text(

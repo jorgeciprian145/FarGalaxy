@@ -322,47 +322,47 @@ fun LocationsScreen(
                     )
                 }
             } else {
-                // LazyColumn: Content can scroll up and get clipped at the boundary
-                // Only visible items (and a small buffer) are composed for better performance
-                // Initially, content starts 16dp below clip line (via spacer)
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .navigationBarsPadding(), // Account for navigation bar height
-                    contentPadding = PaddingValues(
-                        top = 32.dp, // 32dp spacing between bottom of "26 Discovered" label and first row
-                        bottom = 32.dp // Allow last row to be 32dp above bottom bar
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
-                ) {
-                    // Location rows: Each row contains a location image container and text container
-                    // Rows alternate: first row has image on left, second on right, etc.
-                    itemsIndexed(
-                        items = discoveredLocations,
-                        key = { index, location -> location.id } // Use location ID as key for stable identity
-                    ) { index, location ->
-                        val isImageOnLeft = index % 2 == 0 // Alternate: even index = left, odd index = right
-                        LocationRow(
-                            location = location,
-                            isImageOnLeft = isImageOnLeft,
-                            onLocationClick = { onLocationClick(location) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-                
-                // White divider line: Only visible when content is being clipped
-                // Positioned on top of the Column so it appears above clipped content
-                if (isContentClipped.value) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(Color(0xFFFFFFFF)) // White line, full width, 1px
+            // LazyColumn: Content can scroll up and get clipped at the boundary
+            // Only visible items (and a small buffer) are composed for better performance
+            // Initially, content starts 16dp below clip line (via spacer)
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .navigationBarsPadding(), // Account for navigation bar height
+                contentPadding = PaddingValues(
+                    top = 32.dp, // 32dp spacing between bottom of "26 Discovered" label and first row
+                    bottom = 32.dp // Allow last row to be 32dp above bottom bar
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
+            ) {
+                // Location rows: Each row contains a location image container and text container
+                // Rows alternate: first row has image on left, second on right, etc.
+                itemsIndexed(
+                    items = discoveredLocations,
+                    key = { index, location -> location.id } // Use location ID as key for stable identity
+                ) { index, location ->
+                    val isImageOnLeft = index % 2 == 0 // Alternate: even index = left, odd index = right
+                    LocationRow(
+                        location = location,
+                        isImageOnLeft = isImageOnLeft,
+                        onLocationClick = { onLocationClick(location) },
+                        modifier = Modifier.fillMaxWidth()
                     )
+                }
+            }
+            
+            // White divider line: Only visible when content is being clipped
+            // Positioned on top of the Column so it appears above clipped content
+            if (isContentClipped.value) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Color(0xFFFFFFFF)) // White line, full width, 1px
+                )
                 }
             }
         }

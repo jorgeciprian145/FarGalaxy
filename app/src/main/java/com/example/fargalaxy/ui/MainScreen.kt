@@ -772,10 +772,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
         // EquipmentScreen overlay - shown on top of everything when showEquipment is true
         if (showEquipment) {
             Box(modifier = Modifier.fillMaxSize()) {
-                EquipmentScreen(
-                    onBackClick = onBackFromEquipment,
-                    onEquipmentClick = onEquipmentItemClick
-                )
+            EquipmentScreen(
+                onBackClick = onBackFromEquipment,
+                onEquipmentClick = onEquipmentItemClick
+            )
                 
                 // Block pointer events when EquipmentDetailsScreen is shown
                 if (showEquipmentDetails) {
@@ -794,7 +794,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         // StoreScreen overlay - shown on top of everything when showStore is true
         if (showStore) {
             Box(modifier = Modifier.fillMaxSize()) {
-                StoreScreen(
+            StoreScreen(
                     onBackClick = onBackFromStore,
                     onStoreItemClick = onStoreItemClick
                 )

@@ -1,6 +1,10 @@
 package com.example.fargalaxy.ui
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -74,6 +78,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.media.MediaPlayer
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.content.Context
+import kotlin.math.abs
+import kotlin.math.sqrt
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -863,6 +874,7 @@ fun ImpulseLayer(
     impulseWidth: androidx.compose.ui.unit.Dp = 600.dp,
     impulseHeight: androidx.compose.ui.unit.Dp = 100.dp,
     horizontalOffset: androidx.compose.ui.unit.Dp = (-120).dp,
+    animatedOpacity: Float = 1f, // Animated opacity from parent
     modifier: Modifier = Modifier
 ) {
     // Return early if not traveling
@@ -884,12 +896,15 @@ fun ImpulseLayer(
         }
     }
 
-    // Animate opacity from 0f to 1f over 4 seconds
-    val opacity by animateFloatAsState(
+    // Animate opacity from 0f to 1f over 4 seconds, then apply animatedOpacity from parent
+    val baseOpacity by animateFloatAsState(
         targetValue = targetOpacity,
         animationSpec = tween(durationMillis = 4000),
         label = "impulse_fade_in"
     )
+    
+    // Combine base fade-in with animated opacity from parent
+    val finalOpacity = baseOpacity * animatedOpacity
 
     Box(
         modifier = modifier
@@ -902,7 +917,7 @@ fun ImpulseLayer(
             modifier = Modifier
                 .width(impulseWidth)
                 .height(impulseHeight)
-                .alpha(opacity), // Apply fade-in animation
+                .alpha(finalOpacity), // Apply combined opacity
             contentScale = ContentScale.Fit
         )
     }
@@ -1311,7 +1326,7 @@ fun GalaxyScreen(
                 isTestMode = false
                 selectedMinutes = 5
             } else {
-                selectedMinutes = (selectedMinutes + 5).coerceAtMost(60)
+            selectedMinutes = (selectedMinutes + 5).coerceAtMost(60)
             }
         }
     }
@@ -1330,7 +1345,7 @@ fun GalaxyScreen(
                 isTestMode = false
                 selectedMinutes = 5
             } else {
-                selectedMinutes = (selectedMinutes - 5).coerceAtLeast(5)
+            selectedMinutes = (selectedMinutes - 5).coerceAtLeast(5)
             }
         }
     }
@@ -1401,7 +1416,7 @@ fun GalaxyScreen(
             com.example.fargalaxy.data.PenaltyTracker.onTripCancelled = { reason ->
                 // Cancel the trip
                 wasTravelCancelled = true
-                isTraveling = false
+            isTraveling = false
                 cancellationReason = reason // Store the cancellation reason
                 com.example.fargalaxy.data.PenaltyTracker.stopTracking()
                 penaltyCount = 0
@@ -1657,6 +1672,167 @@ fun GalaxyScreen(
             )
         }
 
+        // Tilt-based movement for ship and impulse during travel
+        val context = LocalContext.current
+        val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager }
+        val accelerometer = remember { sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+        val coroutineScope = rememberCoroutineScope()
+        
+        // Target offsets based on tilt (will be animated to)
+        var targetVerticalOffset by remember { mutableStateOf(0f) } // in dp
+        var targetHorizontalOffset by remember { mutableStateOf(0f) } // in dp
+        
+        // Track if we're in the last 10 seconds (need to return to center)
+        val isLast10Seconds = remainingSeconds <= 10 && isTraveling
+        
+        // Sensor listener to detect device tilt
+        // Capture remainingSeconds to check in the last 10 seconds
+        var currentRemainingSeconds by remember { mutableStateOf(remainingSeconds) }
+        
+        // Update currentRemainingSeconds when remainingSeconds changes
+        LaunchedEffect(remainingSeconds) {
+            currentRemainingSeconds = remainingSeconds
+        }
+        
+        DisposableEffect(isTraveling, accelerometer, sensorManager) {
+            var listener: SensorEventListener? = null
+            
+            if (isTraveling && accelerometer != null && sensorManager != null) {
+                listener = object : SensorEventListener {
+                    override fun onSensorChanged(event: SensorEvent?) {
+                        if (event == null) return
+                        
+                        // Don't respond to tilt in the last 10 seconds - ship should stay centered
+                        // Ignore all sensor input if we're in the last 10 seconds
+                        if (currentRemainingSeconds <= 10) {
+                            return // Don't update offsets, ship will be forced to center by LaunchedEffect
+                        }
+                        
+                        // Get accelerometer values (x, y, z)
+                        val x = event.values[0]
+                        val y = event.values[1]
+                        val z = event.values[2]
+                        
+                        // Calculate tilt sensitivity
+                        // For a 10-degree tilt: sin(10°) ≈ 0.174, so acceleration component ≈ 0.174 * 9.8 ≈ 1.7 m/s²
+                        // We want this to give us good movement (maybe 15-18dp)
+                        // So sensitivity = 15 / 1.7 ≈ 8.8, we'll use 9 for good responsiveness
+                        val sensitivity = 9f
+                        
+                        // Calculate tilt in horizontal direction only
+                        // X axis: In portrait mode, when you tilt LEFT, X becomes negative
+                        //        When you tilt RIGHT, X becomes positive
+                        //        We want: tilt left → ship moves left (negative offset)
+                        //                 tilt right → ship moves right (positive offset)
+                        //        So we use -x to flip the direction
+                        val tiltX = -x * sensitivity // Negate X so left tilt = left movement, right tilt = right movement
+                        
+                        // Check if device is relatively level horizontally (tilt is minimal)
+                        // Use a threshold of ~0.2 m/s² which corresponds to ~2dp movement
+                        val levelThreshold = 0.2f // m/s²
+                        
+                        // Update state on main thread to ensure recomposition
+                        val newHorizontal = if (abs(x) < levelThreshold) {
+                            0f
+                        } else {
+                            tiltX.coerceIn(-20f, 20f) // Max movement reduced to 20dp
+                        }
+                        
+                        // Vertical movement is disabled - always keep at center
+                        val newVertical = 0f
+                        
+                        // Only update if values changed to avoid unnecessary recompositions
+                        if (abs(targetHorizontalOffset - newHorizontal) > 0.1f || abs(targetVerticalOffset - newVertical) > 0.1f) {
+                            targetHorizontalOffset = newHorizontal
+                            targetVerticalOffset = newVertical
+                        }
+                    }
+                    
+                    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                        // Not needed for this use case
+                    }
+                }
+                
+                // Register sensor listener
+                sensorManager.registerListener(
+                    listener,
+                    accelerometer,
+                    SensorManager.SENSOR_DELAY_GAME // Use GAME delay for faster updates (~50Hz)
+                )
+            } else {
+                targetVerticalOffset = 0f
+                targetHorizontalOffset = 0f
+            }
+            
+            onDispose {
+                listener?.let {
+                    sensorManager?.unregisterListener(it)
+                }
+            }
+        }
+        
+        // Force center in last 10 seconds
+        LaunchedEffect(isLast10Seconds) {
+            if (isLast10Seconds) {
+                targetVerticalOffset = 0f
+                targetHorizontalOffset = 0f
+            }
+        }
+        
+        // Animate to target position smoothly over 4 seconds
+        val verticalOffset = animateDpAsState(
+            targetValue = targetVerticalOffset.dp,
+            animationSpec = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+            label = "vertical_offset"
+        ).value
+        
+        val horizontalOffset = animateDpAsState(
+            targetValue = targetHorizontalOffset.dp,
+            animationSpec = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+            label = "horizontal_offset"
+        ).value
+        
+        // Calculate impulse opacity: 100% -> 60% (2s) -> 100% (2s), repeating every 4 seconds
+        // Keep the opacity animation separate from tilt movement
+        var opacityAnimationStartTime by remember { mutableStateOf(0L) }
+        var opacityProgress by remember { mutableStateOf(0f) }
+        
+        LaunchedEffect(isTraveling) {
+            if (isTraveling) {
+                opacityAnimationStartTime = System.currentTimeMillis()
+                opacityProgress = 0f
+            } else {
+                opacityProgress = 0f
+            }
+        }
+        
+        LaunchedEffect(isTraveling, timerTrigger) {
+            if (isTraveling) {
+                while (isTraveling) {
+                    val elapsed = System.currentTimeMillis() - opacityAnimationStartTime
+                    val cycleDuration = 4000L // 4 seconds
+                    opacityProgress = ((elapsed % cycleDuration).toFloat() / cycleDuration.toFloat())
+                    delay(16) // Update ~60 times per second
+                }
+            } else {
+                opacityProgress = 0f
+            }
+        }
+        
+        val impulseOpacity = remember(opacityProgress) {
+            when {
+                opacityProgress < 0.5f -> {
+                    // 0-2s: 100% -> 60%
+                    val t = opacityProgress / 0.5f
+                    1f - 0.4f * t
+                }
+                else -> {
+                    // 2-4s: 60% -> 100%
+                    val t = (opacityProgress - 0.5f) / 0.5f
+                    0.6f + 0.4f * t
+                }
+            }
+        }
 
         // Impulse/thrust effect layer: Engine thrust effect that appears when traveling.
         // Positioned above the countdown ring but below the ship image.
@@ -1670,8 +1846,10 @@ fun GalaxyScreen(
                 impulseWidth = getImpulseWidth(currentShip.id),
                 impulseHeight = getImpulseHeight(currentShip.id),
                 horizontalOffset = getImpulseHorizontalOffset(currentShip.id),
+                animatedOpacity = impulseOpacity,
                 modifier = Modifier
                     .align(Alignment.Center)
+                    .offset(x = horizontalOffset, y = verticalOffset)
             )
         }
 
@@ -1688,10 +1866,12 @@ fun GalaxyScreen(
                 .height(getGalaxyShipHeight(currentShip.id))
                 .then(
                     if (isTraveling) {
-                        Modifier.clickable { 
-                            // Toggle ring visibility when tapping ship during travel
-                            isRingVisible = !isRingVisible
-                        }
+                        Modifier
+                            .offset(x = horizontalOffset, y = verticalOffset)
+                            .clickable { 
+                                // Toggle ring visibility when tapping ship during travel
+                                isRingVisible = !isRingVisible
+                            }
                     } else {
                         Modifier
                     }
@@ -1813,15 +1993,15 @@ fun GalaxyScreen(
                         verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
                         // "In travel" label
-                        // Uses same font style as TimeLabel (Exo2 Regular, 24.sp, white color)
-                        Text(
-                            text = "In travel",
-                            fontFamily = Exo2,
-                            fontSize = 24.sp,
-                            lineHeight = 24.sp,
-                            color = Color(0xFFFFFFFF),
-                            textAlign = TextAlign.Center
-                        )
+                    // Uses same font style as TimeLabel (Exo2 Regular, 24.sp, white color)
+                    Text(
+                        text = "In travel",
+                        fontFamily = Exo2,
+                        fontSize = 24.sp,
+                        lineHeight = 24.sp,
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center
+                    )
                         
                         // 24dp spacing below "In travel" label
                         Spacer(modifier = Modifier.height(24.dp))

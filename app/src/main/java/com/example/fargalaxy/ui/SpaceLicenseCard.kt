@@ -161,14 +161,14 @@ fun SpaceLicenseCard(
                     fontWeight = FontWeight.Bold,
                     color = textColor
                 )
-                Text(
+            Text(
                     text = "XP",
-                    fontFamily = Exo2,
-                    fontWeight = FontWeight.Bold, // Bold
-                    fontSize = 20.sp,
-                    lineHeight = 24.sp, // Explicit line height to control spacing
-                    color = textColor
-                )
+                fontFamily = Exo2,
+                fontWeight = FontWeight.Bold, // Bold
+                fontSize = 20.sp,
+                lineHeight = 24.sp, // Explicit line height to control spacing
+                color = textColor
+            )
             }
             
             // Progress bar
@@ -207,14 +207,14 @@ fun SpaceLicenseCard(
                         fontWeight = FontWeight.W400,
                         color = textColor
                     )
-                    Text(
+                Text(
                         text = "XP to LVL ${level + 1}",
-                        fontFamily = Exo2,
-                        fontWeight = FontWeight.W400, // Regular
-                        fontSize = 14.sp,
-                        lineHeight = 18.sp, // Explicit line height to control spacing
-                        color = textColor
-                    )
+                    fontFamily = Exo2,
+                    fontWeight = FontWeight.W400, // Regular
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp, // Explicit line height to control spacing
+                    color = textColor
+                )
                 }
             }
         }
