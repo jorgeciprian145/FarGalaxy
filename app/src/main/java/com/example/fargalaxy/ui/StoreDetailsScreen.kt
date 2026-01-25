@@ -151,12 +151,12 @@ fun StoreDetailsScreen(
     // Column has -28dp offset, so visual position is adjusted
     // Spacing to divider/trim line: 24dp (divider should be 24dp below price container)
     // For ship (Dying Star): Move divider down by 40dp
-    // For other items (crates): Move divider down by 40dp - 32dp = 8dp (move up by 32dp relative to ship)
+    // For other items (crates): Move divider up by 32dp relative to original position
     val isShip = itemName == "Dying Star"
     val dividerOffset = if (isShip) {
         40.dp // Ship: keep current position
     } else {
-        8.dp // Other items: move up by 32dp (40dp - 32dp = 8dp)
+        -24.dp // Other items: move up by 32dp (8dp - 32dp = -24dp)
     }
     val clipBoundaryTop = 64.dp + itemImageHeightDp + namePriceHeight + 24.dp + dividerOffset
     

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -514,14 +515,16 @@ fun LocationDetailsScreen(
                     )
                 }
                 
-                // Spacing from location name to divider: 24dp
-                Spacer(modifier = Modifier.height(24.dp))
+                // Spacing from location name to divider: 0dp (moved up by 32dp from original 24dp)
+                // Note: Using offset to move divider up by additional 8dp
                 
                 // Horizontal divider line: Static divider between name and content
                 // White color, 32% opacity, 1dp height, 16dp horizontal padding
+                // Moved up by additional 8dp using offset
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .offset(y = (-8).dp)
                         .height(1.dp)
                         .padding(horizontal = 16.dp)
                         .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))

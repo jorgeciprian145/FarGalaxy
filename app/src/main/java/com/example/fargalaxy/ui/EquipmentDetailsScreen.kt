@@ -117,7 +117,7 @@ fun EquipmentDetailsScreen(
     // Column has -28dp offset, so visual position is adjusted
     // The namePriceHeight already includes the 24dp spacer, so we don't add it again
     // Additional offset: 40dp (same as StaryardDetailsScreen for most ships)
-    val clipBoundaryTop = 64.dp + equipmentImageHeightDp + namePriceHeight + 40.dp
+    val clipBoundaryTop = 64.dp + equipmentImageHeightDp + namePriceHeight + 8.dp // Moved up by 32dp (40dp - 32dp = 8dp)
     
     Box(
         modifier = modifier.fillMaxSize()
