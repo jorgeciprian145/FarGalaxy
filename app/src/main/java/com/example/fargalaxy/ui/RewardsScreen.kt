@@ -257,12 +257,9 @@ fun RewardsScreen(
     // Get context for MediaPlayer
     val context = LocalContext.current
     
-    // Record completed session and add focus time when RewardsScreen appears (session completed successfully)
+    // Record completed session when RewardsScreen appears (session completed successfully)
+    // Note: Focus time is already added in GalaxyScreen when travel ends, so we don't add it again here
     LaunchedEffect(Unit) {
-        // Add focus time for this completed session
-        if (travelMinutes > 0) {
-            UserDataRepository.addFocusTime(travelMinutes)
-        }
         // Record the completed session (updates streak, sessions count, etc.)
         UserDataRepository.recordCompletedSession()
     }
