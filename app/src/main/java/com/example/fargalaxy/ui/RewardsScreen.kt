@@ -164,10 +164,17 @@ fun RewardsScreen(
     // Space conditions percentage (placeholder - will be implemented later)
     val spaceConditionsPercentage = 0 // TODO: Implement space conditions logic
     
-    // Calculate total percentage modifier (penalties + space conditions)
-    val totalPercentage = spaceConditionsPercentage - penaltyPercentage
+    // Calculate total percentage modifier
+    // If flawless travel: +5% bonus
+    // Otherwise: penalties reduce earnings (negative percentage)
+    // Then add space conditions
+    val totalPercentage = if (isFlawlessTravel) {
+        5 + spaceConditionsPercentage // +5% bonus for flawless travel
+    } else {
+        spaceConditionsPercentage - penaltyPercentage // Penalties reduce, space conditions modify
+    }
     
-    // Calculate final earned rewards after penalties and space conditions
+    // Calculate final earned rewards after penalties/bonuses and space conditions
     val earnedXP = if (totalPercentage != 0) {
         (baseEarnedXP * (1f + totalPercentage / 100f)).toInt()
     } else {

@@ -351,8 +351,15 @@ fun TimeLabel(
     val displayText = when {
         isPreparingLaunch -> "Launching in $launchCountdown"
         isTraveling -> {
-            val remainingMinutes = (remainingSeconds + 59) / 60 // Round up to nearest minute
-            "$remainingMinutes mins remaining"
+            if (remainingSeconds >= 60) {
+                // Show minutes:seconds format (e.g., "4:36 mins remaining")
+                val minutes = remainingSeconds / 60
+                val seconds = remainingSeconds % 60
+                "$minutes:${seconds.toString().padStart(2, '0')} mins remaining"
+            } else {
+                // Show seconds only when under a minute (e.g., "58 secs remaining")
+                "$remainingSeconds secs remaining"
+            }
         }
         else -> {
             // TODO: REMOVE TESTING CODE - Show "TEST" when in test mode
