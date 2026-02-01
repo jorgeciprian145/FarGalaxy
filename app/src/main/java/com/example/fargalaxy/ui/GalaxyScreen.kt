@@ -1454,18 +1454,24 @@ fun GalaxyScreen(
             
             // Calculate elapsed focus time and add it to counters (regardless of completion)
             // This happens when travel ends (either completed or cancelled)
-            // Always use actual elapsed time, not selected time
             if (travelStartTime > 0) {
-                val elapsedMillis = System.currentTimeMillis() - travelStartTime
-                val elapsedMinutes = (elapsedMillis / 60_000).toInt() // Convert to minutes
-                
-                // Add focus time (always, regardless of completion)
-                // Minimum 1 minute if any time was spent (even if less than 1 minute)
-                val focusTimeMinutes = if (elapsedMillis > 0 && elapsedMinutes == 0) {
-                    1 // Less than 1 minute but some time was spent
+                // For successful completions, use selectedMinutes (already set in the completion handler)
+                // For cancelled travels, calculate actual elapsed time
+                val focusTimeMinutes = if (!wasTravelCancelled && travelMinutes > 0) {
+                    // Travel completed successfully - use the selected minutes
+                    travelMinutes
                 } else {
-                    elapsedMinutes
+                    // Travel was cancelled - calculate actual elapsed time
+                    val elapsedMillis = System.currentTimeMillis() - travelStartTime
+                    val elapsedMinutes = (elapsedMillis / 60_000).toInt() // Convert to minutes
+                    // Minimum 1 minute if any time was spent (even if less than 1 minute)
+                    if (elapsedMillis > 0 && elapsedMinutes == 0) {
+                        1 // Less than 1 minute but some time was spent
+                    } else {
+                        elapsedMinutes
+                    }
                 }
+                
                 if (focusTimeMinutes > 0) {
                     com.example.fargalaxy.data.UserDataRepository.addFocusTime(focusTimeMinutes)
                     // Sync unlocked ships and locations based on new focus time
