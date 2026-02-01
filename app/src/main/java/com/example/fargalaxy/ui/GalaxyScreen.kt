@@ -351,15 +351,8 @@ fun TimeLabel(
     val displayText = when {
         isPreparingLaunch -> "Launching in $launchCountdown"
         isTraveling -> {
-            if (remainingSeconds >= 60) {
-                // Show minutes:seconds format (e.g., "4:36 mins remaining")
-                val minutes = remainingSeconds / 60
-                val seconds = remainingSeconds % 60
-                "$minutes:${seconds.toString().padStart(2, '0')} mins remaining"
-            } else {
-                // Show seconds only when under a minute (e.g., "58 secs remaining")
-                "$remainingSeconds secs remaining"
-            }
+            val remainingMinutes = (remainingSeconds + 59) / 60 // Round up to nearest minute
+            "$remainingMinutes mins remaining"
         }
         else -> {
             // TODO: REMOVE TESTING CODE - Show "TEST" when in test mode
@@ -1215,6 +1208,9 @@ fun GalaxyScreen(
     // travelMinutes: The duration of the completed travel (for rewards calculation)
     var travelMinutes by remember { mutableStateOf(0) }
     
+    // travelPenaltyCount: The penalty count for the completed travel (captured before reset)
+    var travelPenaltyCount by remember { mutableStateOf(0) }
+    
     // Track if travel was cancelled (to avoid showing modal if cancelled)
     var wasTravelCancelled by remember { mutableStateOf(false) }
     
@@ -1260,6 +1256,8 @@ fun GalaxyScreen(
             
             // Check if travel completed
             if (remainingSeconds <= 0 && !wasTravelCancelled) {
+                // Capture penalty count before resetting
+                travelPenaltyCount = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
                 isTraveling = false
                 travelMinutes = if (isTestMode) {
                     0
@@ -2146,7 +2144,7 @@ fun GalaxyScreen(
             val coroutineScope = rememberCoroutineScope()
             RewardsScreen(
                 travelMinutes = travelMinutes,
-                penaltyCount = penaltyCount,
+                penaltyCount = travelPenaltyCount,
                 onContinueClick = {
                     playMouseClickSound(context, coroutineScope)
                     showRewardsScreen = false
