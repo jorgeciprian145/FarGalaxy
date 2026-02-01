@@ -1,0 +1,71 @@
+[33m307266b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33m307266b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{1}: commit: mini ajustes
+[33m068a941[m HEAD@{2}: commit: arregle un bug
+[33mbec1c76[m HEAD@{3}: commit: cambios en efectos de sonido
+[33me65520f[m HEAD@{4}: commit: arregle los empty states
+[33m50a91d1[m HEAD@{5}: commit: efectos de sonido
+[33m7b1469f[m HEAD@{6}: commit: arregle unas cosas del penalty
+[33mb91197d[m HEAD@{7}: commit: demasiadas cosas para resumirlo
+[33m626bef5[m HEAD@{8}: commit: agregue modal post viaje
+[33m19c4d8a[m HEAD@{9}: commit: agregue lo que faltaba de Store
+[33mfb21142[m HEAD@{10}: commit: Agregue la store, la primer parte al menos
+[33m4fb863c[m HEAD@{11}: commit: space store y bloquear tamano de fuente
+[33m97a44d5[m HEAD@{12}: commit: agregue staryard
+[33m37c1315[m HEAD@{13}: commit: cambios varios
+[33med1665c[m HEAD@{14}: commit: mejoras varias
+[33mc27edc3[m HEAD@{15}: commit: empece a trabajar en Vault y otros cambios
+[33m7742cdc[m HEAD@{16}: commit: Varios cambios grandes a nivel logica de la estructura
+[33m992f169[m HEAD@{17}: commit: arregle el spacing de los textos en shipdetails
+[33m2932428[m HEAD@{18}: reset: moving to origin/main
+[33m2932428[m HEAD@{19}: commit: corregi fondo en factions
+[33m7c4509d[m HEAD@{20}: commit: agregue facciones
+[33m1a4c0ac[m HEAD@{21}: commit: corregi el scrolling behavior, quedo barbaro
+[33mb16b2b2[m HEAD@{22}: reset: moving to origin/main
+[33mb16b2b2[m HEAD@{23}: commit: quedo perfecto
+[33mda24cb1[m HEAD@{24}: commit: mini ajustes
+[33m6bfb5bc[m HEAD@{25}: commit: termine locations
+[33mbc80d7a[m HEAD@{26}: commit: arreglos en locations
+[33m3771ff3[m HEAD@{27}: commit: varios cambois en locations
+[33m12797aa[m HEAD@{28}: reset: moving to origin/main
+[33m12797aa[m HEAD@{29}: reset: moving to origin/main
+[33m12797aa[m HEAD@{30}: commit: mas planetas
+[33ma0891a0[m HEAD@{31}: commit: agregue mas cositas
+[33m24ed56e[m HEAD@{32}: commit: algunos cambios falopa
+[33m645a384[m HEAD@{33}: commit: otro planeta y ajustes mini
+[33m210ae83[m HEAD@{34}: commit: arreglo cositas de planetas
+[33m2525c26[m HEAD@{35}: commit: mas planetas y planetas enormes
+[33m3fae3e3[m HEAD@{36}: commit: agregue locations
+[33m1878706[m HEAD@{37}: commit: arregle las naves
+[33mc79ee57[m HEAD@{38}: commit: todas las naves listas
+[33me6edb44[m HEAD@{39}: commit: agregue naves y arregle cositas
+[33m6f7052d[m HEAD@{40}: commit: algunos cambios chiquitos en la ultima nave
+[33m57e851b[m HEAD@{41}: commit: Arregle unas cosas y agregue una nave
+[33m871ec00[m HEAD@{42}: commit: agregue algunos cambios y naves nuevas
+[33m51ce4ca[m HEAD@{43}: commit: arregle unas cositas en el scroll y ahora podes esconder el contador
+[33m3728756[m HEAD@{44}: commit: agregue una ultima nave y corregi para que te lleve a career desp de elegir
+[33m38fa8f0[m HEAD@{45}: commit: ahora las naves se pueden elegir y ajuste tamanos
+[33m0d68c86[m HEAD@{46}: commit: agregue naves
+[33mfffb62e[m HEAD@{47}: commit: agregue pantalla de seleccion de naves
+[33m9798b92[m HEAD@{48}: commit: corregi la pantalla con la nave
+[33maf616e8[m HEAD@{49}: commit: modifique la estetica del contador
+[33mf0cef73[m HEAD@{50}: commit: agregue contador de mins
+[33m2bc3c58[m HEAD@{51}: commit: agregue detalles de la nave
+[33m23419cf[m HEAD@{52}: commit: cree la pantalla con la nave
+[33m6912c53[m HEAD@{53}: commit: agregue travel log y ajuste espacios
+[33m399d49e[m HEAD@{54}: commit: agregue row de ship
+[33m2042ebc[m HEAD@{55}: commit: agregue achievements
+[33m5afbe44[m HEAD@{56}: commit: agregue lineas blancas
+[33m06a5114[m HEAD@{57}: commit: agregue iconos de progreso a career
+[33m46f22f0[m HEAD@{58}: commit: Agregado card de nivel en career
+[33m7cf46db[m HEAD@{59}: reset: moving to origin/main
+[33m7cf46db[m HEAD@{60}: commit: agregue pantalla de vault
+[33m3ca8fe1[m HEAD@{61}: commit: correji errores con indicador y agregue gradientes
+[33m713b5cb[m HEAD@{62}: commit: agregue la nueva pantalla de career con el swipe y el boton
+[33m7c3dd4e[m HEAD@{63}: commit: mejore un poco el efecto velocidad y ajuste el tamaño del countdown ring
+[33mb295ac9[m HEAD@{64}: commit: Agregue tap a los botones y ajuste efecto velocidad
+[33m5f986ad[m HEAD@{65}: commit: Agregue temporizador antes de lanzamiento y ajustes
+[33m8824df3[m HEAD@{66}: commit: Agregue el efecto de velocidad
+[33m527dbc8[m HEAD@{67}: commit: Agregue animacion de motor
+[33m0093cee[m HEAD@{68}: Branch: renamed refs/heads/main to refs/heads/main
+[33m0093cee[m HEAD@{70}: Branch: renamed refs/heads/master to refs/heads/main
+[33m0093cee[m HEAD@{72}: commit (initial): Version 1.0

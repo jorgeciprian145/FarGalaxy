@@ -2,7 +2,10 @@ package com.example.fargalaxy.ui
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -128,12 +132,14 @@ private fun calculateLevelFromXP(xp: Int): Int {
  * RewardsScreen composable - displays rewards after completing a travel session.
  * 
  * @param travelMinutes The number of minutes the travel lasted (0 for test mode)
+ * @param penaltyCount The number of penalties suffered during travel
  * @param onContinueClick Callback when continue button is clicked
  * @param modifier Modifier for the screen
  */
 @Composable
 fun RewardsScreen(
     travelMinutes: Int,
+    penaltyCount: Int = 0,
     onContinueClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -148,14 +154,36 @@ fun RewardsScreen(
     } else {
         travelMinutes.toFloat()
     }
-    val earnedXP = (actualMinutes * 10).toInt() // 1 min = 10 XP
-    val earnedCredits = (actualMinutes * 100).toInt() // 1 min = 100 credits
+    val baseEarnedXP = (actualMinutes * 10).toInt() // 1 min = 10 XP
+    val baseEarnedCredits = (actualMinutes * 100).toInt() // 1 min = 100 credits
+    
+    // Calculate penalty percentage (5% per penalty)
+    val penaltyPercentage = penaltyCount * 5
+    val isFlawlessTravel = penaltyCount == 0
+    
+    // Space conditions percentage (placeholder - will be implemented later)
+    val spaceConditionsPercentage = 0 // TODO: Implement space conditions logic
+    
+    // Calculate total percentage modifier (penalties + space conditions)
+    val totalPercentage = spaceConditionsPercentage - penaltyPercentage
+    
+    // Calculate final earned rewards after penalties and space conditions
+    val earnedXP = if (totalPercentage != 0) {
+        (baseEarnedXP * (1f + totalPercentage / 100f)).toInt()
+    } else {
+        baseEarnedXP
+    }
+    val earnedCredits = if (totalPercentage != 0) {
+        (baseEarnedCredits * (1f + totalPercentage / 100f)).toInt()
+    } else {
+        baseEarnedCredits
+    }
     
     // Get current user data
     val currentXP = UserDataRepository.userXP
     val currentCredits = UserDataRepository.userCredits
     
-    // Calculate new values
+    // Calculate new values (base values before penalties/space conditions are applied)
     val newXP = currentXP + earnedXP
     val newCredits = currentCredits + earnedCredits
     
@@ -168,6 +196,56 @@ fun RewardsScreen(
     
     // Animated credits value (starts at current, animates to new)
     var animatedCredits by remember { mutableStateOf(currentCredits) }
+    
+    // Visibility states for progressive content appearance
+    var showPenaltySection by remember { mutableStateOf(false) } // Penalty/flawless + small label
+    var showSpaceConditionsSection by remember { mutableStateOf(false) } // Space conditions + small label
+    var showXPEarned by remember { mutableStateOf(false) } // XP earned (no small label)
+    var showCreditsEarned by remember { mutableStateOf(false) } // Credits earned (no small label)
+    var showLevelStatusSection by remember { mutableStateOf(false) } // Content up to level status card
+    var showRemainingContent by remember { mutableStateOf(false) } // Credits section at bottom
+    
+    // "X mins of focus" animation states (slide from top + fade in)
+    var focusTimeOffset by remember { mutableStateOf((-50).dp) } // Start off-screen top
+    var focusTimeAlpha by remember { mutableStateOf(0f) } // Start invisible
+    
+    // Slide-in from left + fade-in animation states (for labels under "X mins of focus")
+    var penaltySectionOffset by remember { mutableStateOf((-100).dp) } // Start off-screen left
+    var penaltySectionAlpha by remember { mutableStateOf(0f) } // Start invisible
+    var spaceConditionsSectionOffset by remember { mutableStateOf((-100).dp) }
+    var spaceConditionsSectionAlpha by remember { mutableStateOf(0f) }
+    var xpEarnedOffset by remember { mutableStateOf((-100).dp) }
+    var xpEarnedAlpha by remember { mutableStateOf(0f) }
+    var creditsEarnedOffset by remember { mutableStateOf((-100).dp) }
+    var creditsEarnedAlpha by remember { mutableStateOf(0f) }
+    
+    // Counter animation states for XP and Credits earned
+    var xpEarnedCounter by remember { mutableStateOf(0) } // Counter for XP earned (starts at 0)
+    var creditsEarnedCounter by remember { mutableStateOf(0) } // Counter for Credits earned (starts at 0)
+    var startXPEarnedCounter by remember { mutableStateOf(false) } // Trigger for XP counter
+    var startCreditsEarnedCounter by remember { mutableStateOf(false) } // Trigger for Credits counter
+    
+    // LevelStatusCard slide out animation states
+    var levelStatusCardOffset by remember { mutableStateOf(0.dp) } // Start at center, slide out to left
+    var showLevelStatusCard by remember { mutableStateOf(false) } // Visibility control
+    var levelStatusSectionAlpha by remember { mutableStateOf(0f) } // Fade in for level status section
+    
+    // Credits section slide in animation states
+    var creditsSectionOffset by remember { mutableStateOf(1000.dp) } // Start off-screen right, slide to center (0.dp)
+    var showCreditsSection by remember { mutableStateOf(false) } // Visibility control
+    
+    // Penalty/Flawless travel animation states
+    var showFlawlessTravel by remember { mutableStateOf(false) }
+    var penaltyLabelAlpha by remember { mutableStateOf(1f) } // Fade out/in instead of slide
+    var flawlessTravelAlpha by remember { mutableStateOf(0f) }
+    
+    // Main label offset animation states removed - using natural Row centering instead
+    
+    // Fade-in animation states for 14sp labels (now appearing with main labels)
+    var penaltyPercentageAlpha by remember { mutableStateOf(0f) } // Fade in with main label
+    var spaceConditionsAlpha by remember { mutableStateOf(0f) } // Fade in with main label
+    
+    // Counter animation removed - XP and Credits show final values immediately
     
     // Get context for MediaPlayer
     val context = LocalContext.current
@@ -183,89 +261,153 @@ fun RewardsScreen(
     }
     
     // Sound playback for XP animation
-    // XP animation: starts at 3s (2000ms + 1000ms delay), duration 500ms, ends at 3.5s
-    // Sound: starts exactly when XP animation starts (3s), ends exactly when XP animation ends (3.5s)
-    // Total sound duration: 500ms (XP animation duration)
+    // Sound effects are now integrated into the animation sequence above
+    
+    // New animation sequence:
+    // 0s: Screen appears - "X mins of focus" slides in from top + fades in
+    // 1s: Penalty/flawless section appears (slide in from left + fade in) - main label + small label together
+    //     If flawless: play ping sound
+    // 0.5s after penalty section: Space conditions section appears (slide in from left + fade in) - main label + small label together
+    // 1s after space conditions: XP earned appears (slide in from left + fade in, final value, no small label)
+    // 1s after XP earned: Credits earned appears (slide in from left + fade in, final value, no small label)
+    // 1s after credits earned: Level status section appears (fade in)
+    // 1s after level status: XP count animation with sound
+    // 1s after XP animation ends: Remaining content appears (fade in)
+    // 1s after remaining content: Credits count animation with sound
+    
+    // "X mins of focus" slide in from top + fade in (immediately when screen appears)
     LaunchedEffect(Unit) {
-        val xpMediaPlayer = MediaPlayer.create(context, R.raw.charge)
-        xpMediaPlayer?.let { player ->
+        focusTimeOffset = 0.dp // Slide to final position
+        focusTimeAlpha = 1f // Fade in
+    }
+    
+    // Penalty/flawless section slide in from left + fade in (1s after screen appears)
+    LaunchedEffect(Unit) {
+        delay(1000)
+        
+        if (isFlawlessTravel) {
+            // Play ping sound for flawless travel
             try {
-                // Wait until XP animation starts (at 3s)
-                delay(3000)
-                
-                // Prepare player: set looping in case file is shorter than needed
-                player.isLooping = true
-                player.setVolume(1f, 1f) // Start at full volume
-                player.start()
-                
-                // Play at full volume during XP animation (500ms)
-                delay(500)
-                
-                // Stop and release exactly when XP animation ends
-                player.stop()
-                player.release()
-            } catch (e: Exception) {
-                // Handle any errors silently
-                try {
-                    if (player.isPlaying) {
-                        player.stop()
-                    }
-                    player.release()
-                } catch (e2: Exception) {
-                    // Ignore release errors
+                val pingPlayer = MediaPlayer.create(context, R.raw.ping)
+                pingPlayer?.let { player ->
+                    player.setVolume(1f, 1f)
+                    player.start()
+                    // Don't wait for sound to finish, let it play in background
                 }
+            } catch (e: Exception) {
+                // Ignore sound errors
             }
+            
+            // Show flawless travel label
+            showFlawlessTravel = true
+            flawlessTravelAlpha = 1f
+        }
+        
+        // Show penalty section and slide in from left + fade in (main label + small label together)
+        showPenaltySection = true
+        penaltySectionOffset = 0.dp // Slide to final position
+        penaltySectionAlpha = 1f // Fade in
+        penaltyPercentageAlpha = 1f // Small label appears with main label
+    }
+    
+    // Space conditions section slide in from left + fade in (0.5s after penalty section animation ends)
+    LaunchedEffect(penaltySectionOffset) {
+        if (penaltySectionOffset == 0.dp) {
+            delay(600 + 500) // Wait for slide in animation (600ms) + 0.5s delay
+            showSpaceConditionsSection = true
+            spaceConditionsSectionOffset = 0.dp // Slide to final position
+            spaceConditionsSectionAlpha = 1f // Fade in
+            spaceConditionsAlpha = 1f // Small label appears with main label
         }
     }
     
-    // Sound playback - only for credits animation
-    // Credits animation: starts at 4.5s (3.5s + 1s gap), duration 500ms, ends at 5s
-    // Sound: starts at 5.2s (0.7s after credits animation starts), ends when credits animation ends (5s)
-    // Note: Sound starts after credits animation has already started
-    // Total sound duration: 500ms (credits animation only)
-    LaunchedEffect(Unit) {
-        val creditsMediaPlayer = MediaPlayer.create(context, R.raw.coins)
-        creditsMediaPlayer?.let { player ->
-            try {
-                // Wait until 5.2s (0.7s after credits animation starts at 4.5s)
-                delay(5200)
-                
-                // Prepare player: set looping in case file is shorter than needed
-                player.isLooping = true
-                player.setVolume(1f, 1f) // Start at full volume
-                player.start()
-                
-                // Play at full volume during credits animation (500ms)
-                delay(500)
-                
-                // Stop and release exactly when credits animation ends
-                player.stop()
-                player.release()
-            } catch (e: Exception) {
-                // Handle any errors silently
-                try {
-                    if (player.isPlaying) {
-                        player.stop()
-                    }
-                    player.release()
-                } catch (e2: Exception) {
-                    // Ignore release errors
-                }
-            }
+    // XP earned appears with slide in from left + fade in (1s after space conditions section)
+    // Counter animation starts simultaneously with slide/fade animation
+    LaunchedEffect(spaceConditionsSectionOffset) {
+        if (spaceConditionsSectionOffset == 0.dp) {
+            delay(600 + 1000) // Wait for slide in animation (600ms) + 1s delay
+            showXPEarned = true
+            xpEarnedOffset = 0.dp // Slide to final position
+            xpEarnedAlpha = 1f // Fade in
+            startXPEarnedCounter = true // Start counter animation
         }
     }
     
-    // Start XP animation after 2 seconds (card appears immediately, animation starts after delay)
-    LaunchedEffect(Unit) {
-        delay(2000)
-        delay(1000) // Start XP animation 1 second after initial delay (3 seconds total)
-        startXPAnimation = true
+    // XP earned counter animation (1 second from 0 to earnedXP)
+    LaunchedEffect(startXPEarnedCounter) {
+        if (startXPEarnedCounter) {
+            val startValue = 0
+            val endValue = earnedXP
+            val duration = 1000L // 1 second
+            val steps = 30
+            val stepDelay = duration / steps
+            val stepValue = (endValue - startValue) / steps
+            
+            for (i in 0..steps) {
+                xpEarnedCounter = (startValue + stepValue * i).toInt()
+                delay(stepDelay)
+            }
+            xpEarnedCounter = earnedXP // Ensure final value
+        }
     }
     
-    // Animate XP when startXPAnimation becomes true
-    LaunchedEffect(startXPAnimation) {
-        if (startXPAnimation) {
-            // Animate from currentXP to newXP over 500ms
+    // Credits earned appears with slide in from left + fade in (1s after XP earned)
+    // Counter animation starts simultaneously with slide/fade animation
+    LaunchedEffect(xpEarnedOffset) {
+        if (xpEarnedOffset == 0.dp) {
+            delay(600 + 1000) // Wait for slide in animation (600ms) + 1s delay
+            showCreditsEarned = true
+            creditsEarnedOffset = 0.dp // Slide to final position
+            creditsEarnedAlpha = 1f // Fade in
+            startCreditsEarnedCounter = true // Start counter animation
+        }
+    }
+    
+    // Credits earned counter animation (1 second from 0 to earnedCredits)
+    LaunchedEffect(startCreditsEarnedCounter) {
+        if (startCreditsEarnedCounter) {
+            val startValue = 0
+            val endValue = earnedCredits
+            val duration = 1000L // 1 second
+            val steps = 30
+            val stepDelay = duration / steps
+            val stepValue = (endValue - startValue) / steps
+            
+            for (i in 0..steps) {
+                creditsEarnedCounter = (startValue + stepValue * i).toInt()
+                delay(stepDelay)
+            }
+            creditsEarnedCounter = earnedCredits // Ensure final value
+        }
+    }
+    
+    // Level status section fade in (1s after credits earned)
+    LaunchedEffect(creditsEarnedOffset) {
+        if (creditsEarnedOffset == 0.dp) {
+            delay(600 + 1000) // Wait for slide in animation (600ms) + 1s delay
+            showLevelStatusCard = true
+            levelStatusSectionAlpha = 1f
+        }
+    }
+    
+    // XP count animation (1s after level status section appears)
+    LaunchedEffect(levelStatusSectionAlpha) {
+        if (levelStatusSectionAlpha == 1f) {
+            delay(1000 + 1000) // Wait for fade in (1s) + 1s delay
+            startXPAnimation = true
+            
+            // Play XP sound effect (start with animation)
+            val xpSoundPlayer = try {
+                MediaPlayer.create(context, R.raw.charge)?.apply {
+                    isLooping = true
+                    setVolume(1f, 1f)
+                    start()
+                }
+            } catch (e: Exception) {
+                null
+            }
+            
+            // Animate XP from currentXP to newXP over 500ms
             val startValue = currentXP.toFloat()
             val endValue = newXP.toFloat()
             val duration = 500L
@@ -281,30 +423,75 @@ fun RewardsScreen(
             // Update global state
             UserDataRepository.userXP = newXP
             
-            // Start credits animation 1 second after XP animation completes
-            delay(1000)
+            // Stop XP sound effect
+            try {
+                xpSoundPlayer?.let { player ->
+                    if (player.isPlaying) {
+                        player.stop()
+                    }
+                    player.release()
+                }
+            } catch (e: Exception) {
+                // Ignore sound errors
+            }
+            
+            // After XP animation ends: Wait 1.5s, then LevelStatusCard slides out left, Credits section slides in from right
+            delay(500 + 1500) // Wait for XP animation to complete (500ms) + 1.5s delay
+            
+            // Slide out LevelStatusCard to the left
+            levelStatusCardOffset = (-1000).dp
+            
+            // Slide in Credits section from the right (simultaneously)
+            showCreditsSection = true
+            creditsSectionOffset = 0.dp
+            
+            // Wait for slide animations to complete (600ms), then wait 1s before starting credits count
+            delay(600 + 1000) // Slide animation (600ms) + 1s delay
             startCreditsAnimation = true
         }
     }
     
-    // Animate credits when startCreditsAnimation becomes true
+    // Credits count animation (triggered when startCreditsAnimation becomes true)
     LaunchedEffect(startCreditsAnimation) {
         if (startCreditsAnimation) {
-            // Animate from currentCredits to newCredits over 500ms
-            val startValue = currentCredits.toFloat()
-            val endValue = newCredits.toFloat()
-            val duration = 500L
-            val steps = 30
-            val stepDelay = duration / steps
-            val stepValue = (endValue - startValue) / steps
+            // Play credits sound effect (start with animation)
+            val creditsSoundPlayer = try {
+                MediaPlayer.create(context, R.raw.coins)?.apply {
+                    isLooping = true
+                    setVolume(1f, 1f)
+                    start()
+                }
+            } catch (e: Exception) {
+                null
+            }
             
-            for (i in 0..steps) {
-                animatedCredits = (startValue + stepValue * i).toInt()
-                delay(stepDelay)
+            // Animate credits from currentCredits to newCredits over 500ms
+            val creditsStartValue = currentCredits.toFloat()
+            val creditsEndValue = newCredits.toFloat()
+            val creditsDuration = 500L
+            val creditsSteps = 30
+            val creditsStepDelay = creditsDuration / creditsSteps
+            val creditsStepValue = (creditsEndValue - creditsStartValue) / creditsSteps
+            
+            for (i in 0..creditsSteps) {
+                animatedCredits = (creditsStartValue + creditsStepValue * i).toInt()
+                delay(creditsStepDelay)
             }
             animatedCredits = newCredits
             // Update global state
             UserDataRepository.userCredits = newCredits
+            
+            // Stop credits sound effect
+            try {
+                creditsSoundPlayer?.let { player ->
+                    if (player.isPlaying) {
+                        player.stop()
+                    }
+                    player.release()
+                }
+            } catch (e: Exception) {
+                // Ignore sound errors
+            }
         }
     }
     
@@ -328,14 +515,13 @@ fun RewardsScreen(
                 .background(Color.Black.copy(alpha = 0.96f))
         )
         
-        // Scrollable content
+        // Scrollable content (with bottom padding for continue button and gradient)
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp) // 16dp side padding
-                .navigationBarsPadding()
-                .padding(bottom = 24.dp),
+                .padding(bottom = 60.dp), // Extra padding for scrolling and fixed button area
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top padding: 48dp (JSON positioned 48dp from top)
@@ -397,156 +583,371 @@ fun RewardsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // "X mins of focus" - 20sp, bold
+                // "X mins of focus" - 20sp, bold - appears with slide in from top + fade in
                 // For test mode (0 minutes), show "0 mins" or handle differently
                 val focusTimeText = if (travelMinutes == 0) {
                     "0 mins of focus" // Test mode: 10 seconds
                 } else {
                     "$travelMinutes mins of focus"
                 }
+                
+                val focusTimeOffsetAnimated by animateDpAsState(
+                    targetValue = focusTimeOffset,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "focus_time_slide"
+                )
+                val focusTimeAlphaAnimated by animateFloatAsState(
+                    targetValue = focusTimeAlpha,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "focus_time_fade"
+                )
+                
+                // Always show the label (it animates in)
                 Text(
                     text = focusTimeText,
                     fontFamily = Exo2,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.White,
+                    modifier = Modifier
+                        .offset(y = focusTimeOffsetAnimated)
+                        .alpha(focusTimeAlphaAnimated)
                 )
                 
                 // 8dp spacing
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // "0 penalties suffered" - 20sp, regular (placeholder)
-                Text(
-                    text = "0 penalties suffered",
-                    fontFamily = Exo2,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.White
+                // Penalty counter / Flawless travel row - appears with slide in from left + fade in
+                val penaltySectionOffsetAnimated by animateDpAsState(
+                    targetValue = penaltySectionOffset,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "penalty_section_slide"
+                )
+                val penaltySectionAlphaAnimated by animateFloatAsState(
+                    targetValue = penaltySectionAlpha,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "penalty_section_fade"
                 )
                 
-                // 16dp spacing
-                Spacer(modifier = Modifier.height(16.dp))
+                if (showPenaltySection) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(x = penaltySectionOffsetAnimated)
+                            .alpha(penaltySectionAlphaAnimated),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Penalty counter or Flawless travel label
+                        if (!showFlawlessTravel) {
+                            Text(
+                                text = "$penaltyCount penalties",
+                                fontFamily = Exo2,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White
+                            )
+                        } else {
+                            Text(
+                                text = "Flawless travel",
+                                fontFamily = Exo2,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White
+                            )
+                        }
+                        
+                        // Penalty percentage label (4dp to the right) - fades in with main label
+                        Spacer(modifier = Modifier.width(4.dp))
+                        
+                        val penaltyPercentageAlphaAnimated by animateFloatAsState(
+                            targetValue = penaltyPercentageAlpha,
+                            animationSpec = tween(durationMillis = 1000),
+                            label = "penalty_percentage_fade"
+                        )
+                        
+                        val percentageText = if (isFlawlessTravel) {
+                            "(+5%)"
+                        } else {
+                            "(-$penaltyPercentage%)"
+                        }
+                        Text(
+                            text = percentageText,
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.White,
+                            modifier = Modifier.alpha(penaltyPercentageAlphaAnimated)
+                        )
+                    }
+                }
                 
-                // "+X XP earned" - dynamic
-                Text(
-                    text = "+$earnedXP XP earned",
-                    fontFamily = Exo2,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.White
+                // 0dp spacing (Space conditions directly below)
+                Spacer(modifier = Modifier.height(0.dp))
+                
+                // Space conditions row - appears with slide in from left + fade in
+                val spaceConditionsSectionOffsetAnimated by animateDpAsState(
+                    targetValue = spaceConditionsSectionOffset,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "space_conditions_section_slide"
+                )
+                val spaceConditionsSectionAlphaAnimated by animateFloatAsState(
+                    targetValue = spaceConditionsSectionAlpha,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "space_conditions_section_fade"
                 )
                 
-                // 8dp spacing
+                if (showSpaceConditionsSection) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(x = spaceConditionsSectionOffsetAnimated)
+                            .alpha(spaceConditionsSectionAlphaAnimated),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Space conditions",
+                            fontFamily = Exo2,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.White
+                        )
+                        
+                        // Space conditions percentage label (4dp to the right) - fades in with main label
+                        Spacer(modifier = Modifier.width(4.dp))
+                        
+                        val spaceConditionsAlphaAnimated by animateFloatAsState(
+                            targetValue = spaceConditionsAlpha,
+                            animationSpec = tween(durationMillis = 1000),
+                            label = "space_conditions_fade"
+                        )
+                        
+                        Text(
+                            text = "(${if (spaceConditionsPercentage >= 0) "+" else ""}$spaceConditionsPercentage%)",
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.White,
+                            modifier = Modifier.alpha(spaceConditionsAlphaAnimated)
+                        )
+                    }
+                }
+                
+                // 8dp spacing (between Space conditions and XP earned)
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // "+X credits earned" - dynamic
-                Text(
-                    text = "+$earnedCredits credits earned",
-                    fontFamily = Exo2,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.White
+                // XP earned row - appears with slide in from left + fade in (with counter animation, no small label)
+                val xpEarnedOffsetAnimated by animateDpAsState(
+                    targetValue = xpEarnedOffset,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "xp_earned_slide"
                 )
-            }
-            
-            // 24dp spacing
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Divider
-            HorizontalDivider()
-            
-            // 24dp spacing
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // LevelStatusCard - appears immediately, animates after delay
-            // Calculate level, progress, and xpToNext based on animated XP
-            // We need to calculate these dynamically based on the animated XP value
-            val currentLevel = calculateLevelFromXP(animatedXP)
-            val xpForCurrentLevel = UserDataRepository.getTotalXPForLevel(currentLevel)
-            val xpInCurrentLevel = animatedXP - xpForCurrentLevel
-            val xpRequiredForNext = UserDataRepository.getXPRequiredForLevel(currentLevel)
-            val progress = (xpInCurrentLevel.toFloat() / xpRequiredForNext).coerceIn(0f, 1f)
-            val xpToNext = (xpRequiredForNext - xpInCurrentLevel).coerceAtLeast(0)
-            
-            LevelStatusCard(
-                title = "Standard space license",
-                xpCurrent = animatedXP,
-                xpToNext = xpToNext,
-                level = currentLevel,
-                progress = progress,
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            // 24dp spacing
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Divider
-            HorizontalDivider()
-            
-            // 24dp spacing
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // CreditsSection (without icon)
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy((-8).dp)
-            ) {
-                // Top row: Credits amount label only (no icon)
-                AnimatedNumberCounter(
-                    targetValue = if (startCreditsAnimation) animatedCredits else currentCredits,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                val xpEarnedAlphaAnimated by animateFloatAsState(
+                    targetValue = xpEarnedAlpha,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "xp_earned_fade"
                 )
                 
-                // Bottom row: "Interstellar Credits" label + info icon
-                Row(
-                    modifier = Modifier.offset(x = 15.dp),
-                    horizontalArrangement = Arrangement.spacedBy(0.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                if (showXPEarned) {
                     Text(
-                        text = "Interstellar Credits",
+                        text = "+$xpEarnedCounter XP earned",
                         fontFamily = Exo2,
-                        fontWeight = FontWeight.W400,
-                        fontSize = 14.sp,
-                        color = Color.White
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(x = xpEarnedOffsetAnimated)
+                            .alpha(xpEarnedAlphaAnimated),
+                        textAlign = TextAlign.Center
                     )
-                    
-                    Image(
-                        painter = painterResource(id = R.drawable.infoicon),
-                        contentDescription = "Info",
-                        modifier = Modifier.size(40.dp),
-                        contentScale = ContentScale.Fit
+                }
+                
+                // 0dp spacing (between XP and Credits earned)
+                Spacer(modifier = Modifier.height(0.dp))
+                
+                // Credits earned row - appears with slide in from left + fade in (with counter animation, no small label)
+                val creditsEarnedOffsetAnimated by animateDpAsState(
+                    targetValue = creditsEarnedOffset,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "credits_earned_slide"
+                )
+                val creditsEarnedAlphaAnimated by animateFloatAsState(
+                    targetValue = creditsEarnedAlpha,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "credits_earned_fade"
+                )
+                
+                if (showCreditsEarned) {
+                    Text(
+                        text = "+$creditsEarnedCounter credits earned",
+                        fontFamily = Exo2,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(x = creditsEarnedOffsetAnimated)
+                            .alpha(creditsEarnedAlphaAnimated),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
             
-            // Bottom padding: 24dp
+            // Divider and spacing before level status/credits section
+            // 24dp spacing
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Continue button
+            // Divider
+            HorizontalDivider()
+            
+            // 24dp spacing
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Container for LevelStatusCard and Credits section (same position, overlapping)
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // LevelStatusCard - appears with fade in, then slides out to left
+                val levelStatusSectionAlphaAnimated by animateFloatAsState(
+                    targetValue = levelStatusSectionAlpha,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "level_status_section_fade"
+                )
+                val levelStatusCardOffsetAnimated by animateDpAsState(
+                    targetValue = levelStatusCardOffset,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "level_status_card_slide_out"
+                )
+                
+                if (showLevelStatusCard) {
+                    // Calculate level, progress, and xpToNext based on animated XP
+                    val currentLevel = calculateLevelFromXP(animatedXP)
+                    val xpForCurrentLevel = UserDataRepository.getTotalXPForLevel(currentLevel)
+                    val xpInCurrentLevel = animatedXP - xpForCurrentLevel
+                    val xpRequiredForNext = UserDataRepository.getXPRequiredForLevel(currentLevel)
+                    val progress = (xpInCurrentLevel.toFloat() / xpRequiredForNext).coerceIn(0f, 1f)
+                    val xpToNext = (xpRequiredForNext - xpInCurrentLevel).coerceAtLeast(0)
+                    
+                    LevelStatusCard(
+                        title = "Standard space license",
+                        xpCurrent = animatedXP,
+                        xpToNext = xpToNext,
+                        level = currentLevel,
+                        progress = progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .alpha(levelStatusSectionAlphaAnimated)
+                            .offset(x = levelStatusCardOffsetAnimated)
+                    )
+                }
+                
+                // Credits section - slides in from right, replaces LevelStatusCard
+                val creditsSectionOffsetAnimated by animateDpAsState(
+                    targetValue = creditsSectionOffset,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "credits_section_slide_in"
+                )
+                
+                if (showCreditsSection) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(x = creditsSectionOffsetAnimated),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
+                        // Top row: Credits icon + credits amount label
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp), // 8dp spacing between icon and label
+                            verticalAlignment = Alignment.CenterVertically // Vertically align icon and label
+                        ) {
+                            // Credits icon: 32dp width, maintaining aspect ratio
+                            Image(
+                                painter = painterResource(id = R.drawable.creditsicon),
+                                contentDescription = "Credits",
+                                modifier = Modifier.width(32.dp), // 32dp width, maintaining aspect ratio
+                                contentScale = ContentScale.Fit
+                            )
+                            
+                            // Credits amount label: Bold, 32sp
+                            AnimatedNumberCounter(
+                                targetValue = if (startCreditsAnimation) animatedCredits else currentCredits,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                        
+                        // Bottom row: "Interstellar Credits" label only
+                        Text(
+                            text = "Interstellar Credits",
+                            fontFamily = Exo2,
+                            fontWeight = FontWeight.W400,
+                            fontSize = 14.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Bottom fixed container: Contains gradient and button container
+        // Both stay fixed at bottom when scrolling
+        // navigationBarsPadding() ensures button container sits right above navigation bar with 0 spacing
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .navigationBarsPadding() // Positions content above navigation bar (0 spacing between them)
+        ) {
+            // Gradient overlay container: 48dp height, full width
+            // Gradient from 0% opacity black at top to 100% opacity black at bottom
+            // Positioned right above the button container
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .clip(RoundedCornerShape(80.dp))
-                    .background(Color(0xFFFFFFFF))
-                    .clickable(onClick = onContinueClick),
-                contentAlignment = Alignment.Center
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0x00000000), // 0% opacity at top
+                                Color(0xFF000000)  // 100% opacity at bottom
+                            )
+                        )
+                    )
+            )
+            
+            // Button container: Full width, black background
+            // Contains single full-width button with 16dp padding on all sides
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF000000)) // Black background at 100% opacity
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                Text(
-                    text = "CONTINUE",
-                    fontFamily = Exo2,
-                    fontSize = 24.sp,
-                    lineHeight = 24.sp,
-                    color = Color(0xFF010102),
-                    textAlign = TextAlign.Center,
+                Box(
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .offset(y = (-2).dp)
-                )
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(80.dp))
+                        .background(Color(0xFFFFFFFF))
+                        .clickable(onClick = onContinueClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "CONTINUE",
+                        fontFamily = Exo2,
+                        fontSize = 24.sp,
+                        lineHeight = 24.sp,
+                        color = Color(0xFF010102),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = (-2).dp)
+                    )
+                }
             }
         }
     }

@@ -2139,6 +2139,7 @@ fun GalaxyScreen(
             val coroutineScope = rememberCoroutineScope()
             RewardsScreen(
                 travelMinutes = travelMinutes,
+                penaltyCount = penaltyCount,
                 onContinueClick = {
                     playMouseClickSound(context, coroutineScope)
                     showRewardsScreen = false
@@ -2155,40 +2156,54 @@ fun GalaxyScreen(
         }
         
         // Ship Unlocked Screen: Shown after rewards screen if ships were unlocked
-        if (showShipUnlockedScreen && currentShipUnlockedIndex < newlyUnlockedShips.size) {
+        // Show each ship sequentially - keep showing until all ships have been displayed
+        if (showShipUnlockedScreen && newlyUnlockedShips.isNotEmpty() && currentShipUnlockedIndex < newlyUnlockedShips.size) {
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
             ShipUnlockedScreen(
                 shipId = newlyUnlockedShips[currentShipUnlockedIndex],
                 onContinueClick = {
                     playMouseClickSound(context, coroutineScope)
-                    currentShipUnlockedIndex++
-                    if (currentShipUnlockedIndex >= newlyUnlockedShips.size) {
+                    // Move to next ship
+                    val nextIndex = currentShipUnlockedIndex + 1
+                    if (nextIndex >= newlyUnlockedShips.size) {
+                        // All ships shown, hide ship unlock screen
                         showShipUnlockedScreen = false
+                        currentShipUnlockedIndex = 0 // Reset for next session
                         // After all ships, show location discovery screens if any
                         if (newlyDiscoveredLocations.isNotEmpty()) {
                             showLocationDiscoveredScreen = true
                             currentLocationDiscoveredIndex = 0
                         }
+                    } else {
+                        // Show next ship
+                        currentShipUnlockedIndex = nextIndex
                     }
                 }
             )
         }
         
         // Location Discovered Screen: Shown after ship unlock screens (or after rewards if no ships)
-        if (showLocationDiscoveredScreen && currentLocationDiscoveredIndex < newlyDiscoveredLocations.size) {
+        // Show each location sequentially - keep showing until all locations have been displayed
+        if (showLocationDiscoveredScreen && newlyDiscoveredLocations.isNotEmpty() && currentLocationDiscoveredIndex < newlyDiscoveredLocations.size) {
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
             LocationDiscoveredScreen(
                 locationId = newlyDiscoveredLocations[currentLocationDiscoveredIndex],
                 onContinueClick = {
                     playMouseClickSound(context, coroutineScope)
-                    currentLocationDiscoveredIndex++
-                    if (currentLocationDiscoveredIndex >= newlyDiscoveredLocations.size) {
+                    // Move to next location
+                    val nextIndex = currentLocationDiscoveredIndex + 1
+                    if (nextIndex >= newlyDiscoveredLocations.size) {
+                        // All locations shown, hide location discovered screen
                         showLocationDiscoveredScreen = false
+                        currentLocationDiscoveredIndex = 0 // Reset for next session
                         // Reset for next session
                         newlyUnlockedShips = emptyList()
                         newlyDiscoveredLocations = emptyList()
+                    } else {
+                        // Show next location
+                        currentLocationDiscoveredIndex = nextIndex
                     }
                 }
             )
