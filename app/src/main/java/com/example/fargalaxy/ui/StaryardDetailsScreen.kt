@@ -665,6 +665,7 @@ fun StaryardDetailsScreen(
                             "vulcani_legenda_f1" -> 12
                             "force_of_nature" -> 15
                             "dying_star" -> 15
+                            "ship22" -> 15
                             else -> 1 // Default placeholder
                         }
 
@@ -753,6 +754,7 @@ fun StaryardDetailsScreen(
                             "vulcani_legenda_f1" -> 68
                             "force_of_nature" -> 80
                             "dying_star" -> 68
+                            "ship22" -> 68
                             else -> 0
                         }
                         val speedValue = when (ship.id) {
@@ -773,6 +775,7 @@ fun StaryardDetailsScreen(
                             "vulcani_legenda_f1" -> 72
                             "force_of_nature" -> 72
                             "dying_star" -> 64
+                            "ship22" -> 64
                             else -> 0
                         }
                         val stabilityValue = when (ship.id) {
@@ -793,6 +796,7 @@ fun StaryardDetailsScreen(
                             "vulcani_legenda_f1" -> 18
                             "force_of_nature" -> 45
                             "dying_star" -> 60
+                            "ship22" -> 60
                             else -> 0
                         }
                         

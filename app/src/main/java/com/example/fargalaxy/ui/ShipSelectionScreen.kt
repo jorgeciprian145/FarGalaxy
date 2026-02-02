@@ -472,6 +472,7 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "dying_star" -> R.drawable.ship15selectionscreen
         "asn_ag94_centurion" -> R.drawable.ship16selectionscreen
         "isc_m450_phoenix" -> R.drawable.ship17selectionscreen
+        "ship22" -> R.drawable.ship22selectionscreen
         "legendary_ship" -> R.drawable.ship12selectionscreen
         else -> R.drawable.ship1selectionscreen // Fallback
     }

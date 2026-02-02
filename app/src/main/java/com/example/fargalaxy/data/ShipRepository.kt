@@ -374,6 +374,30 @@ object ShipRepository {
             uniqueTrait = null
         ),
         Ship(
+            id = "ship22",
+            name = "Song of fire",
+            manufacturer = "Eternal Infinitum (according to what was deciphered)",
+            type = "Unknown",
+            rarity = ShipRarity.MYTHICAL,
+            imageResId = R.drawable.ship22,
+            renderImageResId = R.drawable.ship22render,
+            dimensions = ShipDimensions(
+                lengthMeters = 43f,
+                lengthFeet = 141f, // 43m * 3.28084 = 141.08ft ≈ 141ft
+                widthMeters = 32f,
+                widthFeet = 105f // 32m * 3.28084 = 104.99ft ≈ 105ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 4
+            ),
+            lore = "Fragments of recovered data suggest that the Dying Star was commissioned by a powerful ruler from a technologically advanced civilization now lost to time. The vessel's hull is believed to have been forged using exotic matter extracted from the core of a collapsing star, a process so extreme that no surviving records describe it in full. What remains indicates a construction method that pushed both material science and energy containment far beyond known limits.\n\nResidual stellar radiation is still detectable throughout the ship's structure, constantly feeding its internal systems. This persistent output is thought to be self-regulating, allowing the vessel to operate without a conventional reactor. Pilots report subtle but continuous fluctuations in gravity and energy flow, reinforcing the theory that the ship is not merely powered by stellar remnants, but actively bound to them.",
+            speed = 200f,
+            acceleration = 170f,
+            warpConverters = 150f,
+            uniqueTrait = null
+        ),
+        Ship(
             id = "asn_ag94_centurion",
             name = "ASN AG94 Centurion",
             manufacturer = "Karnyx Armory Division",

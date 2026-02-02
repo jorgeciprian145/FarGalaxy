@@ -115,7 +115,7 @@ private fun getLocationBadgeContainerColor(rarity: LocationRarity): Color {
 private fun getFactionBadgeResId(faction: String): Int? {
     return when (faction) {
         "Alliance of Starfaring Nations", "Alliance of Star Nations" -> R.drawable.alliancebadge
-        "Independent Systems Federation" -> R.drawable.isfbadge
+        "Independent Systems Coalition" -> R.drawable.isfbadge
         "Navakeshi Star Armada" -> R.drawable.navakeshibadge
         else -> null // "None" or unknown faction
     }
@@ -130,7 +130,7 @@ private fun getFactionBadgeResId(faction: String): Int? {
 private fun getFactionLogoResId(faction: String): Int? {
     return when (faction) {
         "Alliance of Starfaring Nations", "Alliance of Star Nations" -> R.drawable.alliancelogo
-        "Independent Systems Federation" -> R.drawable.isflogo
+        "Independent Systems Coalition" -> R.drawable.isflogo
         "Navakeshi Star Armada" -> R.drawable.navakeshilogo
         else -> null // "None" or unknown faction
     }

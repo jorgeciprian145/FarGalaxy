@@ -36,7 +36,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
@@ -57,6 +60,11 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
+import coil.compose.AsyncImage
+import coil.decode.GifDecoder
+import coil.request.ImageRequest
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.platform.LocalContext
 import com.example.fargalaxy.R
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
@@ -368,49 +376,109 @@ fun ShipDetailsScreen(
                         contentScale = ContentScale.Fit
                     )
                     
-                    // Ship image (frontmost) - on top of everything, even noise
-                    // Fills available width (already constrained by 16dp padding), maintains aspect ratio
-                    // Height is calculated automatically based on aspect ratio
-                    Image(
-                        painter = painterResource(id = ship.renderImageResId),
-                        contentDescription = ship.name,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.Center)
-                            .onSizeChanged { size ->
-                                shipImageSize = size
-                            },
-                        contentScale = ContentScale.Fit
-                    )
-                    
-                    // Lightning effect layer: Only for ship14 (Force of nature)
-                    // Same dimensions, positioning, and scaling behavior as ship render image
-                    // Positioned on top of the ship image
-                    if (ship.id == "force_of_nature") {
-                        val lightningComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ship14lightningeffect))
-                        LottieAnimation(
-                            composition = lightningComposition,
-                            iterations = LottieConstants.IterateForever,
+                    // For ship22, wrap ship and GIF in single compositing context for blend mode to work
+                    if (ship.id == "ship22") {
+                        val context = LocalContext.current
+                        // Container with transparent background - both ship and GIF drawn here
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .align(Alignment.Center),
-                            contentScale = ContentScale.Fit
-                        )
-                    }
-                    
-                    // Solar flare effect layer: Only for ship15 (Dying Star)
-                    // Same dimensions, positioning, and scaling behavior as ship render image
-                    // Positioned on top of the ship image
-                    if (ship.id == "dying_star") {
-                        val solarFlareComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.shipsolarflare))
-                        LottieAnimation(
-                            composition = solarFlareComposition,
-                            iterations = LottieConstants.IterateForever,
+                                .align(Alignment.Center)
+                                .graphicsLayer {
+                                    // Use Auto instead of Offscreen to avoid black background
+                                    compositingStrategy = CompositingStrategy.Auto
+                                }
+                        ) {
+                            // Ship image - drawn first
+                            Image(
+                                painter = painterResource(id = ship.renderImageResId),
+                                contentDescription = ship.name,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center)
+                                    .onSizeChanged { size ->
+                                        shipImageSize = size
+                                    },
+                                contentScale = ContentScale.Fit
+                            )
+                            
+                            // GIF with screen blend mode - blends with ship image and background
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center)
+                                    .drawWithContent {
+                                        // Apply screen blend mode - black areas blend with ship/background
+                                        val paint = Paint().apply {
+                                            blendMode = BlendMode.Screen
+                                        }
+                                        drawContext.canvas.saveLayer(
+                                            bounds = Rect(
+                                                Offset.Zero,
+                                                Size(size.width, size.height)
+                                            ),
+                                            paint = paint
+                                        )
+                                        drawContent()
+                                        drawContext.canvas.restore()
+                                    }
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(R.raw.ship22flames)
+                                        .decoderFactory(GifDecoder.Factory())
+                                        .build(),
+                                    contentDescription = "Flames effect",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                        }
+                    } else {
+                        // Ship image (frontmost) - on top of everything, even noise
+                        // Fills available width (already constrained by 16dp padding), maintains aspect ratio
+                        // Height is calculated automatically based on aspect ratio
+                        Image(
+                            painter = painterResource(id = ship.renderImageResId),
+                            contentDescription = ship.name,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .align(Alignment.Center),
+                                .align(Alignment.Center)
+                                .onSizeChanged { size ->
+                                    shipImageSize = size
+                                },
                             contentScale = ContentScale.Fit
                         )
+                        
+                        // Lightning effect layer: Only for ship14 (Force of nature)
+                        // Same dimensions, positioning, and scaling behavior as ship render image
+                        // Positioned on top of the ship image
+                        if (ship.id == "force_of_nature") {
+                            val lightningComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ship14lightningeffect))
+                            LottieAnimation(
+                                composition = lightningComposition,
+                                iterations = LottieConstants.IterateForever,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                        
+                        // Solar flare effect layer: Only for ship15 (Dying Star)
+                        // Same dimensions, positioning, and scaling behavior as ship render image
+                        // Positioned on top of the ship image
+                        if (ship.id == "dying_star") {
+                            val solarFlareComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.shipsolarflare))
+                            LottieAnimation(
+                                composition = solarFlareComposition,
+                                iterations = LottieConstants.IterateForever,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
                     }
                 }
             }
@@ -840,6 +908,7 @@ fun ShipDetailsScreen(
                                 "vulcani_legenda_f1" -> 12
                                 "force_of_nature" -> 15
                                 "dying_star" -> 15
+                                "ship22" -> 15
                                 else -> 1 // Default placeholder
                             }
 
@@ -928,6 +997,7 @@ fun ShipDetailsScreen(
                                 "vulcani_legenda_f1" -> 68
                                 "force_of_nature" -> 80
                                 "dying_star" -> 68
+                                "ship22" -> 68
                                 else -> 0
                             }
                             val speedValue = when (ship.id) {
@@ -948,6 +1018,7 @@ fun ShipDetailsScreen(
                                 "vulcani_legenda_f1" -> 72
                                 "force_of_nature" -> 72
                                 "dying_star" -> 64
+                                "ship22" -> 64
                                 else -> 0
                             }
                             val stabilityValue = when (ship.id) {
@@ -968,6 +1039,7 @@ fun ShipDetailsScreen(
                                 "vulcani_legenda_f1" -> 18
                                 "force_of_nature" -> 45
                                 "dying_star" -> 60
+                                "ship22" -> 60
                                 else -> 0
                             }
                             

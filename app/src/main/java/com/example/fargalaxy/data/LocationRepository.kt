@@ -117,7 +117,7 @@ object LocationRepository {
             dayDuration = "26 Earth hours",
             population = "600,000",
             diameter = "5,600 km",
-            faction = "Independent Systems Federation",
+            faction = "Independent Systems Coalition",
             lore = "Elyrion is a large habitable moon known for its lush landscapes, turquoise waters, and diverse ecosystem. It has a mild climate and oxygen-rich atmosphere, supporting dense forests, vibrant wetlands, and coastal regions that change color with the sun. Bioluminescent vegetation creates a soft glow visible from orbit at night.\n\nElyrion Haven, the main settlement, is home to roughly 420,000 residents. It evolved from a scientific outpost into a colony focused on agriculture, ecological research, and light tourism. The moon's fertile soils produce high-yield crops and unique bioplants for export, and research institutes study its flora for medical and biotechnological applications.\n\nElyrion is a welcoming destination with modest cities integrated into the environment, connected by lightweight magrails, and surrounded by preserved natural reserves. Inhabitants prioritize quality of life and a peaceful atmosphere over economic opportunity.\n\nWhile not strategically important, Elyrion plays a steady role in supporting trade, science, and culture. It stands out in a galaxy of industrial hubs and harsh frontier worlds as a place where life thrives."
         ),
         Location(
@@ -149,7 +149,7 @@ object LocationRepository {
             dayDuration = "31 Earth hours",
             population = "11,500",
             diameter = "8,900 km",
-            faction = "Independent Systems Federation",
+            faction = "Independent Systems Coalition",
             lore = "Hjorn-4 is a remote frozen planet characterized by towering glacial ridges, endless plains of ancient ice, and a surface where temperatures rarely rise above freezing. Seasonal storms sweep across the planet's surface, creating harsh conditions for any form of settlement. Despite these challenges, Hjorn-4 holds a valuable resource: deep layers of extremely pure ice that have remained untouched for millennia.\n\nFrosthaven Station, the planet's only major settlement, is located within a natural canyon that provides some protection from the planet's frequent storms. The station consists of refineries, storage silos, and habitation domes that house the planet's small population. Most residents are technicians, engineers, or transport crews who work on rotating schedules, with a small group of long-term settlers who have made Hjorn-4 their permanent home.\n\nDaily operations on Hjorn-4 focus on extracting pristine ice from subglacial tunnels that reach deep into the planet's frozen crust. This ice is processed into ultrapure water, which is in high demand for reactor coolant loops and biotechnological manufacturing processes across the galaxy. The extraction and processing operations require constant maintenance due to the extreme cold and the planet's harsh weather conditions."
         ),
         Location(
@@ -197,7 +197,7 @@ object LocationRepository {
             dayDuration = "21 Earth hours",
             population = "300,000",
             diameter = "11,800 km",
-            faction = "Independent Systems Federation",
+            faction = "Independent Systems Coalition",
             lore = "Vaelaris is a world of perpetual rain and thick atmosphere, existing in a perpetual twilight state. The planet's surface is dominated by cloud bands that stretch across its entire circumference, creating strong winds and constant precipitation. Its oceans are vast and deep, with rugged island chains and eroded plateaus rising from the water.\n\nThe planet's unique biosphere includes storm algae, bioluminescent organisms that thrive in the constant rain and low light conditions. These algae are harvested for medical and biotechnological products, making Vaelaris a valuable scientific research hub. Research stations dot the planet's surface, studying its unique climate and life forms.\n\nLife on Vaelaris has adapted to the constant rain and twilight conditions. Architecture is designed to channel water efficiently, and the planet's inhabitants have developed a resilience that comes from living in such challenging conditions. Vaelaris stands as a world of knowledge, persistence, and the remarkable ability of life to thrive in even the most demanding environments."
         ),
         Location(
@@ -219,7 +219,7 @@ object LocationRepository {
         ),
         Location(
             id = "location14",
-            name = "ISF New Harlinger",
+            name = "ISC New Harlinger",
             type = "Light Frigate",
             classification = LocationClassification.CAPITAL_SHIP,
             rarity = LocationRarity.UNCOMMON,
@@ -231,8 +231,8 @@ object LocationRepository {
             weight = "1.3 million tons",
             length = "410 m",
             population = "1300",
-            faction = "Independent Systems Federation",
-            lore = "The ISF Dawnbreaker is a long-range cruiser designed to serve as a stabilizing presence across the Independent Systems Federation's vast and often remote territories. Engineered for endurance and reliability, the vessel operates far from established infrastructure, supporting autonomous worlds that rely on consistent communication, protection, and logistical assistance.\n\nThe ship regularly undertakes missions that blend diplomacy with practical intervention. It escorts civilian convoys through contested regions, mediates disputes between frontier settlements, and provides technical aid to colonies experiencing power, weather, or orbital infrastructure failures. Its defensive weaponry is calibrated for deterrence rather than escalation, allowing the Dawnbreaker to operate safely in areas where neutrality is valued."
+            faction = "Independent Systems Coalition",
+            lore = "The ISC Dawnbreaker is a long-range cruiser designed to serve as a stabilizing presence across the Independent Systems Coalition's vast and often remote territories. Engineered for endurance and reliability, the vessel operates far from established infrastructure, supporting autonomous worlds that rely on consistent communication, protection, and logistical assistance.\n\nThe ship regularly undertakes missions that blend diplomacy with practical intervention. It escorts civilian convoys through contested regions, mediates disputes between frontier settlements, and provides technical aid to colonies experiencing power, weather, or orbital infrastructure failures. Its defensive weaponry is calibrated for deterrence rather than escalation, allowing the Dawnbreaker to operate safely in areas where neutrality is valued."
         ),
         Location(
             id = "location15",
@@ -293,8 +293,8 @@ object LocationRepository {
             dayDuration = "25.9 Earth hours",
             population = "180 million",
             diameter = "12,900 km",
-            faction = "Independent Systems Federation",
-            lore = "Tiravel is a major member world of the Independent Systems Federation, distinguished by its federated planetary structure. The planet is divided into five large continents, each functioning as an autonomous political entity with its own government, laws, and economic priorities. Rather than operating under a single planetary authority, Tiravel is governed through negotiated agreements between these continental states, reflecting the ISF's emphasis on sovereignty and cooperation.\n\nThe planet's geography supports this distributed model. Broad landmasses surrounded by shallow green-tinted seas allow for regional specialization without isolation. Each continent developed its own identity over time, shaped by local resources, culture, and trade networks, while remaining deeply interconnected through maritime and orbital transport routes."
+            faction = "Independent Systems Coalition",
+            lore = "Tiravel is a major member world of the Independent Systems Coalition, distinguished by its federated planetary structure. The planet is divided into five large continents, each functioning as an autonomous political entity with its own government, laws, and economic priorities. Rather than operating under a single planetary authority, Tiravel is governed through negotiated agreements between these continental states, reflecting the ISC's emphasis on sovereignty and cooperation.\n\nThe planet's geography supports this distributed model. Broad landmasses surrounded by shallow green-tinted seas allow for regional specialization without isolation. Each continent developed its own identity over time, shaped by local resources, culture, and trade networks, while remaining deeply interconnected through maritime and orbital transport routes."
         ),
         Location(
             id = "location19",
@@ -326,11 +326,11 @@ object LocationRepository {
             population = "30 million",
             diameter = "8,500 km",
             faction = "None",
-            lore = "Badavorn is a modest-sized, forest-covered moon orbiting a temperate gas giant. Initially established as an ISF colonial project, the moon was valued for its stable climate, abundant freshwater, and dense native flora that proved adaptable to human agriculture. The colony grew steadily, developing a network of settlements across the moon's surface.\n\nOver time, tensions emerged between the colonial administration and the Independent Systems Federation. Political disputes, resource control disagreements, and local uprisings escalated into a broader conflict that ultimately led to the collapse of formal ISF governance. Badavorn declared itself fully independent, severing its ties with the federation and establishing its own self-governing institutions.\n\nFollowing independence, Badavorn entered a period of isolation, focusing on self-governance and rebuilding its institutions. The moon's economy was built on forestry, sustainable agriculture, and localized manufacturing, supporting a population distributed across medium-sized cities and expansive rural regions. Urban development was deliberately restrained, reflecting a cultural preference for autonomy and environmental balance.\n\nIn recent years, Badavorn has re-established diplomatic relations with the Independent Systems Federation, including limited trade agreements and scientific exchanges under carefully negotiated terms. The moon stands as an example of a former colony that successfully transitioned into a stable, self-sustaining world without becoming a major political or military power."
+            lore = "Badavorn is a modest-sized, forest-covered moon orbiting a temperate gas giant. Initially established as an ISC colonial project, the moon was valued for its stable climate, abundant freshwater, and dense native flora that proved adaptable to human agriculture. The colony grew steadily, developing a network of settlements across the moon's surface.\n\nOver time, tensions emerged between the colonial administration and the Independent Systems Coalition. Political disputes, resource control disagreements, and local uprisings escalated into a broader conflict that ultimately led to the collapse of formal ISC governance. Badavorn declared itself fully independent, severing its ties with the coalition and establishing its own self-governing institutions.\n\nFollowing independence, Badavorn entered a period of isolation, focusing on self-governance and rebuilding its institutions. The moon's economy was built on forestry, sustainable agriculture, and localized manufacturing, supporting a population distributed across medium-sized cities and expansive rural regions. Urban development was deliberately restrained, reflecting a cultural preference for autonomy and environmental balance.\n\nIn recent years, Badavorn has re-established diplomatic relations with the Independent Systems Coalition, including limited trade agreements and scientific exchanges under carefully negotiated terms. The moon stands as an example of a former colony that successfully transitioned into a stable, self-sustaining world without becoming a major political or military power."
         ),
         Location(
             id = "location21",
-            name = "ISF Dawnbreaker",
+            name = "ISC Dawnbreaker",
             type = "Heavy Frigate",
             classification = LocationClassification.CAPITAL_SHIP,
             rarity = LocationRarity.EPIC,
@@ -342,8 +342,8 @@ object LocationRepository {
             weight = "3.4 million tons",
             length = "960 m",
             population = "1,800",
-            faction = "Independent Systems Federation",
-            lore = "The ISF Dawnbreaker is a long-range cruiser designed to serve as a stabilizing presence across the Independent Systems Federation's vast and often remote territories. Engineered for endurance and reliability, the vessel operates far from established infrastructure, supporting autonomous worlds that rely on consistent communication, protection, and logistical assistance.\n\nThe ship regularly undertakes missions that blend diplomacy with practical intervention. It escorts civilian convoys through contested regions, mediates disputes between frontier settlements, and provides technical aid to colonies experiencing power, weather, or orbital infrastructure failures. Its defensive weaponry is calibrated for deterrence rather than escalation, allowing the Dawnbreaker to operate safely in areas where neutrality is valued."
+            faction = "Independent Systems Coalition",
+            lore = "The ISC Dawnbreaker is a long-range cruiser designed to serve as a stabilizing presence across the Independent Systems Coalition's vast and often remote territories. Engineered for endurance and reliability, the vessel operates far from established infrastructure, supporting autonomous worlds that rely on consistent communication, protection, and logistical assistance.\n\nThe ship regularly undertakes missions that blend diplomacy with practical intervention. It escorts civilian convoys through contested regions, mediates disputes between frontier settlements, and provides technical aid to colonies experiencing power, weather, or orbital infrastructure failures. Its defensive weaponry is calibrated for deterrence rather than escalation, allowing the Dawnbreaker to operate safely in areas where neutrality is valued."
         ),
         Location(
             id = "location22",
@@ -396,7 +396,7 @@ object LocationRepository {
         ),
         Location(
             id = "location25",
-            name = "ISF Indomitable Horizon",
+            name = "ISC Indomitable Horizon",
             type = "Capital Ship",
             classification = LocationClassification.CAPITAL_SHIP,
             rarity = LocationRarity.LEGENDARY,
@@ -408,8 +408,8 @@ object LocationRepository {
             weight = "10 million tons",
             length = "2.2 km",
             population = "9200",
-            faction = "Independent Systems Federation",
-            lore = "The ISF Indomitable Horizon is one of two Leviathan-class capital ships currently in service with the Independent Systems Federation. These vessels represent the pinnacle of ISF naval engineering and strategic capability, designed for autonomous, long-duration deployments far from established supply lines and support infrastructure.\n\nThe Indomitable Horizon functions as a self-sustaining command and carrier platform, capable of operating independently for extended periods while maintaining full combat readiness and operational effectiveness. Its internal systems include extensive manufacturing capabilities, resource processing facilities, and redundant command structures that allow it to function as a mobile carrier group, diplomatic deterrent, and stabilizing presence across multiple systems.\n\nUnlike vessels that require constant resupply and support, the Indomitable Horizon embodies the ISF's core values of sovereignty and local autonomy. It signals commitment and capability without requiring permanent occupation or dependency on external resources. Its presence in a region demonstrates the ISF's ability to project power and maintain stability while respecting the independence of local systems.\n\nThe ship serves multiple roles simultaneously: as a carrier for smaller vessels and strike craft, as a command center for coordinated operations, and as a diplomatic platform for high-level negotiations. Its design philosophy reflects the ISF's belief that true strength comes from self-reliance and the ability to operate independently while maintaining cooperative relationships with other factions."
+            faction = "Independent Systems Coalition",
+            lore = "The ISC Indomitable Horizon is one of two Leviathan-class capital ships currently in service with the Independent Systems Coalition. These vessels represent the pinnacle of ISC naval engineering and strategic capability, designed for autonomous, long-duration deployments far from established supply lines and support infrastructure.\n\nThe Indomitable Horizon functions as a self-sustaining command and carrier platform, capable of operating independently for extended periods while maintaining full combat readiness and operational effectiveness. Its internal systems include extensive manufacturing capabilities, resource processing facilities, and redundant command structures that allow it to function as a mobile carrier group, diplomatic deterrent, and stabilizing presence across multiple systems.\n\nUnlike vessels that require constant resupply and support, the Indomitable Horizon embodies the ISC's core values of sovereignty and local autonomy. It signals commitment and capability without requiring permanent occupation or dependency on external resources. Its presence in a region demonstrates the ISC's ability to project power and maintain stability while respecting the independence of local systems.\n\nThe ship serves multiple roles simultaneously: as a carrier for smaller vessels and strike craft, as a command center for coordinated operations, and as a diplomatic platform for high-level negotiations. Its design philosophy reflects the ISC's belief that true strength comes from self-reliance and the ability to operate independently while maintaining cooperative relationships with other factions."
         ),
         Location(
             id = "location26",
