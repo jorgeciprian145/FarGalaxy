@@ -652,6 +652,7 @@ fun StaryardDetailsScreen(
                             "type45c_shooting_star" -> 2
                             "navakeshi_star_pouncer" -> 2
                             "a300_albatross" -> 3
+                            "p7h_skyblazer" -> 5
                             "b7f_starforce" -> 4
                             "navakeshi_star_crusher" -> 5
                             "asn_ag94_centurion" -> 3
@@ -666,6 +667,7 @@ fun StaryardDetailsScreen(
                             "force_of_nature" -> 15
                             "dying_star" -> 15
                             "ship22" -> 15
+                            "ship23" -> 8
                             else -> 1 // Default placeholder
                         }
 
@@ -741,6 +743,7 @@ fun StaryardDetailsScreen(
                             "type45c_shooting_star" -> 35
                             "navakeshi_star_pouncer" -> 32
                             "a300_albatross" -> 28
+                            "p7h_skyblazer" -> 32
                             "b7f_starforce" -> 38
                             "navakeshi_star_crusher" -> 35
                             "asn_ag94_centurion" -> 35
@@ -754,7 +757,8 @@ fun StaryardDetailsScreen(
                             "vulcani_legenda_f1" -> 68
                             "force_of_nature" -> 80
                             "dying_star" -> 68
-                            "ship22" -> 68
+                            "ship22" -> 61
+                            "ship23" -> 16
                             else -> 0
                         }
                         val speedValue = when (ship.id) {
@@ -762,6 +766,7 @@ fun StaryardDetailsScreen(
                             "type45c_shooting_star" -> 32
                             "navakeshi_star_pouncer" -> 30
                             "a300_albatross" -> 28
+                            "p7h_skyblazer" -> 32
                             "b7f_starforce" -> 38
                             "navakeshi_star_crusher" -> 30
                             "asn_ag94_centurion" -> 32
@@ -775,7 +780,8 @@ fun StaryardDetailsScreen(
                             "vulcani_legenda_f1" -> 72
                             "force_of_nature" -> 72
                             "dying_star" -> 64
-                            "ship22" -> 64
+                            "ship22" -> 61
+                            "ship23" -> 20
                             else -> 0
                         }
                         val stabilityValue = when (ship.id) {
@@ -783,6 +789,7 @@ fun StaryardDetailsScreen(
                             "type45c_shooting_star" -> 16
                             "navakeshi_star_pouncer" -> 18
                             "a300_albatross" -> 38
+                            "p7h_skyblazer" -> 38
                             "b7f_starforce" -> 19
                             "navakeshi_star_crusher" -> 24
                             "asn_ag94_centurion" -> 30
@@ -796,7 +803,8 @@ fun StaryardDetailsScreen(
                             "vulcani_legenda_f1" -> 18
                             "force_of_nature" -> 45
                             "dying_star" -> 60
-                            "ship22" -> 60
+                            "ship22" -> 68
+                            "ship23" -> 69
                             else -> 0
                         }
                         

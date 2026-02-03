@@ -69,6 +69,8 @@ import com.example.fargalaxy.R
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
 import com.example.fargalaxy.ui.ProgressBar
+import com.example.fargalaxy.data.UserDataRepository
+import com.example.fargalaxy.data.GameStateRepository
 
 /**
  * Enum to represent the selected tab in ShipDetailsScreen.
@@ -154,6 +156,38 @@ private fun getBadgeContainerColor(rarity: ShipRarity): Color {
         ShipRarity.LEGENDARY -> Color(0x29E7CC52) // #E7CC52 at 16% opacity (0x29 = ~16%)
         ShipRarity.MYTHICAL -> Color(0x29F6823A) // #F6823A at 16% opacity (0x29 = ~16%)
         else -> Color(0x29FFFFFF) // White at 16% opacity (default for COMMON and others)
+    }
+}
+
+/**
+ * Helper function to get the required space license level for a ship.
+ * 
+ * @param shipId The ship's ID
+ * @return The required space license level
+ */
+private fun getRequiredSpaceLicenseLevel(shipId: String): Int {
+    return when (shipId) {
+        "b14_phantom" -> 1
+        "type45c_shooting_star" -> 2
+        "navakeshi_star_pouncer" -> 2
+        "a300_albatross" -> 3
+        "p7h_skyblazer" -> 5
+        "b7f_starforce" -> 4
+        "navakeshi_star_crusher" -> 5
+        "asn_ag94_centurion" -> 3
+        "b15_specter" -> 6
+        "n6_98_melina" -> 6
+        "model3_tortoise_ccp" -> 8
+        "h98_valkyrie" -> 9
+        "navakeshi_star_ravager" -> 9
+        "isc_m450_phoenix" -> 9
+        "silver_lightning" -> 12
+        "vulcani_legenda_f1" -> 12
+        "force_of_nature" -> 15
+        "dying_star" -> 15
+        "ship22" -> 15
+        "ship23" -> 8
+        else -> 1 // Default placeholder
     }
 }
 
@@ -889,28 +923,7 @@ fun ShipDetailsScreen(
                                 .padding(horizontal = 24.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            // TODO: Replace with dynamic required level from ship model
-                            val requiredLevel = when (ship.id) {
-                                "b14_phantom" -> 1
-                                "type45c_shooting_star" -> 2
-                                "navakeshi_star_pouncer" -> 2
-                                "a300_albatross" -> 3
-                                "b7f_starforce" -> 4
-                                "navakeshi_star_crusher" -> 5
-                                "asn_ag94_centurion" -> 3
-                                "b15_specter" -> 6
-                                "n6_98_melina" -> 6
-                                "model3_tortoise_ccp" -> 8
-                                "h98_valkyrie" -> 9
-                                "navakeshi_star_ravager" -> 9
-                                "isc_m450_phoenix" -> 9
-                                "silver_lightning" -> 12
-                                "vulcani_legenda_f1" -> 12
-                                "force_of_nature" -> 15
-                                "dying_star" -> 15
-                                "ship22" -> 15
-                                else -> 1 // Default placeholder
-                            }
+                            val requiredLevel = getRequiredSpaceLicenseLevel(ship.id)
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -984,6 +997,7 @@ fun ShipDetailsScreen(
                                 "type45c_shooting_star" -> 35
                                 "navakeshi_star_pouncer" -> 32
                                 "a300_albatross" -> 28
+                                "p7h_skyblazer" -> 32
                                 "b7f_starforce" -> 38
                                 "navakeshi_star_crusher" -> 35
                                 "asn_ag94_centurion" -> 35
@@ -997,7 +1011,8 @@ fun ShipDetailsScreen(
                                 "vulcani_legenda_f1" -> 68
                                 "force_of_nature" -> 80
                                 "dying_star" -> 68
-                                "ship22" -> 68
+                                "ship22" -> 61
+                                "ship23" -> 16
                                 else -> 0
                             }
                             val speedValue = when (ship.id) {
@@ -1005,6 +1020,7 @@ fun ShipDetailsScreen(
                                 "type45c_shooting_star" -> 32
                                 "navakeshi_star_pouncer" -> 30
                                 "a300_albatross" -> 28
+                                "p7h_skyblazer" -> 32
                                 "b7f_starforce" -> 38
                                 "navakeshi_star_crusher" -> 30
                                 "asn_ag94_centurion" -> 32
@@ -1018,7 +1034,8 @@ fun ShipDetailsScreen(
                                 "vulcani_legenda_f1" -> 72
                                 "force_of_nature" -> 72
                                 "dying_star" -> 64
-                                "ship22" -> 64
+                                "ship22" -> 61
+                                "ship23" -> 20
                                 else -> 0
                             }
                             val stabilityValue = when (ship.id) {
@@ -1026,6 +1043,7 @@ fun ShipDetailsScreen(
                                 "type45c_shooting_star" -> 16
                                 "navakeshi_star_pouncer" -> 18
                                 "a300_albatross" -> 38
+                                "p7h_skyblazer" -> 38
                                 "b7f_starforce" -> 19
                                 "navakeshi_star_crusher" -> 24
                                 "asn_ag94_centurion" -> 30
@@ -1039,7 +1057,8 @@ fun ShipDetailsScreen(
                                 "vulcani_legenda_f1" -> 18
                                 "force_of_nature" -> 45
                                 "dying_star" -> 60
-                                "ship22" -> 60
+                                "ship22" -> 68
+                                "ship23" -> 69
                                 else -> 0
                             }
                             
@@ -1104,6 +1123,17 @@ fun ShipDetailsScreen(
                 // Show "SELECT SHIP" button when ship is not the current ship
                 // Show "CHANGE SHIP" button when ship is the current ship and onChangeShip callback is provided
                 if (!isCurrentShip) {
+                    // Check license level requirement
+                    val requiredLevel = getRequiredSpaceLicenseLevel(ship.id)
+                    val currentLevel = UserDataRepository.getCurrentLevel()
+                    val isTestMode = GameStateRepository.isTestMode
+                    val canSelectShip = isTestMode || currentLevel >= requiredLevel
+                    val buttonText = if (canSelectShip) {
+                        "SELECT SHIP"
+                    } else {
+                        "Requires license level $requiredLevel"
+                    }
+                    
                     // "SELECT SHIP" button - shown when viewing a ship that is not the current ship
                     Box(
                         modifier = Modifier
@@ -1120,11 +1150,15 @@ fun ShipDetailsScreen(
                                     color = Color(0xFFFFFFFF),
                                     shape = RoundedCornerShape(40.dp)
                                 )
-                                .clickable(onClick = onSelectShip),
+                                .clickable(
+                                    enabled = canSelectShip,
+                                    onClick = onSelectShip
+                                )
+                                .alpha(if (canSelectShip) 1f else 0.5f), // Reduce opacity when disabled
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "SELECT SHIP",
+                                text = buttonText,
                                 fontFamily = Exo2,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.W400,

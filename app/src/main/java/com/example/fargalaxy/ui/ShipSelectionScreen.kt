@@ -49,8 +49,43 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.ShipRepository
+import com.example.fargalaxy.data.UserDataRepository
+import com.example.fargalaxy.data.GameStateRepository
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
+import androidx.compose.ui.draw.alpha
+
+/**
+ * Helper function to get the required space license level for a ship.
+ * 
+ * @param shipId The ship's ID
+ * @return The required space license level
+ */
+private fun getRequiredSpaceLicenseLevel(shipId: String): Int {
+    return when (shipId) {
+        "b14_phantom" -> 1
+        "type45c_shooting_star" -> 2
+        "navakeshi_star_pouncer" -> 2
+        "a300_albatross" -> 3
+        "p7h_skyblazer" -> 5
+        "b7f_starforce" -> 4
+        "navakeshi_star_crusher" -> 5
+        "asn_ag94_centurion" -> 3
+        "b15_specter" -> 6
+        "n6_98_melina" -> 6
+        "model3_tortoise_ccp" -> 8
+        "h98_valkyrie" -> 9
+        "navakeshi_star_ravager" -> 9
+        "isc_m450_phoenix" -> 9
+        "silver_lightning" -> 12
+        "vulcani_legenda_f1" -> 12
+        "force_of_nature" -> 15
+        "dying_star" -> 15
+        "ship22" -> 15
+        "ship23" -> 8
+        else -> 1 // Default placeholder
+    }
+}
 
 /**
  * ShipSelectionScreen composable - displays the ship selection screen where users can view and select ships.
@@ -83,6 +118,9 @@ fun ShipSelectionScreen(
     val allShips = ShipRepository.getAllShips()
     val currentShip = ShipRepository.getCurrentShip()
     
+    // Create a map of ship ID to its index in the repository to preserve original order
+    val shipOrderMap = allShips.mapIndexed { index, ship -> ship.id to index }.toMap()
+    
     // Filter to only unlocked ships (test mode shows all, real mode shows only unlocked)
     // Filter to show only owned ships (purchased and selectable)
     val unlockedShips = allShips.filter { 
@@ -91,6 +129,7 @@ fun ShipSelectionScreen(
     
     // Group ships by rarity, with current ship first
     // Rarity order: COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHICAL
+    // Within each rarity group, maintain repository order
     val rarityOrder = listOf(
         ShipRarity.COMMON,
         ShipRarity.UNCOMMON,
@@ -102,9 +141,10 @@ fun ShipSelectionScreen(
     
     val availableShips = if (unlockedShips.isNotEmpty()) {
         val otherShips = unlockedShips.filter { it.id != currentShip.id }
-        // Group other ships by rarity
+        // Group other ships by rarity, maintaining repository order within each group
         val groupedByRarity = rarityOrder.map { rarity ->
             otherShips.filter { it.rarity == rarity }
+                .sortedBy { shipOrderMap[it.id] ?: Int.MAX_VALUE } // Sort by repository order
         }.flatten()
         // Current ship first, then grouped by rarity
         listOf(currentShip) + groupedByRarity
@@ -329,12 +369,21 @@ fun ShipSelectionScreen(
                             ) {
                                 rowShips.forEach { ship ->
                                     val isCurrentShip = ship.id == currentShip.id
+                                    // Check license level requirement
+                                    val requiredLevel = getRequiredSpaceLicenseLevel(ship.id)
+                                    val currentLevel = UserDataRepository.getCurrentLevel()
+                                    val isTestMode = GameStateRepository.isTestMode
+                                    val canSelectShip = isTestMode || currentLevel >= requiredLevel
+                                    
                                     ShipContainer(
                                         ship = ship,
                                         isCurrentShip = isCurrentShip,
                                         containerWidth = containerWidth,
                                         onShipClick = { onShipClick(ship) },
-                                        modifier = Modifier.width(containerWidth)
+                                        enabled = canSelectShip,
+                                        modifier = Modifier
+                                            .width(containerWidth)
+                                            .alpha(if (canSelectShip) 1f else 0.5f) // Reduce opacity when disabled
                                     )
                                 }
                             }
@@ -459,6 +508,7 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "type45c_shooting_star" -> R.drawable.ship2selectionscreen
         "navakeshi_star_pouncer" -> R.drawable.ship3selectionscreen
         "a300_albatross" -> R.drawable.ship4selectionscreen
+        "p7h_skyblazer" -> R.drawable.ship19selectionscreen
         "b7f_starforce" -> R.drawable.ship5selectionscreen
         "navakeshi_star_crusher" -> R.drawable.ship6selectionscreen
         "b15_specter" -> R.drawable.ship7selectionscreen
@@ -473,6 +523,7 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "asn_ag94_centurion" -> R.drawable.ship16selectionscreen
         "isc_m450_phoenix" -> R.drawable.ship17selectionscreen
         "ship22" -> R.drawable.ship22selectionscreen
+        "ship23" -> R.drawable.ship23selectionscreen
         "legendary_ship" -> R.drawable.ship12selectionscreen
         else -> R.drawable.ship1selectionscreen // Fallback
     }
@@ -498,6 +549,7 @@ private fun ShipContainer(
     isCurrentShip: Boolean,
     containerWidth: androidx.compose.ui.unit.Dp,
     onShipClick: () -> Unit = {},
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val backgroundResId = getSelectionBackgroundResId(ship.rarity, isCurrentShip)
@@ -507,7 +559,10 @@ private fun ShipContainer(
         modifier = modifier
             .width(containerWidth)
             .aspectRatio(1f) // Maintain 1:1 aspect ratio
-            .clickable(onClick = onShipClick)
+            .clickable(
+                enabled = enabled,
+                onClick = onShipClick
+            )
     ) {
         // Background SVG: Full width and height, grows proportionally
         Image(

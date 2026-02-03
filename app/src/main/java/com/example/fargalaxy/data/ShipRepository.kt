@@ -86,6 +86,30 @@ object ShipRepository {
             uniqueTrait = null
         ),
         Ship(
+            id = "p7h_skyblazer",
+            name = "P7H Skyblazer",
+            manufacturer = "Marakeshi Space Technologies",
+            type = "Multi-purpose Hypertravel Starcraft",
+            rarity = ShipRarity.UNCOMMON,
+            imageResId = R.drawable.ship19,
+            renderImageResId = R.drawable.ship19render,
+            dimensions = ShipDimensions(
+                lengthMeters = 50f,
+                lengthFeet = 140f, // 50m * 3.28084 = 164.04ft, but image shows 140ft
+                widthMeters = 40f,
+                widthFeet = 39f // 40m * 3.28084 = 131.23ft, but image shows 39ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 4
+            ),
+            lore = "The P7H Skyblazer was the first design developed by Marakeshi Space Technologies for the military sector, although later variants were adapted for civilian use. Built around a robust and flexible frame, the Skyblazer was engineered to perform across a wide range of roles, from long-range hypertravel jumps to sustained operations in low-orbit environments.\n\nAlthough commonly deployed for air-to-ground support and near-orbit patrols, the Skyblazer has also been adopted by several private armed groups. Its ability to quickly disengage from conflict, combined with enough firepower to defend itself when escape is not an option, has made it a popular choice for interplanetary light cargo runs and high-risk VIP transport missions.",
+            speed = 100f,
+            acceleration = 50f,
+            warpConverters = 75f,
+            uniqueTrait = null
+        ),
+        Ship(
             id = "a300_albatross",
             name = "A-300 Albatross",
             manufacturer = "Valketh Industries",
@@ -382,19 +406,43 @@ object ShipRepository {
             imageResId = R.drawable.ship22,
             renderImageResId = R.drawable.ship22render,
             dimensions = ShipDimensions(
-                lengthMeters = 43f,
-                lengthFeet = 141f, // 43m * 3.28084 = 141.08ft ≈ 141ft
-                widthMeters = 32f,
-                widthFeet = 105f // 32m * 3.28084 = 104.99ft ≈ 105ft
+                lengthMeters = 48f,
+                lengthFeet = 104f, // 48m * 3.28084 = 157.48ft, but image shows 104ft
+                widthMeters = 40f,
+                widthFeet = 39f // 40m * 3.28084 = 131.23ft, but image shows 39ft
             ),
             crewCapacity = CrewCapacity(
                 pilots = 1,
-                crewMembers = 4
+                crewMembers = 3
             ),
-            lore = "Fragments of recovered data suggest that the Dying Star was commissioned by a powerful ruler from a technologically advanced civilization now lost to time. The vessel's hull is believed to have been forged using exotic matter extracted from the core of a collapsing star, a process so extreme that no surviving records describe it in full. What remains indicates a construction method that pushed both material science and energy containment far beyond known limits.\n\nResidual stellar radiation is still detectable throughout the ship's structure, constantly feeding its internal systems. This persistent output is thought to be self-regulating, allowing the vessel to operate without a conventional reactor. Pilots report subtle but continuous fluctuations in gravity and energy flow, reinforcing the theory that the ship is not merely powered by stellar remnants, but actively bound to them.",
+            lore = "Fragments of recovered data indicate that the vessel was constructed around an internal power architecture unlike anything documented in known starship design. Rather than relying on a continuous energy source, the ship appears to trigger a repeating reaction cycle within the engine compartment, converting controlled micro-detonations into sustained propulsion. This approach generates extreme thermal and kinetic output, pushing the ship far beyond the tolerances of conventional containment systems.\n\nEtched into the inner fuselage, a faint inscription was discovered after decades of study. The most accepted translation reads: \"For those who may hear my song after I am lost to time, for fire is my song.\" Researchers believe this message reflects the design philosophy behind the vessel. Stability is not achieved by suppressing its violent core, but by shaping its release into a precise and continuous cadence.",
             speed = 200f,
             acceleration = 170f,
             warpConverters = 150f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "ship23",
+            name = "Navakeshi Star Diver",
+            manufacturer = "Kel'Varra Star Systems",
+            type = "Light hypertravel bomber",
+            rarity = ShipRarity.RARE,
+            imageResId = R.drawable.ship23,
+            renderImageResId = R.drawable.ship23render,
+            dimensions = ShipDimensions(
+                lengthMeters = 50f,
+                lengthFeet = 138f, // 50m * 3.28084 = 164.04ft, but image shows 138ft
+                widthMeters = 42f,
+                widthFeet = 144f // 42m * 3.28084 = 137.8ft, but image shows 144ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 3
+            ),
+            lore = "Unlike the Pouncer or the Crusher, the Diver is rarely seen in open formations. It is most often deployed in small units, tasked with disabling installations, supply routes, and surface targets ahead of major fleet movements.\n\nPiloting a Star Diver requires patience and restraint rather than aggression. To Navakeshi commanders, it is not a ship of spectacle, but one of quiet inevitability. When a Diver is committed to a mission, the damage is already calculated.",
+            speed = 140f,
+            acceleration = 70f,
+            warpConverters = 95f,
             uniqueTrait = null
         ),
         Ship(

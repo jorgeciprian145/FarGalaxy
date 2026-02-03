@@ -711,7 +711,7 @@ fun RewardsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Space conditions",
+                            text = "Flight Environment",
                             fontFamily = Exo2,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Normal,

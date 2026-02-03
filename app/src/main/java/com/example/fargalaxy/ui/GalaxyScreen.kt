@@ -712,7 +712,9 @@ private fun getGalaxyShipImageResId(shipId: String): Int {
         "dying_star" -> R.drawable.ship15
         "asn_ag94_centurion" -> R.drawable.ship16
         "isc_m450_phoenix" -> R.drawable.ship17
+        "p7h_skyblazer" -> R.drawable.ship19
         "ship22" -> R.drawable.ship22
+        "ship23" -> R.drawable.ship23
         "legendary_ship" -> R.drawable.ship1 // Fallback
         else -> R.drawable.ship1 // Default fallback
     }
@@ -739,7 +741,9 @@ private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "dying_star" -> 208.dp // Ship15: 60% larger than 130.dp (130 * 1.6 = 208)
         "asn_ag94_centurion" -> 162.dp // Ship16: 10% smaller than 180.dp (180 * 0.9 = 162)
         "isc_m450_phoenix" -> 234.dp // Ship17: 30% larger than 180.dp (180 * 1.3 = 234)
+        "p7h_skyblazer" -> 236.5.dp // Ship19: 5% smaller than 249.dp (249 * 0.95 = 236.55)
         "ship22" -> 208.dp // Ship22: Same height as ship15 (208.dp)
+        "ship23" -> 231.dp // Ship23: 15% bigger than 200.dp (200 * 1.15 = 230, then 220 * 1.05 = 231)
         else -> 113.dp // Default height
     }
 }
@@ -767,7 +771,9 @@ private fun getImpulseImageResId(shipId: String): Int {
         "dying_star" -> R.drawable.impulse15
         "asn_ag94_centurion" -> R.drawable.impulse16
         "isc_m450_phoenix" -> R.drawable.impulse17
+        "p7h_skyblazer" -> R.drawable.impulse19
         "ship22" -> R.drawable.impulse22
+        "ship23" -> R.drawable.impulse23
         "legendary_ship" -> R.drawable.impulse1 // Fallback
         else -> R.drawable.impulse1 // Default fallback
     }
@@ -795,7 +801,9 @@ private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
         "dying_star" -> 1104.dp // Impulse15: 60% larger than 690.dp (690 * 1.6 = 1104)
         "asn_ag94_centurion" -> 945.dp // Impulse16: 10% smaller than 1050.dp (1050 * 0.9 = 945)
         "isc_m450_phoenix" -> 1300.dp // Impulse17: 30% larger than 1000.dp (1000 * 1.3 = 1300)
+        "p7h_skyblazer" -> 1379.dp // Impulse19: 5% smaller than 1452.dp (1452 * 0.95 = 1379.4)
         "ship22" -> 1104.dp // Impulse22: Same width as impulse15 (1104.dp)
+        "ship23" -> 1270.5.dp // Impulse23: 15% bigger than 1100.dp (1100 * 1.15 = 1265, then 1210 * 1.05 = 1270.5)
         else -> 600.dp // Default width
     }
 }
@@ -822,7 +830,9 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "dying_star" -> 184.dp // Impulse15: 60% larger than 115.dp (115 * 1.6 = 184)
         "asn_ag94_centurion" -> 157.5.dp // Impulse16: 10% smaller than 175.dp (175 * 0.9 = 157.5)
         "isc_m450_phoenix" -> 214.5.dp // Impulse17: 30% larger than 165.dp (165 * 1.3 = 214.5)
+        "p7h_skyblazer" -> 230.dp // Impulse19: 5% smaller than 242.dp (242 * 0.95 = 229.9)
         "ship22" -> 184.dp // Impulse22: Same height as impulse15 (184.dp)
+        "ship23" -> 213.675.dp // Impulse23: 15% bigger than 185.dp (185 * 1.15 = 212.75, then 203.5 * 1.05 = 213.675)
         else -> 100.dp // Default height
     }
 }
@@ -848,7 +858,9 @@ private fun getImpulseHorizontalOffset(shipId: String): androidx.compose.ui.unit
         "dying_star" -> (-120).dp // Ship15: Dying Star
         "asn_ag94_centurion" -> (-112).dp // Ship16: ASN AG94 Centurion - 8dp to the right from default (-120 + 8 = -112)
         "isc_m450_phoenix" -> (-110).dp // Ship17: ISC M450 Phoenix - 10dp to the right from default (-120 + 10 = -110)
+        "p7h_skyblazer" -> (-88).dp // Ship19: 10% to the left from -80.dp (-80 * 1.1 = -88)
         "ship22" -> (-120).dp // Ship22: Same offset as ship15
+        "ship23" -> (-132.25).dp // Ship23: 30% to the left from -100.dp (-115 * 1.15 = -132.25)
         "legendary_ship" -> (-120).dp // Legendary ship fallback
         else -> (-120).dp // Default offset
     }
