@@ -183,6 +183,7 @@ private fun getRequiredSpaceLicenseLevel(shipId: String): Int {
         "isc_m450_phoenix" -> 9
         "a450_sparrow" -> 9
         "t47_dolphin" -> 9
+        "asn_h99_dragoon" -> 12
         "silver_lightning" -> 12
         "vulcani_legenda_f1" -> 12
         "force_of_nature" -> 15
@@ -1011,6 +1012,7 @@ fun ShipDetailsScreen(
                                 "isc_m450_phoenix" -> 40
                                 "a450_sparrow" -> 38
                                 "t47_dolphin" -> 22
+                                "asn_h99_dragoon" -> 54
                                 "silver_lightning" -> 62
                                 "vulcani_legenda_f1" -> 68
                                 "force_of_nature" -> 80
@@ -1036,6 +1038,7 @@ fun ShipDetailsScreen(
                                 "isc_m450_phoenix" -> 36
                                 "a450_sparrow" -> 36
                                 "t47_dolphin" -> 21
+                                "asn_h99_dragoon" -> 58
                                 "silver_lightning" -> 60
                                 "vulcani_legenda_f1" -> 72
                                 "force_of_nature" -> 72
@@ -1061,6 +1064,7 @@ fun ShipDetailsScreen(
                                 "isc_m450_phoenix" -> 32
                                 "a450_sparrow" -> 36
                                 "t47_dolphin" -> 68
+                                "asn_h99_dragoon" -> 65
                                 "silver_lightning" -> 57
                                 "vulcani_legenda_f1" -> 18
                                 "force_of_nature" -> 45

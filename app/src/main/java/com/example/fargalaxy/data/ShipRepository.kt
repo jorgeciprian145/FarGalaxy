@@ -494,6 +494,30 @@ object ShipRepository {
             uniqueTrait = null
         ),
         Ship(
+            id = "asn_h99_dragoon",
+            name = "ASN H-99 Dragoon",
+            manufacturer = "Karnyx Armory Division",
+            type = "Multi-purpose Hypertravel Starcraft",
+            rarity = ShipRarity.LEGENDARY,
+            imageResId = R.drawable.ship18,
+            renderImageResId = R.drawable.ship18render,
+            dimensions = ShipDimensions(
+                lengthMeters = 43f,
+                lengthFeet = 104f, // As shown in ship details screen
+                widthMeters = 41f,
+                widthFeet = 39f // As shown in ship details screen
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 3
+            ),
+            lore = "Few starships command the level of respect reserved for the Dragoon. Engineered as a high performance military platform, it combines raw power, resilience, and precision into a single, uncompromising design, setting a benchmark for modern military starcraft.\n\nBuilt exclusively by Karnyx for ASN deployment, the H-99 Dragoon stands as one of the fleet's most valuable multipurpose assets. Its adaptability across mission profiles and its proven reliability under pressure have secured its role as a central pillar of ASN space operations.",
+            speed = 100f,
+            acceleration = 50f,
+            warpConverters = 75f,
+            uniqueTrait = null
+        ),
+        Ship(
             id = "a450_sparrow",
             name = "A450 Sparrow",
             manufacturer = "Valketh Industries",
@@ -570,6 +594,7 @@ object ShipRepository {
             "dying_star" -> 15
             "asn_ag94_centurion" -> 16
             "isc_m450_phoenix" -> 17
+            "asn_h99_dragoon" -> 18
             "p7h_skyblazer" -> 19
             "a450_sparrow" -> 20
             "t47_dolphin" -> 21

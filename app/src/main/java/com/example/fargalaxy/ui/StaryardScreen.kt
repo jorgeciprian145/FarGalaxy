@@ -591,6 +591,7 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "silver_lightning" -> R.drawable.ship12selectionscreen
         "vulcani_legenda_f1" -> R.drawable.ship13selectionscreen
         "force_of_nature" -> R.drawable.ship14selectionscreen
+        "asn_h99_dragoon" -> R.drawable.ship18selectionscreen
         "a450_sparrow" -> R.drawable.ship20selectionscreen
         "t47_dolphin" -> R.drawable.ship21selectionscreen
         "legendary_ship" -> R.drawable.ship12selectionscreen

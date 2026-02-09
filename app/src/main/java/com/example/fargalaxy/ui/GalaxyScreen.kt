@@ -706,6 +706,7 @@ private fun getGalaxyShipImageResId(shipId: String): Int {
         "model3_tortoise_ccp" -> R.drawable.ship9
         "navakeshi_star_ravager" -> R.drawable.ship11
         "h98_valkyrie" -> R.drawable.ship10
+        "asn_h99_dragoon" -> R.drawable.ship18
         "silver_lightning" -> R.drawable.ship12
         "vulcani_legenda_f1" -> R.drawable.ship13
         "force_of_nature" -> R.drawable.ship14
@@ -737,6 +738,7 @@ private fun getGalaxyShipHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "model3_tortoise_ccp" -> 234.dp // Ship9: 10% smaller (260.dp * 0.9 = 234.dp)
         "navakeshi_star_ravager" -> 210.dp // Ship11: EPIC assault ship, larger than ship6
         "h98_valkyrie" -> 237.dp // Ship10: 110% bigger than 113.dp (113 * 2.1 = 237.3)
+        "asn_h99_dragoon" -> 190.785.dp // Ship18: 15% larger from current size - 165.9.dp * 1.15 = 190.785.dp
         "silver_lightning" -> 191.dp // Ship12: 10% bigger than 174.dp (174 * 1.1 = 191.4)
         "vulcani_legenda_f1" -> 136.dp // Ship13: 20% bigger than 113.dp (113 * 1.2 = 135.6)
         "force_of_nature" -> 130.dp // Ship14: 15% bigger than 113.dp (113 * 1.15 = 129.95)
@@ -769,6 +771,7 @@ private fun getImpulseImageResId(shipId: String): Int {
         "model3_tortoise_ccp" -> R.drawable.impulse9
         "navakeshi_star_ravager" -> R.drawable.impulse11
         "h98_valkyrie" -> R.drawable.impulse10
+        "asn_h99_dragoon" -> R.drawable.impulse18
         "silver_lightning" -> R.drawable.impulse12
         "vulcani_legenda_f1" -> R.drawable.impulse13
         "force_of_nature" -> R.drawable.impulse14
@@ -801,6 +804,7 @@ private fun getImpulseWidth(shipId: String): androidx.compose.ui.unit.Dp {
         "model3_tortoise_ccp" -> 1307.dp // Impulse9: 10% smaller than similar cargo ships (1452.dp * 0.9 = 1306.8)
         "navakeshi_star_ravager" -> 1200.dp // Impulse11: Larger than ship6, similar to mid-tier EPIC ships
         "h98_valkyrie" -> 1386.dp // Impulse10: 10% bigger than 1260.dp (1260 * 1.1 = 1386)
+        "asn_h99_dragoon" -> 1115.73.dp // Impulse18: 15% larger from current size - 970.2.dp * 1.15 = 1115.73.dp
         "silver_lightning" -> 1118.dp // Impulse13: 10% bigger than 1016.dp (1016 * 1.1 = 1117.6)
         "vulcani_legenda_f1" -> 726.dp // Impulse13: 20% bigger than 600.dp (600 * 1.2 = 720, or 660 * 1.1 = 726)
         "force_of_nature" -> 690.dp // Impulse14: 15% bigger than 600.dp (600 * 1.15 = 690)
@@ -832,6 +836,7 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
         "model3_tortoise_ccp" -> 218.dp // Impulse9: 10% smaller than similar cargo ships (242.dp * 0.9 = 217.8)
         "navakeshi_star_ravager" -> 200.dp // Impulse11: Larger than ship6, similar to mid-tier EPIC ships
         "h98_valkyrie" -> 231.dp // Impulse10: 10% bigger than 210.dp (210 * 1.1 = 231)
+        "asn_h99_dragoon" -> 185.955.dp // Impulse18: 15% larger from current size - 161.7.dp * 1.15 = 185.955.dp
         "silver_lightning" -> 186.dp // Impulse13: 10% bigger than 169.dp (169 * 1.1 = 185.9)
         "vulcani_legenda_f1" -> 121.dp // Impulse13: 20% bigger than 100.dp (100 * 1.2 = 120, or 110 * 1.1 = 121)
         "force_of_nature" -> 115.dp // Impulse14: 15% bigger than 100.dp (100 * 1.15 = 115)
@@ -864,6 +869,7 @@ private fun getImpulseHorizontalOffset(shipId: String): androidx.compose.ui.unit
         "model3_tortoise_ccp" -> (-72).dp // Ship9: Model 3 "Tortoise" CCP - moved 40% to the right from default (-120 + 48 = -72)
         "navakeshi_star_ravager" -> (-102).dp // Ship11: Navakeshi Star Ravager - moved 15% to the right from default (-120 + 18 = -102)
         "h98_valkyrie" -> (-120).dp // Ship10: H-98 Valkyrie
+        "asn_h99_dragoon" -> (-100).dp // Ship18: 20dp to the right from Valkyrie (-120.dp + 20.dp = -100.dp)
         "force_of_nature" -> (-120).dp // Ship14: Force of nature
         "dying_star" -> (-120).dp // Ship15: Dying Star
         "asn_ag94_centurion" -> (-112).dp // Ship16: ASN AG94 Centurion - 8dp to the right from default (-120 + 8 = -112)

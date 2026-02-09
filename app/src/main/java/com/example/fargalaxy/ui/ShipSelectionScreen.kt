@@ -79,6 +79,7 @@ private fun getRequiredSpaceLicenseLevel(shipId: String): Int {
         "isc_m450_phoenix" -> 9
         "a450_sparrow" -> 9
         "t47_dolphin" -> 9
+        "asn_h99_dragoon" -> 12
         "silver_lightning" -> 12
         "vulcani_legenda_f1" -> 12
         "force_of_nature" -> 15
@@ -521,6 +522,7 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "dying_star" -> R.drawable.ship15selectionscreen
         "asn_ag94_centurion" -> R.drawable.ship16selectionscreen
         "isc_m450_phoenix" -> R.drawable.ship17selectionscreen
+        "asn_h99_dragoon" -> R.drawable.ship18selectionscreen
         "a450_sparrow" -> R.drawable.ship20selectionscreen
         "t47_dolphin" -> R.drawable.ship21selectionscreen
         "ship22" -> R.drawable.ship22selectionscreen
