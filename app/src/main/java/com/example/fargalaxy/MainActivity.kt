@@ -17,20 +17,35 @@ import com.example.fargalaxy.ui.MainScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Set window background to black first
+        window.setBackgroundDrawableResource(android.R.color.black)
+        
         enableEdgeToEdge()
         
-        // Set navigation bar to solid black
-        // Note: Using window.navigationBarColor directly (deprecated but functional)
-        // In edge-to-edge mode, the color is controlled via WindowInsetsControllerCompat
+        // Set navigation bar to solid opaque black
+        // This must be done after enableEdgeToEdge() to ensure it takes effect
         @Suppress("DEPRECATION")
         window.navigationBarColor = Color.BLACK
         
-        // Enable blur effect for navigation bar (Android 12+)
-        // enableEdgeToEdge() already handles edge-to-edge mode
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-            windowInsetsController?.isAppearanceLightNavigationBars = false
-            // Note: enableEdgeToEdge() already sets window.setDecorFitsSystemWindows(false)
+        // Ensure navigation bar is solid black in edge-to-edge mode
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController?.isAppearanceLightNavigationBars = false
+        
+        // For Android 8.0+ (API 26+), ensure navigation bar color is set and opaque
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            @Suppress("DEPRECATION")
+            window.navigationBarColor = Color.BLACK
+            // Ensure the navigation bar is opaque (not translucent)
+            window.statusBarColor = Color.TRANSPARENT // Keep status bar transparent
+        }
+        
+        // For Android 5.0+ (API 21+), ensure navigation bar is opaque
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            @Suppress("DEPRECATION")
+            window.navigationBarColor = Color.BLACK
         }
         
         // Initialize repositories with persistence

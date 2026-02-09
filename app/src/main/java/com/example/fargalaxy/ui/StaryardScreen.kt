@@ -80,11 +80,25 @@ fun StaryardScreen(
     // Get all ships and filter to only show unlocked ships that are NOT owned (excluding starting ship b14_phantom)
     // Ships that are already owned should not appear in the staryard
     val allShips = ShipRepository.getAllShips()
-    val availableShips = allShips.filter { 
+    val filteredShips = allShips.filter {
         it.id != "b14_phantom" && // Exclude starting ship
         com.example.fargalaxy.data.GameStateRepository.isShipUnlocked(it.id) &&
         !com.example.fargalaxy.data.GameStateRepository.isShipOwned(it.id)
     }
+
+    // Group ships by rarity and, within each rarity, sort by ascending repository number
+    val rarityOrder = listOf(
+        ShipRarity.COMMON,
+        ShipRarity.UNCOMMON,
+        ShipRarity.RARE,
+        ShipRarity.EPIC,
+        ShipRarity.LEGENDARY,
+        ShipRarity.MYTHICAL
+    )
+    val availableShips = filteredShips.sortedWith(
+        compareBy<com.example.fargalaxy.model.Ship> { rarityOrder.indexOf(it.rarity) }
+            .thenBy { ShipRepository.getRepositoryNumber(it.id) }
+    )
     
     // Read credits from global repository
     val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
@@ -577,6 +591,8 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "silver_lightning" -> R.drawable.ship12selectionscreen
         "vulcani_legenda_f1" -> R.drawable.ship13selectionscreen
         "force_of_nature" -> R.drawable.ship14selectionscreen
+        "a450_sparrow" -> R.drawable.ship20selectionscreen
+        "t47_dolphin" -> R.drawable.ship21selectionscreen
         "legendary_ship" -> R.drawable.ship12selectionscreen
         else -> R.drawable.ship1selectionscreen // Fallback
     }

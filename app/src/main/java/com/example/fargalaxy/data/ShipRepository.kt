@@ -492,8 +492,92 @@ object ShipRepository {
             acceleration = 75f,
             warpConverters = 100f,
             uniqueTrait = null
+        ),
+        Ship(
+            id = "a450_sparrow",
+            name = "A450 Sparrow",
+            manufacturer = "Valketh Industries",
+            type = "Hypertravel starfighter",
+            rarity = ShipRarity.EPIC,
+            imageResId = R.drawable.ship20,
+            renderImageResId = R.drawable.ship20render,
+            dimensions = ShipDimensions(
+                lengthMeters = 35f,
+                lengthFeet = 104f, // As shown in ship details screen
+                widthMeters = 38f,
+                widthFeet = 124f // As shown in ship details screen
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 1
+            ),
+            lore = "Valketh Industries had already established itself as a reliable starship manufacturer, but sought to expand into a new market. Fast civilian ships designed for experienced pilots. This ambition led to Project Sparrow, an initiative centered on speed, precision handling and pilot feedback.\n\nThe A450 Sparrow is a lightweight hypertravel starfighter. Commonly favored by couriers, independent operators, and thrill seeking pilots, it excels at rapid point to point travel, offering an unmatched sense of control and responsiveness.",
+            speed = 100f,
+            acceleration = 50f,
+            warpConverters = 75f,
+            uniqueTrait = null
+        ),
+        Ship(
+            id = "t47_dolphin",
+            name = "T47 Dolphin",
+            manufacturer = "Karnyx Armory Division",
+            type = "Compact Cargo Hypertravel Starcraft",
+            rarity = ShipRarity.EPIC,
+            imageResId = R.drawable.ship21,
+            renderImageResId = R.drawable.ship21render,
+            dimensions = ShipDimensions(
+                lengthMeters = 54f,
+                lengthFeet = 177f, // 54m * 3.28084 = 177.17ft ≈ 177ft
+                widthMeters = 40f,
+                widthFeet = 131f // 40m * 3.28084 = 131.23ft ≈ 131ft
+            ),
+            crewCapacity = CrewCapacity(
+                pilots = 1,
+                crewMembers = 1
+            ),
+            lore = "The Dolphin builds upon the proven design principles that made its cousin, the Tortoise, a dependable cargo vessel, while deliberately addressing its primary limitation: speed. Through refined propulsion systems and improved mass distribution, Karnyx engineers created a more agile starcraft that preserves a generous cargo capacity while significantly reducing travel times across interplanetary routes.\n\nThis balance makes the Dolphin a preferred choice for transporting valuable or sensitive assets that would otherwise attract piracy. While not intended for direct combat, its increased maneuverability and reliable hypertravel performance allow operators to minimize exposure in contested space, earning the Dolphin a reputation as a fast, discreet, and efficient solution for modern cargo operations.",
+            speed = 100f,
+            acceleration = 50f,
+            warpConverters = 75f,
+            uniqueTrait = null
         )
     )
+    
+    /**
+     * Helper to get the repository number for a given ship ID.
+     *
+     * This corresponds to the internal "shipX" numbering used in assets
+     * (e.g. ship1, ship2, ship3, ..., ship23).
+     *
+     * It can be used for consistent ordering within rarity groups.
+     */
+    fun getRepositoryNumber(shipId: String): Int {
+        return when (shipId) {
+            "b14_phantom" -> 1
+            "type45c_shooting_star" -> 2
+            "navakeshi_star_pouncer" -> 3
+            "a300_albatross" -> 4
+            "b7f_starforce" -> 5
+            "navakeshi_star_crusher" -> 6
+            "b15_specter" -> 7
+            "n6_98_melina" -> 8
+            "model3_tortoise_ccp" -> 9
+            "h98_valkyrie" -> 10
+            "navakeshi_star_ravager" -> 11
+            "silver_lightning" -> 12
+            "vulcani_legenda_f1" -> 13
+            "force_of_nature" -> 14
+            "dying_star" -> 15
+            "asn_ag94_centurion" -> 16
+            "isc_m450_phoenix" -> 17
+            "p7h_skyblazer" -> 19
+            "a450_sparrow" -> 20
+            "t47_dolphin" -> 21
+            "ship22" -> 22
+            "ship23" -> 23
+            else -> Int.MAX_VALUE
+        }
+    }
     
     /**
      * Get all available ships.

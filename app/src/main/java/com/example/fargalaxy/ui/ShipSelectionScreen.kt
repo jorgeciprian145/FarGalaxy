@@ -77,6 +77,8 @@ private fun getRequiredSpaceLicenseLevel(shipId: String): Int {
         "h98_valkyrie" -> 9
         "navakeshi_star_ravager" -> 9
         "isc_m450_phoenix" -> 9
+        "a450_sparrow" -> 9
+        "t47_dolphin" -> 9
         "silver_lightning" -> 12
         "vulcani_legenda_f1" -> 12
         "force_of_nature" -> 15
@@ -118,9 +120,6 @@ fun ShipSelectionScreen(
     val allShips = ShipRepository.getAllShips()
     val currentShip = ShipRepository.getCurrentShip()
     
-    // Create a map of ship ID to its index in the repository to preserve original order
-    val shipOrderMap = allShips.mapIndexed { index, ship -> ship.id to index }.toMap()
-    
     // Filter to only unlocked ships (test mode shows all, real mode shows only unlocked)
     // Filter to show only owned ships (purchased and selectable)
     val unlockedShips = allShips.filter { 
@@ -129,7 +128,7 @@ fun ShipSelectionScreen(
     
     // Group ships by rarity, with current ship first
     // Rarity order: COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHICAL
-    // Within each rarity group, maintain repository order
+    // Within each rarity group, sort by ascending repository number
     val rarityOrder = listOf(
         ShipRarity.COMMON,
         ShipRarity.UNCOMMON,
@@ -141,10 +140,10 @@ fun ShipSelectionScreen(
     
     val availableShips = if (unlockedShips.isNotEmpty()) {
         val otherShips = unlockedShips.filter { it.id != currentShip.id }
-        // Group other ships by rarity, maintaining repository order within each group
+        // Group other ships by rarity, sorting by repository number within each group
         val groupedByRarity = rarityOrder.map { rarity ->
             otherShips.filter { it.rarity == rarity }
-                .sortedBy { shipOrderMap[it.id] ?: Int.MAX_VALUE } // Sort by repository order
+                .sortedBy { ShipRepository.getRepositoryNumber(it.id) } // Sort by repository number
         }.flatten()
         // Current ship first, then grouped by rarity
         listOf(currentShip) + groupedByRarity
@@ -522,6 +521,8 @@ private fun getSelectionScreenImageResId(shipId: String): Int {
         "dying_star" -> R.drawable.ship15selectionscreen
         "asn_ag94_centurion" -> R.drawable.ship16selectionscreen
         "isc_m450_phoenix" -> R.drawable.ship17selectionscreen
+        "a450_sparrow" -> R.drawable.ship20selectionscreen
+        "t47_dolphin" -> R.drawable.ship21selectionscreen
         "ship22" -> R.drawable.ship22selectionscreen
         "ship23" -> R.drawable.ship23selectionscreen
         "legendary_ship" -> R.drawable.ship12selectionscreen
