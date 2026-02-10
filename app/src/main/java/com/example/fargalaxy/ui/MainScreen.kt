@@ -156,6 +156,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track the selected faction for details
     var selectedFactionForDetails by remember { mutableStateOf<String?>(null) }
     
+    // Track if SectorDetailsScreen should be shown
+    var showSectorDetails by remember { mutableStateOf(false) }
+    
     // Track if we should reset scroll in ShipSelectionScreen (true when opening from CareerScreen)
     var shouldResetShipSelectionScroll by remember { mutableStateOf(false) }
     
@@ -514,6 +517,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
             showStore -> {
                 onBackFromStore()
             }
+            // If SectorDetailsScreen is shown, close it
+            showSectorDetails -> {
+                showSectorDetails = false
+            }
             // If FactionDetailsScreen is shown, close it
             showFactionDetails -> {
                 showFactionDetails = false
@@ -613,15 +620,18 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onBackClick = { navigateToPage(1) }, // Navigate to GalaxyScreen
                         onStaryardClick = onStaryardClick,
                         onEquipmentClick = onEquipmentClick,
-                        onStoreClick = onStoreClick
+                        onStoreClick = onStoreClick,
+                        onSectorDetailsClick = {
+                            showSectorDetails = true
+                        }
                     )
                 }
             }
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
-        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, or StoreDetailsScreen is shown (they have their own backgrounds)
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails) {
+        // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, StoreDetailsScreen, SectorDetailsScreen, or FactionDetailsScreen is shown (they have their own backgrounds)
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !showSectorDetails && !showFactionDetails) {
             Image(
                 painter = painterResource(id = R.drawable.noise_8bit),
                 contentDescription = null,
@@ -634,8 +644,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, StoreDetailsScreen, RewardsScreen, ShipUnlockedScreen, LocationDiscoveredScreen, or ShipAcquiredScreen is shown
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !isRewardsScreenShown && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, StoreDetailsScreen, SectorDetailsScreen, FactionDetailsScreen, RewardsScreen, ShipUnlockedScreen, LocationDiscoveredScreen, or ShipAcquiredScreen is shown
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !showSectorDetails && !showFactionDetails && !isRewardsScreenShown && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -695,6 +705,15 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         }
                 )
             }
+        }
+        
+        // SectorDetailsScreen overlay - shown on top of everything when showSectorDetails is true
+        if (showSectorDetails) {
+            SectorDetailsScreen(
+                onBackClick = {
+                    showSectorDetails = false
+                }
+            )
         }
         
         // FactionDetailsScreen overlay - shown on top of everything when showFactionDetails is true

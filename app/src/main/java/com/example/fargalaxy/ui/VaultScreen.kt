@@ -75,6 +75,7 @@ fun VaultScreen(
     onStaryardClick: () -> Unit = {},
     onEquipmentClick: () -> Unit = {},
     onStoreClick: () -> Unit = {},
+    onSectorDetailsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Read credits from global repository
@@ -412,7 +413,7 @@ fun VaultScreen(
                 
                 // "VIEW SECTOR DETAILS" button
                 ViewSectorDetailsButton(
-                    onClick = {}, // TODO: Add callback for viewing sector details
+                    onClick = onSectorDetailsClick,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                 )
