@@ -588,9 +588,12 @@ fun RepairNeededModal(
     onWaitClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // Track icon height for offset calculation
-    var iconHeight by remember { mutableStateOf(0.dp) }
+    // Track JSON height for offset calculation
+    var jsonHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
+    
+    // Load JSON composition
+    val jsonComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.modalcheck))
     
     Box(
         modifier = modifier
@@ -731,24 +734,25 @@ fun RepairNeededModal(
                 }
             }
             
-            // Repairtool icon: Positioned right above the container (bottom edge at container top), then offset down by 50% of its height
-            // Size: 88dp
-            // Use default height of 88dp if not yet measured
-            val effectiveIconHeight = if (iconHeight > 0.dp) iconHeight else 88.dp
+            // JSON Animation: Positioned right above the container (bottom edge at container top), then offset down by 50% of its height
+            // Width is 70% of screen width
+            val configuration = LocalConfiguration.current
+            val screenWidth = with(density) { configuration.screenWidthDp.dp }
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .size(88.dp) // 88dp size
+                    .width(screenWidth * 0.7f) // 70% of screen width
                     .onSizeChanged { size ->
-                        iconHeight = with(density) { size.height.toDp() }
+                        jsonHeight = with(density) { size.height.toDp() }
                     }
-                    .offset(y = -effectiveIconHeight + effectiveIconHeight / 2) // Move up by full height (so bottom aligns with container top), then offset down by 50%
+                    .offset(y = -jsonHeight + jsonHeight / 2) // Move up by full height (so bottom aligns with container top), then offset down by 50%
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.repairtool),
-                    contentDescription = "Repair tool",
+                LottieAnimation(
+                    composition = jsonComposition,
+                    iterations = 1, // Play only once
                     modifier = Modifier
-                        .fillMaxSize(),
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
                     contentScale = ContentScale.Fit
                 )
             }
@@ -1070,7 +1074,29 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
  */
 private fun getDurabilityValue(shipId: String): Int {
     return when (shipId) {
-        "b14_phantom" -> 4
+        "b14_phantom" -> 4 // Ship1
+        "type45c_shooting_star" -> 3 // Ship2
+        "navakeshi_star_pouncer" -> 3 // Ship3
+        "a300_albatross" -> 5 // Ship4
+        "b7f_starforce" -> 3 // Ship5
+        "navakeshi_star_crusher" -> 5 // Ship6
+        "b15_specter" -> 5 // Ship7
+        "n6_98_melina" -> 6 // Ship8
+        "model3_tortoise_ccp" -> 7 // Ship9
+        "h98_valkyrie" -> 5 // Ship10
+        "navakeshi_star_ravager" -> 6 // Ship11
+        "silver_lightning" -> 4 // Ship12
+        "vulcani_legenda_f1" -> 3 // Ship13
+        "force_of_nature" -> 4 // Ship14
+        "dying_star" -> 4 // Ship15
+        "asn_ag94_centurion" -> 3 // Ship16
+        "isc_m450_phoenix" -> 4 // Ship17
+        "asn_h99_dragoon" -> 6 // Ship18
+        "p7h_skyblazer" -> 6 // Ship19
+        "a450_sparrow" -> 3 // Ship20
+        "t47_dolphin" -> 7 // Ship21
+        "ship22" -> 4 // Ship22
+        "ship23" -> 4 // Ship23
         else -> 0
     }
 }
@@ -2870,7 +2896,10 @@ fun GalaxyScreen(
         if (showRepairNeededModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen) {
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
-            val repairCost = com.example.fargalaxy.data.GameStateRepository.getShipRepairCost(currentShip.id)
+            // Use proportional repair cost based on remaining maintenance time
+            val repairCost = remember(timerTrigger) {
+                com.example.fargalaxy.data.GameStateRepository.getShipRepairCostProportional(currentShip.id)
+            }
             val maintenanceMinutes = getMaintenanceTime(currentShip.id)
             
             RepairNeededModal(

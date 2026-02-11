@@ -1074,7 +1074,29 @@ fun ShipDetailsScreen(
                                 else -> 0
                             }
                             val durabilityValue = when (ship.id) {
-                                "b14_phantom" -> 4
+                                "b14_phantom" -> 4 // Ship1
+                                "type45c_shooting_star" -> 3 // Ship2
+                                "navakeshi_star_pouncer" -> 3 // Ship3
+                                "a300_albatross" -> 5 // Ship4
+                                "b7f_starforce" -> 3 // Ship5
+                                "navakeshi_star_crusher" -> 5 // Ship6
+                                "b15_specter" -> 5 // Ship7
+                                "n6_98_melina" -> 6 // Ship8
+                                "model3_tortoise_ccp" -> 7 // Ship9
+                                "h98_valkyrie" -> 5 // Ship10
+                                "navakeshi_star_ravager" -> 6 // Ship11
+                                "silver_lightning" -> 4 // Ship12
+                                "vulcani_legenda_f1" -> 3 // Ship13
+                                "force_of_nature" -> 4 // Ship14
+                                "dying_star" -> 4 // Ship15
+                                "asn_ag94_centurion" -> 3 // Ship16
+                                "isc_m450_phoenix" -> 4 // Ship17
+                                "asn_h99_dragoon" -> 6 // Ship18
+                                "p7h_skyblazer" -> 6 // Ship19
+                                "a450_sparrow" -> 3 // Ship20
+                                "t47_dolphin" -> 7 // Ship21
+                                "ship22" -> 4 // Ship22
+                                "ship23" -> 4 // Ship23
                                 else -> 0
                             }
                             

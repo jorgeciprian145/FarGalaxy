@@ -550,28 +550,78 @@ object GameStateRepository {
     /**
      * Get maintenance time requirement (in minutes) for a ship.
      * This is the time a ship needs to spend in maintenance after all travels are consumed.
+     * Based on ship rarity:
+     * - COMMON: 60 mins
+     * - UNCOMMON: 120 mins
+     * - RARE: 180 mins
+     * - EPIC: 240 mins
+     * - LEGENDARY: 300 mins
+     * - MYTHICAL: 360 mins
      * 
      * @param shipId The ship ID
      * @return Maintenance time in minutes
      */
     fun getShipMaintenanceTime(shipId: String): Int {
-        return when (shipId) {
-            "b14_phantom" -> 2 // Ship1: 2 minutes for testing
-            else -> 5 // Default: 5 minutes
+        val ship = ShipRepository.getShipById(shipId) ?: return 60 // Default to COMMON if ship not found
+        return when (ship.rarity) {
+            com.example.fargalaxy.model.ShipRarity.COMMON -> 60
+            com.example.fargalaxy.model.ShipRarity.UNCOMMON -> 120
+            com.example.fargalaxy.model.ShipRarity.RARE -> 180
+            com.example.fargalaxy.model.ShipRarity.EPIC -> 240
+            com.example.fargalaxy.model.ShipRarity.LEGENDARY -> 300
+            com.example.fargalaxy.model.ShipRarity.MYTHICAL -> 360
         }
     }
     
     /**
      * Get the repair cost in credits for a ship.
+     * Based on ship rarity:
+     * - COMMON: 1500 credits
+     * - UNCOMMON: 3000 credits
+     * - RARE: 4500 credits
+     * - EPIC: 6000 credits
+     * - LEGENDARY: 7500 credits
+     * - MYTHICAL: 9000 credits
      * 
      * @param shipId The ship ID
      * @return The repair cost in credits
      */
     fun getShipRepairCost(shipId: String): Int {
-        return when (shipId) {
-            "b14_phantom" -> 100 // Ship1: 100 credits for testing
-            else -> 200 // Default: 200 credits
+        val ship = ShipRepository.getShipById(shipId) ?: return 1500 // Default to COMMON if ship not found
+        return when (ship.rarity) {
+            com.example.fargalaxy.model.ShipRarity.COMMON -> 1500
+            com.example.fargalaxy.model.ShipRarity.UNCOMMON -> 3000
+            com.example.fargalaxy.model.ShipRarity.RARE -> 4500
+            com.example.fargalaxy.model.ShipRarity.EPIC -> 6000
+            com.example.fargalaxy.model.ShipRarity.LEGENDARY -> 7500
+            com.example.fargalaxy.model.ShipRarity.MYTHICAL -> 9000
         }
+    }
+    
+    /**
+     * Get the proportional repair cost in credits for a ship based on remaining maintenance time.
+     * The cost is proportional to the remaining maintenance time:
+     * - If 100% of time remains, cost = full repair cost
+     * - If 40% of time remains, cost = 40% of full repair cost
+     * 
+     * @param shipId The ship ID
+     * @return The proportional repair cost in credits (rounded to nearest integer)
+     */
+    fun getShipRepairCostProportional(shipId: String): Int {
+        val baseCost = getShipRepairCost(shipId)
+        val totalTimeMinutes = getShipMaintenanceTime(shipId)
+        val remainingTimeSeconds = getRemainingMaintenanceTime(shipId)
+        
+        // If maintenance is complete or not in maintenance, return 0
+        if (remainingTimeSeconds <= 0 || totalTimeMinutes <= 0) {
+            return 0
+        }
+        
+        val totalTimeSeconds = totalTimeMinutes * 60
+        val proportion = remainingTimeSeconds.toFloat() / totalTimeSeconds.toFloat()
+        
+        // Calculate proportional cost and round to nearest integer
+        return (baseCost * proportion).toInt()
     }
     
     /**
