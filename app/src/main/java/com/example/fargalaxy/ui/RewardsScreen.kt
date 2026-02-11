@@ -506,6 +506,7 @@ fun RewardsScreen(
         contentAlignment = Alignment.Center
     ) {
         // Blur and overlay: Same as modal (96% opacity)
+        // Clickable to block all interactions behind the screen
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -517,6 +518,7 @@ fun RewardsScreen(
                     ).asComposeRenderEffect()
                 }
                 .background(Color.Black.copy(alpha = 0.96f))
+                .clickable(enabled = false) { } // Block all clicks
         )
         
         // Scrollable content (with bottom padding for continue button and gradient)

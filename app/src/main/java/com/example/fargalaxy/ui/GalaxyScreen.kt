@@ -12,6 +12,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +58,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -479,7 +482,8 @@ fun TimeControlsBar(
  * LaunchButton composable - displays the main action button at the bottom of the screen.
  * Primary style (idle): White background with rounded corners (80.dp radius) and dark text.
  * Secondary style (traveling/preparing): Transparent background with 1px white border and white text.
- * Button text toggles between "LAUNCH" (when idle), "CANCEL" (when preparing), and "STOP TRAVEL" (when traveling).
+ * Disabled style (no travels available): 40% fill opacity, "NOT AVAILABLE" text, #D5D5D5 color, lock icon.
+ * Button text toggles between "LAUNCH" (when idle), "CANCEL" (when preparing), "STOP TRAVEL" (when traveling), and "NOT AVAILABLE" (when disabled).
  * Uses Exo 2 Regular font at 24.sp for the button label.
  */
 @Composable
@@ -487,28 +491,30 @@ fun LaunchButton(
     onClick: () -> Unit = {},
     isTraveling: Boolean = false,
     isPreparingLaunch: Boolean = false,
+    isDisabled: Boolean = false, // No travels available
     modifier: Modifier = Modifier
 ) {
     // Determine button text based on state
     val buttonText = when {
         isPreparingLaunch -> "CANCEL"
         isTraveling -> "STOP TRAVEL"
+        isDisabled -> "NOT AVAILABLE"
         else -> "LAUNCH"
     }
 
     // Determine button styling based on state
     // Preparing and traveling use secondary style (transparent with border)
     val useSecondaryStyle = isTraveling || isPreparingLaunch
-    val backgroundColor = if (useSecondaryStyle) {
-        Color.Transparent // Secondary style: no fill
-    } else {
-        Color(0xFFFFFFFF) // Primary style: white fill
+    val backgroundColor = when {
+        useSecondaryStyle -> Color.Transparent // Secondary style: no fill
+        isDisabled -> Color(0xFFFFFFFF).copy(alpha = 0.4f) // Disabled: 40% opacity white fill
+        else -> Color(0xFFFFFFFF) // Primary style: white fill
     }
 
-    val textColor = if (useSecondaryStyle) {
-        Color(0xFFFFFFFF) // Secondary style: white text
-    } else {
-        Color(0xFF010102) // Primary style: dark text
+    val textColor = when {
+        useSecondaryStyle -> Color(0xFFFFFFFF) // Secondary style: white text
+        isDisabled -> Color(0xFFD5D5D5) // Disabled: #D5D5D5 color
+        else -> Color(0xFF010102) // Primary style: dark text
     }
 
     Box(
@@ -530,20 +536,223 @@ fun LaunchButton(
                 }
             )
             .background(backgroundColor)
-            .clickable(onClick = onClick),
+            .then(
+                if (isDisabled) {
+                    Modifier // Disabled: not clickable
+                } else {
+                    Modifier.clickable(onClick = onClick)
+                }
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = buttonText,
-            fontFamily = Exo2,
-            fontSize = 24.sp,
-            lineHeight = 24.sp,
-            color = textColor,
-            textAlign = TextAlign.Center,
+        Row(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = (-2).dp)
+                .offset(y = (-2).dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Lock icon: Only shown when disabled, 16dp size, 4dp spacing to the left of text
+            if (isDisabled) {
+                Image(
+                    painter = painterResource(id = R.drawable.lock),
+                    contentDescription = "Locked",
+                    modifier = Modifier.size(16.dp),
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(textColor) // Use same color as text
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            
+            Text(
+                text = buttonText,
+                fontFamily = Exo2,
+                fontSize = 24.sp,
+                lineHeight = 24.sp,
+                color = textColor,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * RepairNeededModal composable - displays a modal when ship runs out of travels.
+ * Shows an overlay with blur, a container with gradient background, title, label, two buttons, and repairtool icon.
+ */
+@Composable
+fun RepairNeededModal(
+    repairCost: Int,
+    maintenanceMinutes: Int,
+    onRepairClick: () -> Unit = {},
+    onWaitClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    // Track icon height for offset calculation
+    var iconHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
+    
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                // Block all pointer input (scrolling, dragging, etc.) to prevent pager scrolling
+                detectDragGestures { change, dragAmount ->
+                    // Consume all drag gestures to prevent pager scrolling
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // Blur and overlay: Blurs the content behind and applies dark overlay with 96% opacity
+        // Clickable to block all interactions behind the modal
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    renderEffect = AndroidRenderEffect.createBlurEffect(
+                        16f,
+                        16f,
+                        Shader.TileMode.CLAMP
+                    ).asComposeRenderEffect()
+                }
+                .background(Color.Black.copy(alpha = 0.96f))
+                .clickable(enabled = false) { } // Block all clicks
         )
+        
+        // Modal Container with repairtool icon on top
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            // Modal Container
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF373A3E), // Top color
+                                Color(0xFF2B2E32)  // Bottom color
+                            )
+                        ),
+                        shape = RoundedCornerShape(32.dp) // 32dp corner radius
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF6B6C6F),
+                        shape = RoundedCornerShape(32.dp) // 32dp corner radius
+                    )
+                    .padding(
+                        top = 72.dp,
+                        bottom = 24.dp,
+                        start = 24.dp,
+                        end = 24.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Title: "Repairs needed" - bold, 28sp
+                Text(
+                    text = "Repairs needed",
+                    fontFamily = Exo2,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                
+                // Spacing: 4dp between title and label
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Label: Description message - regular, 16sp
+                Text(
+                    text = "Your ship used all the available travels and maintenance is needed. You can repair your ship for $repairCost credits or wait $maintenanceMinutes minutes before using it again.",
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                
+                // Spacing: 16dp between label and buttons
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Primary Button: "REPAIR (X CREDITS)" - primary style (white background, dark text), 16sp
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(80.dp))
+                        .background(Color(0xFFFFFFFF)) // White background (primary style)
+                        .clickable(onClick = onRepairClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "REPAIR ($repairCost CREDITS)",
+                        fontFamily = Exo2,
+                        fontSize = 16.sp,
+                        lineHeight = 16.sp,
+                        color = Color(0xFF010102), // Dark text (primary style)
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = (-2).dp)
+                    )
+                }
+                
+                // Spacing: 12dp between buttons
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Secondary Button: "WAIT FOR MAINTENANCE" - secondary style (transparent with white border, white text), 16sp
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(80.dp))
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFFFFFFF), // White border
+                            shape = RoundedCornerShape(80.dp)
+                        )
+                        .clickable(onClick = onWaitClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "WAIT FOR MAINTENANCE",
+                        fontFamily = Exo2,
+                        fontSize = 16.sp,
+                        lineHeight = 16.sp,
+                        color = Color(0xFFFFFFFF), // White text (secondary style)
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = (-2).dp)
+                    )
+                }
+            }
+            
+            // Repairtool icon: Positioned right above the container (bottom edge at container top), then offset down by 50% of its height
+            // Size: 88dp
+            // Use default height of 88dp if not yet measured
+            val effectiveIconHeight = if (iconHeight > 0.dp) iconHeight else 88.dp
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .size(88.dp) // 88dp size
+                    .onSizeChanged { size ->
+                        iconHeight = with(density) { size.height.toDp() }
+                    }
+                    .offset(y = -effectiveIconHeight + effectiveIconHeight / 2) // Move up by full height (so bottom aligns with container top), then offset down by 50%
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.repairtool),
+                    contentDescription = "Repair tool",
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
     }
 }
 
@@ -853,6 +1062,30 @@ private fun getImpulseHeight(shipId: String): androidx.compose.ui.unit.Dp {
 }
 
 /**
+ * Helper function to get the durability value for a ship.
+ * Returns the number of travel sessions available per day.
+ * 
+ * @param shipId The ship's ID
+ * @return The durability value (number of travels)
+ */
+private fun getDurabilityValue(shipId: String): Int {
+    return when (shipId) {
+        "b14_phantom" -> 4
+        else -> 0
+    }
+}
+
+/**
+ * Helper function to get maintenance time requirement for a ship.
+ * 
+ * @param shipId The ship's ID
+ * @return The maintenance time in minutes
+ */
+private fun getMaintenanceTime(shipId: String): Int {
+    return com.example.fargalaxy.data.GameStateRepository.getShipMaintenanceTime(shipId)
+}
+
+/**
  * Helper function to get the impulse horizontal offset based on ship ID.
  * Returns ship-specific horizontal offset, or default -120.dp if not specified.
  * Negative values move left, positive values move right.
@@ -1018,6 +1251,161 @@ fun SpeedEffectLayer(
             .fillMaxWidth(),
         contentScale = ContentScale.Fit
     )
+}
+
+/**
+ * MaintenanceArcIndicator composable - displays a single continuous arc representing maintenance time remaining.
+ * 
+ * The indicator:
+ * - Has a diameter of 300dp (radius 150dp)
+ * - Spans 60 degrees total
+ * - Is positioned aligned with the radar circle (640dp square, centered)
+ * - The middle of the arc is aligned with the vertical center (pointing left, opposite of durability arc)
+ * - Color: #F87F7F (red)
+ * - Arc shrinks from full (60°) to 0° as maintenance time decreases
+ * 
+ * @param remainingSeconds The remaining maintenance time in seconds
+ * @param totalMinutes The total maintenance duration in minutes
+ * @param modifier Modifier for positioning and sizing
+ */
+@Composable
+fun MaintenanceArcIndicator(
+    remainingSeconds: Int,
+    totalMinutes: Int,
+    modifier: Modifier = Modifier
+) {
+    if (remainingSeconds <= 0 || totalMinutes <= 0) {
+        return
+    }
+    
+    // Arc specifications
+    val arcDiameter = 300.dp
+    val arcRadius = 150.dp
+    val totalSpanDegrees = 60f // Total span: 60 degrees
+    val strokeWidth = 8.dp // Stroke width for arc
+    
+    // Calculate remaining arc angle based on remaining time
+    // remainingSeconds / (totalMinutes * 60) gives progress (0 to 1)
+    // Multiply by totalSpanDegrees to get remaining arc angle
+    val totalSeconds = totalMinutes * 60
+    val remainingArcAngle = if (totalSeconds > 0) {
+        totalSpanDegrees * (remainingSeconds.toFloat() / totalSeconds.toFloat())
+    } else {
+        0f
+    }
+    
+    // Start angle: Middle of arc should be at vertical center (180° = 9 o'clock, pointing left)
+    // Arc spans 60 degrees total, so it should go from 150° to 210°
+    // Start at 150° (top-left) and sweep remainingArcAngle clockwise
+    // As time passes, remainingArcAngle decreases from 60° to 0°
+    val startAngle = 150f // Start 30 degrees clockwise from left (top-left)
+    
+    Canvas(
+        modifier = modifier
+            .size(arcDiameter)
+    ) {
+        val center = Offset(size.width / 2, size.height / 2)
+        val radius = arcRadius.toPx()
+        val strokeWidthPx = strokeWidth.toPx()
+        
+        // Draw the maintenance arc (shrinks as time passes)
+        drawArc(
+            color = Color(0xFFF87F7F), // Red color #F87F7F
+            startAngle = startAngle,
+            sweepAngle = remainingArcAngle, // Positive for clockwise, shrinks as time passes
+            useCenter = false,
+            topLeft = Offset(
+                center.x - radius,
+                center.y - radius
+            ),
+            size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2),
+            style = Stroke(
+                width = strokeWidthPx,
+                cap = StrokeCap.Butt // No rounded corners
+            )
+        )
+    }
+}
+
+/**
+ * DurabilityArcIndicator composable - displays curved segments along an arc representing remaining travels.
+ * 
+ * The indicator:
+ * - Has a diameter of 300dp (radius 150dp)
+ * - Spans 60 degrees total (for all segments + gaps)
+ * - Is positioned aligned with the radar circle (640dp square, centered)
+ * - The middle of the arc is aligned with the vertical center (pointing right)
+ * - Only visible when idle
+ * - Consumed segments are shown at 20% opacity (starting from the top segment)
+ * 
+ * @param durability The total durability value (number of travels available)
+ * @param consumedTravels The number of consumed travels (segments to show at 20% opacity)
+ * @param modifier Modifier for positioning and sizing
+ */
+@Composable
+fun DurabilityArcIndicator(
+    durability: Int,
+    consumedTravels: Int = 0,
+    modifier: Modifier = Modifier
+) {
+    if (durability <= 0) {
+        return
+    }
+    
+    // Arc specifications
+    val arcDiameter = 300.dp
+    val arcRadius = 150.dp
+    val totalSpanDegrees = 60f // Total span for all segments + gaps
+    val gapAngleDegrees = 1.5f // Gap angle in degrees (approximately 4dp on the arc)
+    val strokeWidth = 8.dp // Stroke width for segments
+    
+    // Calculate segment angle: (total span - gaps) / number of segments
+    val numGaps = durability - 1
+    val totalGapAngle = numGaps * gapAngleDegrees
+    val segmentAngle = (totalSpanDegrees - totalGapAngle) / durability
+    
+    // Start angle: Middle of arc should be at vertical center (0° = 3 o'clock, pointing right)
+    // Arc spans 60 degrees total, so it should go from -30° to +30°
+    // Start at -30° and sweep +60° (clockwise) to reach +30°
+    // The first segment (top) is at -30°, and consumption moves clockwise (downward)
+    val startAngle = -30f // Start 30 degrees counter-clockwise from right (top-right)
+    
+    Canvas(
+        modifier = modifier
+            .size(arcDiameter)
+    ) {
+        val center = Offset(size.width / 2, size.height / 2)
+        val radius = arcRadius.toPx()
+        val strokeWidthPx = strokeWidth.toPx()
+        
+        // Draw each segment
+        var currentAngle = startAngle
+        repeat(durability) { index ->
+            // Determine if this segment is consumed (starting from top, moving clockwise)
+            val isConsumed = index < consumedTravels
+            val opacity = if (isConsumed) 0.2f else 1.0f // 20% opacity for consumed, 100% for remaining
+            
+            // Draw the segment arc
+            drawArc(
+                color = Color(0xFFFFFFFF).copy(alpha = opacity), // White with opacity
+                startAngle = currentAngle,
+                sweepAngle = segmentAngle, // Positive for clockwise
+                useCenter = false,
+                topLeft = Offset(
+                    center.x - radius,
+                    center.y - radius
+                ),
+                size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2),
+                style = Stroke(
+                    width = strokeWidthPx,
+                    cap = StrokeCap.Butt // No rounded corners
+                )
+            )
+            
+            // Move to next segment position (segment + gap)
+            currentAngle += (segmentAngle + gapAngleDegrees)
+        }
+    }
 }
 
 /**
@@ -1238,6 +1626,12 @@ fun GalaxyScreen(
     var showTravelCanceledModal by remember { mutableStateOf(false) }
     var cancellationReason by remember { mutableStateOf("timeout") } // "timeout" or "penalties"
     
+    // showRepairNeededModal: Controls visibility of the repair needed modal when ship runs out of travels
+    var showRepairNeededModal by remember { mutableStateOf(false) }
+    
+    // pendingRepairModal: Flag to track if repair modal should be shown after all other screens are done
+    var pendingRepairModal by remember { mutableStateOf(false) }
+    
     // showRewardsScreen: Controls visibility of the rewards screen
     var showRewardsScreen by remember { mutableStateOf(false) }
     
@@ -1271,6 +1665,27 @@ fun GalaxyScreen(
         }
     }
     
+    // Maintenance timer: Updates every second to check maintenance status
+    // This ensures maintenance time continues even when app is in background
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000) // Update every second
+            timerTrigger = System.currentTimeMillis() // Trigger recomposition for maintenance too
+            
+            // Check if maintenance is complete for current ship
+            // Get remaining time directly - if it's <= 0, maintenance should be completed
+            val remainingSeconds = com.example.fargalaxy.data.GameStateRepository.getRemainingMaintenanceTime(currentShip.id)
+            val hasMaintenanceData = com.example.fargalaxy.data.GameStateRepository.hasMaintenanceData(currentShip.id)
+            
+            // If remaining time is 0 or negative, and maintenance data exists, complete maintenance
+            // This handles the case where time expired but completeMaintenance wasn't called yet
+            if (remainingSeconds <= 0 && hasMaintenanceData) {
+                // Maintenance complete - reset consumed travels and clear maintenance data
+                com.example.fargalaxy.data.GameStateRepository.completeMaintenance(currentShip.id)
+            }
+        }
+    }
+    
     // Calculate remaining time based on elapsed time (works even when app is in background)
     // This derived state recalculates whenever travelStartTime or timerTrigger changes
     val calculatedRemainingSeconds = derivedStateOf {
@@ -1300,6 +1715,21 @@ fun GalaxyScreen(
                 } else {
                     selectedMinutes
                 }
+                // Consume one travel after trip completes
+                com.example.fargalaxy.data.GameStateRepository.consumeTravel(currentShip.id)
+                
+                // Check if all travels are consumed - if so, start maintenance
+                val durability = getDurabilityValue(currentShip.id)
+                val consumedTravels = com.example.fargalaxy.data.GameStateRepository.getConsumedTravels(currentShip.id)
+                if (consumedTravels >= durability) {
+                    val wasAlreadyInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
+                    com.example.fargalaxy.data.GameStateRepository.startMaintenance(currentShip.id)
+                    // Mark repair modal as pending - will show after all other screens (success modal, rewards, unlocks)
+                    if (!wasAlreadyInMaintenance) {
+                        pendingRepairModal = true
+                    }
+                }
+                
                 showTravelSuccessModal = true
                 com.example.fargalaxy.data.PenaltyTracker.stopTracking()
                 penaltyCount = 0
@@ -1423,6 +1853,21 @@ fun GalaxyScreen(
             isTraveling = false
             isInitialRingAppearance = false // Reset for next launch
             wasTravelCancelled = true // Mark as cancelled
+            // Consume one travel after trip is manually cancelled
+            com.example.fargalaxy.data.GameStateRepository.consumeTravel(currentShip.id)
+            
+            // Check if all travels are consumed - if so, start maintenance
+            val durability = getDurabilityValue(currentShip.id)
+            val consumedTravels = com.example.fargalaxy.data.GameStateRepository.getConsumedTravels(currentShip.id)
+            if (consumedTravels >= durability) {
+                val wasAlreadyInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
+                com.example.fargalaxy.data.GameStateRepository.startMaintenance(currentShip.id)
+                // Mark repair modal as pending - will show after all other screens (success modal, rewards, unlocks)
+                if (!wasAlreadyInMaintenance) {
+                    pendingRepairModal = true
+                }
+            }
+            
             // Stop penalty tracking when travel is cancelled
             com.example.fargalaxy.data.PenaltyTracker.stopTracking()
             penaltyCount = 0 // Reset penalty count
@@ -1478,6 +1923,9 @@ fun GalaxyScreen(
                     }
                     travelStartTime = 0L
                 }
+                
+                // Consume one travel after trip is cancelled
+                com.example.fargalaxy.data.GameStateRepository.consumeTravel(currentShip.id)
                 
                 // Show cancellation modal
                 showTravelCanceledModal = true
@@ -1703,6 +2151,55 @@ fun GalaxyScreen(
                 .size(640.dp)
                 .clipToBounds()
         )
+        
+        // Durability arc indicator: Curved segments along an arc representing remaining travels.
+        // Positioned aligned with the radar circle (640dp square, centered).
+        // The middle of the arc is aligned with the vertical center (pointing right).
+        // Only visible when idle (not traveling, not preparing) and not in maintenance.
+        if (!isTraveling && !isPreparingLaunch) {
+            val durability = getDurabilityValue(currentShip.id)
+            // Use timerTrigger to ensure reactive updates when maintenance completes
+            val consumedTravels = remember(timerTrigger, currentShip.id) {
+                com.example.fargalaxy.data.GameStateRepository.getConsumedTravels(currentShip.id)
+            }
+            val isInMaintenance = remember(timerTrigger, currentShip.id) {
+                com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
+            }
+            
+            // Only show durability arc if not in maintenance
+            // When maintenance completes, consumedTravels resets to 0, and all segments show full opacity
+            if (!isInMaintenance) {
+                DurabilityArcIndicator(
+                    durability = durability,
+                    consumedTravels = consumedTravels, // Reactive: updates when maintenance completes
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(300.dp) // Arc diameter
+                )
+            }
+            
+            // Maintenance arc indicator: Single continuous arc representing maintenance time remaining.
+            // Positioned aligned with the radar circle (640dp square, centered).
+            // The middle of the arc is aligned with the vertical center (pointing left, opposite of durability arc).
+            // Only visible when idle and in maintenance.
+            // Use timerTrigger to ensure updates even when app is in background
+            val remainingMaintenanceSeconds = remember(timerTrigger) {
+                com.example.fargalaxy.data.GameStateRepository.getRemainingMaintenanceTime(currentShip.id)
+            }
+            
+            if (isInMaintenance && remainingMaintenanceSeconds > 0) {
+                val maintenanceMinutes = getMaintenanceTime(currentShip.id)
+                
+                // Show maintenance arc
+                MaintenanceArcIndicator(
+                    remainingSeconds = remainingMaintenanceSeconds,
+                    totalMinutes = maintenanceMinutes,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(300.dp) // Arc diameter
+                )
+            }
+        }
 
         // Speed effect layer: Lottie animation that appears 2 seconds after travel starts.
         // Positioned between the radar layer and countdown ring.
@@ -2094,23 +2591,41 @@ fun GalaxyScreen(
             // Time controls bar: Displays minus button, time label, and plus button.
             // When traveling/preparing: Only shows time label (buttons are hidden).
             // When not traveling/preparing: Shows all controls with buttons enabled.
-            TimeControlsBar(
-                selectedMinutes = selectedMinutes,
-                remainingSeconds = remainingSeconds,
-                isTraveling = isTraveling,
-                isPreparingLaunch = isPreparingLaunch,
-                launchCountdown = launchCountdown,
-                isTestMode = isTestMode, // TODO: REMOVE TESTING CODE
-                onMinusClick = ::onDecrement,
-                onPlusClick = ::onIncrement
-            )
+            // Hidden when ship is in maintenance and launch button is locked.
+            // Use timerTrigger to ensure reactive updates when maintenance completes
+            val isInMaintenanceForControls = remember(timerTrigger, currentShip.id) {
+                com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
+            }
+            
+            val durability = getDurabilityValue(currentShip.id)
+            val consumedTravels = remember(timerTrigger, currentShip.id) {
+                com.example.fargalaxy.data.GameStateRepository.getConsumedTravels(currentShip.id)
+            }
+            val availableTravels = durability - consumedTravels
+            // Disable launch button when no travels available OR when ship is in maintenance
+            val isLaunchDisabled = !isTraveling && !isPreparingLaunch && (availableTravels <= 0 || isInMaintenanceForControls)
+            
+            if (!(isInMaintenanceForControls && isLaunchDisabled)) {
+                TimeControlsBar(
+                    selectedMinutes = selectedMinutes,
+                    remainingSeconds = remainingSeconds,
+                    isTraveling = isTraveling,
+                    isPreparingLaunch = isPreparingLaunch,
+                    launchCountdown = launchCountdown,
+                    isTestMode = isTestMode, // TODO: REMOVE TESTING CODE
+                    onMinusClick = ::onDecrement,
+                    onPlusClick = ::onIncrement
+                )
+            }
             
             // Launch button: Toggles between "LAUNCH", "CANCEL" (when preparing), and "STOP TRAVEL" (when traveling).
+            // Disabled when no travels are available (shows "NOT AVAILABLE" with lock icon).
             // Calls onLaunchToggle handler to start preparation, cancel, or stop the countdown.
             LaunchButton(
                 onClick = ::onLaunchToggle,
                 isTraveling = isTraveling,
-                isPreparingLaunch = isPreparingLaunch
+                isPreparingLaunch = isPreparingLaunch,
+                isDisabled = isLaunchDisabled
             )
         }
 
@@ -2179,8 +2694,82 @@ fun GalaxyScreen(
                 }
             )
         }
+
+        // ADD / REPAIR buttons: Positioned on top of everything, centered on screen with offset
+        // Only visible when idle (not traveling, not preparing) and no screens/modals are showing
+        // TODO: Adjust offset values below to reposition the buttons manually
+        // Current offset: 96dp right/left, 96dp down from center
+        if (!isTraveling && !isPreparingLaunch && !showTravelSuccessModal && !showTravelCanceledModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showRepairNeededModal) {
+            val isInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
+
+            // ADD button on the right side (always visible when idle)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center) // Center on screen
+                    .offset(
+                        x = 96.dp, // Horizontal offset to the right
+                        y = 96.dp  // Vertical offset downwards
+                    )
+            ) {
+                AddButton(
+                    onClick = { /* TODO: Add callback for ADD button */ }
+                )
+            }
+
+            // REPAIR button on the left side (only visible when ship is in maintenance)
+            if (isInMaintenance) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center) // Center on screen
+                        .offset(
+                            x = (-96).dp, // Horizontal offset to the left
+                            y = 96.dp     // Vertical offset downwards
+                        )
+                ) {
+                    RepairButton(
+                        onClick = { /* TODO: Add callback for REPAIR button (pay credits to repair) */ }
+                    )
+                }
+            }
+        }
+        
+        // Maintenance time counter: Positioned 300dp below center, centered horizontally
+        // Shows remaining maintenance time in minutes
+        // Rendered on top of everything to ensure visibility
+        // Hidden when screens/modals are showing
+        if (!isTraveling && !isPreparingLaunch && !showTravelSuccessModal && !showTravelCanceledModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showRepairNeededModal) {
+            val isInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
+            if (isInMaintenance) {
+                val remainingMaintenanceSeconds = remember(timerTrigger) {
+                    com.example.fargalaxy.data.GameStateRepository.getRemainingMaintenanceTime(currentShip.id)
+                }
+                if (remainingMaintenanceSeconds > 0) {
+                    val remainingMinutes = (remainingMaintenanceSeconds + 59) / 60 // Round up to nearest minute
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = 160.dp) // 160dp below center (moved up by additional 100dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "$remainingMinutes MINS REMAINING",
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W400, // Regular
+                            color = Color(0xFFF87F7F), // Red color #F87F7F
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Note: Noise overlay is handled by MainScreen (static layer)
         
         // Rewards Screen: Shown after modal continue is clicked
+        // Rendered after buttons/counter to appear on top of them
         if (showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen) {
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
@@ -2197,12 +2786,19 @@ fun GalaxyScreen(
                     } else if (newlyDiscoveredLocations.isNotEmpty()) {
                         showLocationDiscoveredScreen = true
                         currentLocationDiscoveredIndex = 0
+                    } else {
+                        // No unlock screens, check if repair modal is pending
+                        if (pendingRepairModal) {
+                            showRepairNeededModal = true
+                            pendingRepairModal = false
+                        }
                     }
                 }
             )
         }
         
         // Ship Unlocked Screen: Shown after rewards screen if ships were unlocked
+        // Rendered after buttons/counter to appear on top of them
         // Show each ship sequentially - keep showing until all ships have been displayed
         if (showShipUnlockedScreen && newlyUnlockedShips.isNotEmpty() && currentShipUnlockedIndex < newlyUnlockedShips.size) {
             val context = LocalContext.current
@@ -2221,6 +2817,12 @@ fun GalaxyScreen(
                         if (newlyDiscoveredLocations.isNotEmpty()) {
                             showLocationDiscoveredScreen = true
                             currentLocationDiscoveredIndex = 0
+                        } else {
+                            // No more locations, check if repair modal is pending
+                            if (pendingRepairModal) {
+                                showRepairNeededModal = true
+                                pendingRepairModal = false
+                            }
                         }
                     } else {
                         // Show next ship
@@ -2231,6 +2833,7 @@ fun GalaxyScreen(
         }
         
         // Location Discovered Screen: Shown after ship unlock screens (or after rewards if no ships)
+        // Rendered after buttons/counter to appear on top of them
         // Show each location sequentially - keep showing until all locations have been displayed
         if (showLocationDiscoveredScreen && newlyDiscoveredLocations.isNotEmpty() && currentLocationDiscoveredIndex < newlyDiscoveredLocations.size) {
             val context = LocalContext.current
@@ -2248,6 +2851,11 @@ fun GalaxyScreen(
                         // Reset for next session
                         newlyUnlockedShips = emptyList()
                         newlyDiscoveredLocations = emptyList()
+                        // All unlock screens done, check if repair modal is pending
+                        if (pendingRepairModal) {
+                            showRepairNeededModal = true
+                            pendingRepairModal = false
+                        }
                     } else {
                         // Show next location
                         currentLocationDiscoveredIndex = nextIndex
@@ -2255,8 +2863,138 @@ fun GalaxyScreen(
                 }
             )
         }
+        
+        // Repair Needed Modal: Shown when ship runs out of travels and enters maintenance
+        // Rendered last to ensure it appears on top of everything
+        // Only show when no other screens are visible
+        if (showRepairNeededModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
+            val repairCost = com.example.fargalaxy.data.GameStateRepository.getShipRepairCost(currentShip.id)
+            val maintenanceMinutes = getMaintenanceTime(currentShip.id)
+            
+            RepairNeededModal(
+                repairCost = repairCost,
+                maintenanceMinutes = maintenanceMinutes,
+                onRepairClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    // TODO: Implement credit payment logic
+                    // For now, just complete maintenance (in final app, check if user has enough credits)
+                    com.example.fargalaxy.data.GameStateRepository.completeMaintenance(currentShip.id)
+                    showRepairNeededModal = false
+                },
+                onWaitClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    // Just close the modal - maintenance will continue automatically
+                    showRepairNeededModal = false
+                }
+            )
+        }
+    }
+}
 
-        // Note: Noise overlay is handled by MainScreen (static layer)
+/**
+ * RepairButton composable - displays the "REPAIR" button with secondary style (no icon).
+ * 
+ * Uses the same visual format as AddButton but with:
+ * - Transparent background with white border
+ * - White text
+ * - Rounded corners (80dp radius)
+ * - Fixed size: 88dp width, 32dp height
+ * - 16sp font size, regular weight
+ * - No icon, just "REPAIR" text
+ * 
+ * @param onClick Callback when button is clicked
+ * @param modifier Modifier for the button
+ */
+@Composable
+private fun RepairButton(
+    onClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .width(88.dp)
+            .height(32.dp)
+            .clip(RoundedCornerShape(80.dp))
+            .background(Color(0xFF242736)) // Fill color #242736
+            .border(
+                width = 1.dp,
+                color = Color(0xFFFFFFFF), // White border
+                shape = RoundedCornerShape(80.dp)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        // "REPAIR" text: 16sp, regular weight, no icon
+        Text(
+            text = "REPAIR",
+            fontFamily = Exo2,
+            fontSize = 16.sp,
+            color = Color(0xFFFFFFFF), // White text
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+/**
+ * AddButton composable - displays the "ADD" button with secondary style and miniplus icon.
+ *
+ * Uses the same visual format as ViewButton but with:
+ * - Transparent background with white border
+ * - White text
+ * - Rounded corners (80dp radius)
+ * - Fixed size: 88dp width, 32dp height
+ * - 16sp font size, regular weight
+ * - miniplus icon (12dp) to the left of "ADD" text with 8dp spacing
+ *
+ * @param onClick Callback when button is clicked
+ * @param modifier Modifier for the button
+ */
+@Composable
+private fun AddButton(
+    onClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .width(88.dp)
+            .height(32.dp)
+            .clip(RoundedCornerShape(80.dp))
+            .background(Color(0xFF242736)) // Fill color #242736
+            .border(
+                width = 1.dp,
+                color = Color(0xFFFFFFFF), // White border
+                shape = RoundedCornerShape(80.dp)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 8.dp) // Internal padding for icon and text
+        ) {
+            // miniplus icon: 12dp size, 8dp spacing to the right of text
+            Image(
+                painter = painterResource(id = R.drawable.miniplus),
+                contentDescription = "Add",
+                modifier = Modifier.size(12.dp),
+                contentScale = ContentScale.Fit
+            )
+            
+            // 8dp spacing between icon and text
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            // "ADD" text: 16sp, regular weight
+            Text(
+                text = "ADD",
+                fontFamily = Exo2,
+                fontSize = 16.sp,
+                color = Color(0xFFFFFFFF), // White text
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

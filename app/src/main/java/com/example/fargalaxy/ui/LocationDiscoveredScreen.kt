@@ -87,6 +87,7 @@ fun LocationDiscoveredScreen(
         contentAlignment = Alignment.Center
     ) {
         // Blur and overlay: Same as RewardsScreen (96% opacity black overlay)
+        // Clickable to block all interactions behind the screen
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -98,6 +99,7 @@ fun LocationDiscoveredScreen(
                     ).asComposeRenderEffect()
                 }
                 .background(Color.Black.copy(alpha = 0.96f))
+                .clickable(enabled = false) { } // Block all clicks
         )
         
         // Main layout: Button at bottom, content container centered vertically

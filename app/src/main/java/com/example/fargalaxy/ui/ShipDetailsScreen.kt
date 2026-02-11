@@ -1073,22 +1073,32 @@ fun ShipDetailsScreen(
                                 "ship23" -> 69
                                 else -> 0
                             }
+                            val durabilityValue = when (ship.id) {
+                                "b14_phantom" -> 4
+                                else -> 0
+                            }
                             
-                            // Row 1: Acceleration
+                            // Row 1: Durability
+                            DurabilityRow(
+                                title = "Durability",
+                                value = durabilityValue
+                            )
+                            
+                            // Row 2: Acceleration
                             AttributeRow(
                                 title = "Acceleration",
                                 value = accelerationValue,
                                 progress = accelerationValue / 100f // Convert 0-100 to 0-1 for progress bar
                             )
                             
-                            // Row 2: Speed
+                            // Row 3: Speed
                             AttributeRow(
                                 title = "Speed",
                                 value = speedValue,
                                 progress = speedValue / 100f
                             )
                             
-                            // Row 3: Stability
+                            // Row 4: Stability
                             AttributeRow(
                                 title = "Stability",
                                 value = stabilityValue,
@@ -1211,6 +1221,85 @@ fun ShipDetailsScreen(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * DurabilityRow composable - displays a durability attribute row with title, value, and segmented line.
+ * 
+ * Structure:
+ * - Top container: Label (left, 14sp bold) and value (right, 14sp regular)
+ * - Bottom container: Segmented line (stretches full width, number of segments equals durability value)
+ * - Spacing between containers: 4dp
+ * - Segments are spaced by 4dp
+ * 
+ * @param title The attribute title (e.g., "Durability")
+ * @param value The durability value (number of travel sessions)
+ */
+@Composable
+private fun DurabilityRow(
+    title: String,
+    value: Int
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        // Top container: Label and value
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Label (left): 14sp, bold
+            Text(
+                text = title,
+                fontFamily = Exo2,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFFFFFF)
+            )
+            
+            // Value (right): 14sp, regular - displays as "X travels"
+            Text(
+                text = "$value travels",
+                fontFamily = Exo2,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.W400,
+                color = Color(0xFFFFFFFF)
+            )
+        }
+        
+        // Bottom container: Segmented line
+        // Segments stretch full width, number of segments equals durability value
+        // Segments are spaced by 4dp
+        // First segment has rounded left corners, last segment has rounded right corners
+        if (value > 0) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                repeat(value) { index ->
+                    val isFirst = index == 0
+                    val isLast = index == value - 1
+                    val shape = when {
+                        isFirst && isLast -> RoundedCornerShape(8.dp) // Single segment: all corners rounded
+                        isFirst -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp) // First segment: left corners rounded
+                        isLast -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp) // Last segment: right corners rounded
+                        else -> RoundedCornerShape(0.dp) // Middle segments: no rounded corners
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(shape)
+                            .background(Color(0xFFFFFFFF)) // White segment
+                    )
                 }
             }
         }

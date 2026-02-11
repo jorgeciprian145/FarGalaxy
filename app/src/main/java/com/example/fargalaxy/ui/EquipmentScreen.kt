@@ -530,7 +530,7 @@ fun EquipmentScreen(
                                             "Deep space scanners",
                                             R.drawable.scannerrender,
                                             2500,
-                                            "Reveals the conditions of the space for the day, allowing to make an informed decision on which starship to equip. Can be used only one time, and can only be used once per day."
+                                            "Reveals the flight envirorment for the day, allowing to make an informed decision on which starship to equip. Can be used only one time, and can only be used once per day."
                                         )
                                     }
                             ) {

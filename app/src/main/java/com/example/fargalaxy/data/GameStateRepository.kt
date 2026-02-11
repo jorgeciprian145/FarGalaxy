@@ -21,6 +21,10 @@ object GameStateRepository {
     private const val KEY_UNLOCKED_SHIPS_REAL = "unlocked_ships_real" // JSON array of ship IDs (available to buy)
     private const val KEY_UNLOCKED_LOCATIONS_REAL = "unlocked_locations_real" // JSON array of location IDs
     private const val KEY_OWNED_SHIPS_REAL = "owned_ships_real" // JSON array of ship IDs (purchased and selectable)
+    private const val KEY_CONSUMED_TRAVELS = "consumed_travels" // JSON object: {"shipId": count, "date": "yyyy-MM-dd"}
+    private const val KEY_CONSUMED_TRAVELS_DATE = "consumed_travels_date" // Date when consumed travels were last updated
+    private const val KEY_MAINTENANCE_START_TIME = "maintenance_start_time" // JSON object: {"shipId": timestamp}
+    private const val KEY_MAINTENANCE_DURATION = "maintenance_duration" // JSON object: {"shipId": minutes}
     
     private var prefs: SharedPreferences? = null
     
@@ -42,6 +46,15 @@ object GameStateRepository {
                 // Release build: test mode is always false
                 _isTestMode = mutableStateOf(false)
             }
+            
+            // TODO: TESTING ONLY - Reset consumed travels and maintenance status on app start
+            // In final app, remove this to keep daily reset behavior and maintenance persistence
+            prefs!!.edit()
+                .remove(KEY_CONSUMED_TRAVELS)
+                .remove(KEY_CONSUMED_TRAVELS_DATE)
+                .remove(KEY_MAINTENANCE_START_TIME)
+                .remove(KEY_MAINTENANCE_DURATION)
+                .apply()
             
             // Sync unlocked ships and locations based on current focus time (in case user already has enough focus time)
             syncUnlockedShipsFromFocusTime()
@@ -422,5 +435,418 @@ object GameStateRepository {
     private fun stringSetToJson(set: Set<String>): String {
         if (set.isEmpty()) return "[]"
         return set.joinToString(",", "[", "]") { "\"$it\"" }
+    }
+    
+    /**
+     * Get the current date in "yyyy-MM-dd" format.
+     */
+    private fun getCurrentDateString(): String {
+        val calendar = java.util.Calendar.getInstance()
+        val year = calendar.get(java.util.Calendar.YEAR)
+        val month = calendar.get(java.util.Calendar.MONTH) + 1 // Month is 0-based
+        val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+        return String.format("%04d-%02d-%02d", year, month, day)
+    }
+    
+    /**
+     * Get consumed travels count for a ship.
+     * Returns 0 if it's a new day (travels reset daily).
+     * 
+     * @param shipId The ship ID
+     * @return The number of consumed travels for today
+     */
+    fun getConsumedTravels(shipId: String): Int {
+        val prefs = prefs ?: return 0
+        val currentDate = getCurrentDateString()
+        val storedDate = prefs.getString(KEY_CONSUMED_TRAVELS_DATE, null)
+        
+        // If it's a new day, reset consumed travels
+        if (storedDate != currentDate) {
+            return 0
+        }
+        
+        // Load consumed travels map
+        val consumedTravelsJson = prefs.getString(KEY_CONSUMED_TRAVELS, null) ?: return 0
+        if (consumedTravelsJson.isEmpty() || consumedTravelsJson == "{}") return 0
+        
+        // Parse JSON object: {"shipId": count}
+        try {
+            val json = consumedTravelsJson.removeSurrounding("{", "}")
+            val pairs = json.split(",")
+            for (pair in pairs) {
+                val keyValue = pair.split(":")
+                if (keyValue.size == 2) {
+                    val key = keyValue[0].trim().removeSurrounding("\"")
+                    val value = keyValue[1].trim().toIntOrNull() ?: 0
+                    if (key == shipId) {
+                        return value
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // If parsing fails, return 0
+        }
+        
+        return 0
+    }
+    
+    /**
+     * Consume one travel for a ship.
+     * This should be called after each trip (completed or cancelled).
+     * 
+     * @param shipId The ship ID
+     */
+    fun consumeTravel(shipId: String) {
+        val prefs = prefs ?: return
+        val currentDate = getCurrentDateString()
+        val storedDate = prefs.getString(KEY_CONSUMED_TRAVELS_DATE, null)
+        
+        // Load current consumed travels map
+        val consumedTravelsJson = prefs.getString(KEY_CONSUMED_TRAVELS, null) ?: "{}"
+        val consumedTravels = mutableMapOf<String, Int>()
+        
+        // If it's a new day, reset the map
+        if (storedDate != currentDate) {
+            consumedTravels.clear()
+        } else if (consumedTravelsJson.isNotEmpty() && consumedTravelsJson != "{}") {
+            // Parse existing consumed travels
+            try {
+                val json = consumedTravelsJson.removeSurrounding("{", "}")
+                val pairs = json.split(",")
+                for (pair in pairs) {
+                    val keyValue = pair.split(":")
+                    if (keyValue.size == 2) {
+                        val key = keyValue[0].trim().removeSurrounding("\"")
+                        val value = keyValue[1].trim().toIntOrNull() ?: 0
+                        consumedTravels[key] = value
+                    }
+                }
+            } catch (e: Exception) {
+                // If parsing fails, start fresh
+                consumedTravels.clear()
+            }
+        }
+        
+        // Increment consumed travels for this ship
+        val currentCount = consumedTravels[shipId] ?: 0
+        consumedTravels[shipId] = currentCount + 1
+        
+        // Save back to SharedPreferences
+        val jsonString = consumedTravels.entries.joinToString(",", "{", "}") { 
+            "\"${it.key}\":${it.value}" 
+        }
+        
+        prefs.edit()
+            .putString(KEY_CONSUMED_TRAVELS, jsonString)
+            .putString(KEY_CONSUMED_TRAVELS_DATE, currentDate)
+            .apply()
+        
+        // Check if all travels are consumed - if so, start maintenance
+        val durability = getShipMaintenanceTime(shipId) // We'll use this to check if maintenance is needed
+        // Actually, we need to check if consumedTravels >= durability
+        // But we don't have durability here, so we'll check in GalaxyScreen
+    }
+    
+    /**
+     * Get maintenance time requirement (in minutes) for a ship.
+     * This is the time a ship needs to spend in maintenance after all travels are consumed.
+     * 
+     * @param shipId The ship ID
+     * @return Maintenance time in minutes
+     */
+    fun getShipMaintenanceTime(shipId: String): Int {
+        return when (shipId) {
+            "b14_phantom" -> 2 // Ship1: 2 minutes for testing
+            else -> 5 // Default: 5 minutes
+        }
+    }
+    
+    /**
+     * Get the repair cost in credits for a ship.
+     * 
+     * @param shipId The ship ID
+     * @return The repair cost in credits
+     */
+    fun getShipRepairCost(shipId: String): Int {
+        return when (shipId) {
+            "b14_phantom" -> 100 // Ship1: 100 credits for testing
+            else -> 200 // Default: 200 credits
+        }
+    }
+    
+    /**
+     * Start maintenance for a ship.
+     * This should be called when all travels are consumed.
+     * 
+     * @param shipId The ship ID
+     */
+    fun startMaintenance(shipId: String) {
+        val prefs = prefs ?: return
+        val maintenanceDuration = getShipMaintenanceTime(shipId)
+        val startTime = System.currentTimeMillis()
+        
+        // Load current maintenance map
+        val maintenanceStartJson = prefs.getString(KEY_MAINTENANCE_START_TIME, null) ?: "{}"
+        val maintenanceDurationJson = prefs.getString(KEY_MAINTENANCE_DURATION, null) ?: "{}"
+        val startTimes = mutableMapOf<String, Long>()
+        val durations = mutableMapOf<String, Int>()
+        
+        // Parse existing maintenance data
+        if (maintenanceStartJson.isNotEmpty() && maintenanceStartJson != "{}") {
+            try {
+                val json = maintenanceStartJson.removeSurrounding("{", "}")
+                val pairs = json.split(",")
+                for (pair in pairs) {
+                    val keyValue = pair.split(":")
+                    if (keyValue.size == 2) {
+                        val key = keyValue[0].trim().removeSurrounding("\"")
+                        val value = keyValue[1].trim().toLongOrNull() ?: 0L
+                        startTimes[key] = value
+                    }
+                }
+            } catch (e: Exception) {
+                // If parsing fails, start fresh
+            }
+        }
+        
+        if (maintenanceDurationJson.isNotEmpty() && maintenanceDurationJson != "{}") {
+            try {
+                val json = maintenanceDurationJson.removeSurrounding("{", "}")
+                val pairs = json.split(",")
+                for (pair in pairs) {
+                    val keyValue = pair.split(":")
+                    if (keyValue.size == 2) {
+                        val key = keyValue[0].trim().removeSurrounding("\"")
+                        val value = keyValue[1].trim().toIntOrNull() ?: 0
+                        durations[key] = value
+                    }
+                }
+            } catch (e: Exception) {
+                // If parsing fails, start fresh
+            }
+        }
+        
+        // Set maintenance for this ship
+        startTimes[shipId] = startTime
+        durations[shipId] = maintenanceDuration
+        
+        // Save back to SharedPreferences
+        val startTimesJson = startTimes.entries.joinToString(",", "{", "}") { 
+            "\"${it.key}\":${it.value}" 
+        }
+        val durationsJson = durations.entries.joinToString(",", "{", "}") { 
+            "\"${it.key}\":${it.value}" 
+        }
+        
+        prefs.edit()
+            .putString(KEY_MAINTENANCE_START_TIME, startTimesJson)
+            .putString(KEY_MAINTENANCE_DURATION, durationsJson)
+            .apply()
+    }
+    
+    /**
+     * Get remaining maintenance time (in seconds) for a ship.
+     * Returns 0 if maintenance is complete or not in maintenance.
+     * 
+     * @param shipId The ship ID
+     * @return Remaining maintenance time in seconds
+     */
+    fun getRemainingMaintenanceTime(shipId: String): Int {
+        val prefs = prefs ?: return 0
+        
+        val maintenanceStartJson = prefs.getString(KEY_MAINTENANCE_START_TIME, null) ?: return 0
+        val maintenanceDurationJson = prefs.getString(KEY_MAINTENANCE_DURATION, null) ?: return 0
+        
+        if (maintenanceStartJson.isEmpty() || maintenanceStartJson == "{}") return 0
+        if (maintenanceDurationJson.isEmpty() || maintenanceDurationJson == "{}") return 0
+        
+        var startTime: Long = 0
+        var durationMinutes: Int = 0
+        
+        // Parse start time
+        try {
+            val json = maintenanceStartJson.removeSurrounding("{", "}")
+            val pairs = json.split(",")
+            for (pair in pairs) {
+                val keyValue = pair.split(":")
+                if (keyValue.size == 2) {
+                    val key = keyValue[0].trim().removeSurrounding("\"")
+                    val value = keyValue[1].trim().toLongOrNull() ?: 0L
+                    if (key == shipId) {
+                        startTime = value
+                        break
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            return 0
+        }
+        
+        // Parse duration
+        try {
+            val json = maintenanceDurationJson.removeSurrounding("{", "}")
+            val pairs = json.split(",")
+            for (pair in pairs) {
+                val keyValue = pair.split(":")
+                if (keyValue.size == 2) {
+                    val key = keyValue[0].trim().removeSurrounding("\"")
+                    val value = keyValue[1].trim().toIntOrNull() ?: 0
+                    if (key == shipId) {
+                        durationMinutes = value
+                        break
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            return 0
+        }
+        
+        if (startTime == 0L || durationMinutes == 0) return 0
+        
+        // Calculate remaining time
+        val elapsedMillis = System.currentTimeMillis() - startTime
+        val totalDurationMillis = durationMinutes * 60 * 1000L
+        val remainingMillis = totalDurationMillis - elapsedMillis
+        
+        return (remainingMillis / 1000).toInt().coerceAtLeast(0)
+    }
+    
+    /**
+     * Check if a ship is currently in maintenance.
+     * 
+     * @param shipId The ship ID
+     * @return True if ship is in maintenance, false otherwise
+     */
+    fun isShipInMaintenance(shipId: String): Boolean {
+        return getRemainingMaintenanceTime(shipId) > 0
+    }
+    
+    /**
+     * Check if maintenance data exists for a ship (regardless of whether time has expired).
+     * This is useful to determine if maintenance should be completed when time expires.
+     * 
+     * @param shipId The ship ID
+     * @return True if maintenance data exists, false otherwise
+     */
+    fun hasMaintenanceData(shipId: String): Boolean {
+        val prefs = prefs ?: return false
+        
+        val maintenanceStartJson = prefs.getString(KEY_MAINTENANCE_START_TIME, null) ?: return false
+        if (maintenanceStartJson.isEmpty() || maintenanceStartJson == "{}") return false
+        
+        // Check if this ship's start time exists in the JSON
+        try {
+            val json = maintenanceStartJson.removeSurrounding("{", "}")
+            val pairs = json.split(",")
+            for (pair in pairs) {
+                val keyValue = pair.split(":")
+                if (keyValue.size == 2) {
+                    val key = keyValue[0].trim().removeSurrounding("\"")
+                    if (key == shipId) {
+                        return true // Maintenance data exists for this ship
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            return false
+        }
+        
+        return false
+    }
+    
+    /**
+     * Complete maintenance for a ship (called when maintenance time expires or user repairs).
+     * This resets consumed travels and clears maintenance state.
+     * 
+     * @param shipId The ship ID
+     */
+    fun completeMaintenance(shipId: String) {
+        val prefs = prefs ?: return
+        
+        // Clear consumed travels for this ship
+        val consumedTravelsJson = prefs.getString(KEY_CONSUMED_TRAVELS, null) ?: "{}"
+        val consumedTravels = mutableMapOf<String, Int>()
+        
+        if (consumedTravelsJson.isNotEmpty() && consumedTravelsJson != "{}") {
+            try {
+                val json = consumedTravelsJson.removeSurrounding("{", "}")
+                val pairs = json.split(",")
+                for (pair in pairs) {
+                    val keyValue = pair.split(":")
+                    if (keyValue.size == 2) {
+                        val key = keyValue[0].trim().removeSurrounding("\"")
+                        val value = keyValue[1].trim().toIntOrNull() ?: 0
+                        if (key != shipId) { // Keep other ships' data
+                            consumedTravels[key] = value
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // If parsing fails, clear all
+            }
+        }
+        
+        // Save consumed travels (without this ship)
+        val jsonString = consumedTravels.entries.joinToString(",", "{", "}") { 
+            "\"${it.key}\":${it.value}" 
+        }
+        
+        // Clear maintenance data for this ship
+        val maintenanceStartJson = prefs.getString(KEY_MAINTENANCE_START_TIME, null) ?: "{}"
+        val maintenanceDurationJson = prefs.getString(KEY_MAINTENANCE_DURATION, null) ?: "{}"
+        val startTimes = mutableMapOf<String, Long>()
+        val durations = mutableMapOf<String, Int>()
+        
+        // Parse and remove this ship
+        if (maintenanceStartJson.isNotEmpty() && maintenanceStartJson != "{}") {
+            try {
+                val json = maintenanceStartJson.removeSurrounding("{", "}")
+                val pairs = json.split(",")
+                for (pair in pairs) {
+                    val keyValue = pair.split(":")
+                    if (keyValue.size == 2) {
+                        val key = keyValue[0].trim().removeSurrounding("\"")
+                        val value = keyValue[1].trim().toLongOrNull() ?: 0L
+                        if (key != shipId) {
+                            startTimes[key] = value
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // If parsing fails, clear all
+            }
+        }
+        
+        if (maintenanceDurationJson.isNotEmpty() && maintenanceDurationJson != "{}") {
+            try {
+                val json = maintenanceDurationJson.removeSurrounding("{", "}")
+                val pairs = json.split(",")
+                for (pair in pairs) {
+                    val keyValue = pair.split(":")
+                    if (keyValue.size == 2) {
+                        val key = keyValue[0].trim().removeSurrounding("\"")
+                        val value = keyValue[1].trim().toIntOrNull() ?: 0
+                        if (key != shipId) {
+                            durations[key] = value
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // If parsing fails, clear all
+            }
+        }
+        
+        val startTimesJson = startTimes.entries.joinToString(",", "{", "}") { 
+            "\"${it.key}\":${it.value}" 
+        }
+        val durationsJson = durations.entries.joinToString(",", "{", "}") { 
+            "\"${it.key}\":${it.value}" 
+        }
+        
+        prefs.edit()
+            .putString(KEY_CONSUMED_TRAVELS, jsonString)
+            .putString(KEY_MAINTENANCE_START_TIME, startTimesJson)
+            .putString(KEY_MAINTENANCE_DURATION, durationsJson)
+            .apply()
     }
 }
