@@ -985,7 +985,44 @@ fun ShipDetailsScreen(
                             }
                         }
                         
-                        // Spacing between badge and first attribute row: 16dp
+                        // Spacing between badge and ship profile row: 16dp
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Ship profile row: "Ship profile" (regular) + value (bold)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Ship profile: ",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.W400,
+                                color = Color(0xFFFFFFFF),
+                                modifier = Modifier.offset(y = (-1).dp)
+                            )
+                            
+                            val profileText = when (ship.shipProfile) {
+                                com.example.fargalaxy.model.ShipProfile.STABLE -> "Stable"
+                                com.example.fargalaxy.model.ShipProfile.ACCELERATOR -> "Accelerator"
+                                com.example.fargalaxy.model.ShipProfile.RUNNER -> "Runner"
+                                com.example.fargalaxy.model.ShipProfile.WELL_ROUNDED -> "Well rounded"
+                            }
+                            
+                            Text(
+                                text = profileText,
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFFFFF),
+                                modifier = Modifier.offset(y = (-1).dp)
+                            )
+                        }
+                        
+                        // Spacing between profile and first attribute row: 16dp
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         // Attribute rows: Acceleration, Speed, Stability
@@ -998,11 +1035,11 @@ fun ShipDetailsScreen(
                             val accelerationValue = when (ship.id) {
                                 "b14_phantom" -> 24
                                 "type45c_shooting_star" -> 35
-                                "navakeshi_star_pouncer" -> 32
+                                "navakeshi_star_pouncer" -> 29
                                 "a300_albatross" -> 28
                                 "p7h_skyblazer" -> 32
                                 "b7f_starforce" -> 38
-                                "navakeshi_star_crusher" -> 35
+                                "navakeshi_star_crusher" -> 24
                                 "asn_ag94_centurion" -> 35
                                 "b15_specter" -> 32
                                 "n6_98_melina" -> 25
@@ -1010,7 +1047,7 @@ fun ShipDetailsScreen(
                                 "h98_valkyrie" -> 38
                                 "navakeshi_star_ravager" -> 40
                                 "isc_m450_phoenix" -> 40
-                                "a450_sparrow" -> 38
+                                "a450_sparrow" -> 32
                                 "t47_dolphin" -> 22
                                 "asn_h99_dragoon" -> 54
                                 "silver_lightning" -> 62
@@ -1024,7 +1061,7 @@ fun ShipDetailsScreen(
                             val speedValue = when (ship.id) {
                                 "b14_phantom" -> 25
                                 "type45c_shooting_star" -> 32
-                                "navakeshi_star_pouncer" -> 30
+                                "navakeshi_star_pouncer" -> 32
                                 "a300_albatross" -> 28
                                 "p7h_skyblazer" -> 32
                                 "b7f_starforce" -> 38
@@ -1036,7 +1073,7 @@ fun ShipDetailsScreen(
                                 "h98_valkyrie" -> 34
                                 "navakeshi_star_ravager" -> 40
                                 "isc_m450_phoenix" -> 36
-                                "a450_sparrow" -> 36
+                                "a450_sparrow" -> 40
                                 "t47_dolphin" -> 21
                                 "asn_h99_dragoon" -> 58
                                 "silver_lightning" -> 60
@@ -1054,7 +1091,7 @@ fun ShipDetailsScreen(
                                 "a300_albatross" -> 38
                                 "p7h_skyblazer" -> 38
                                 "b7f_starforce" -> 19
-                                "navakeshi_star_crusher" -> 24
+                                "navakeshi_star_crusher" -> 35
                                 "asn_ag94_centurion" -> 30
                                 "b15_specter" -> 36
                                 "n6_98_melina" -> 42
@@ -1062,7 +1099,7 @@ fun ShipDetailsScreen(
                                 "h98_valkyrie" -> 49
                                 "navakeshi_star_ravager" -> 30
                                 "isc_m450_phoenix" -> 32
-                                "a450_sparrow" -> 36
+                                "a450_sparrow" -> 30
                                 "t47_dolphin" -> 68
                                 "asn_h99_dragoon" -> 65
                                 "silver_lightning" -> 57

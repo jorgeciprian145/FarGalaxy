@@ -4,6 +4,7 @@ import com.example.fargalaxy.model.CrewCapacity
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipDimensions
 import com.example.fargalaxy.model.ShipRarity
+import com.example.fargalaxy.model.ShipProfile
 import com.example.fargalaxy.R
 
 /**
@@ -35,7 +36,8 @@ object ShipRepository {
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
-            uniqueTrait = null // No unique trait for this ship
+            uniqueTrait = null, // No unique trait for this ship
+            shipProfile = ShipProfile.WELL_ROUNDED // Ship1
         ),
         Ship(
             id = "type45c_shooting_star",
@@ -59,7 +61,8 @@ object ShipRepository {
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.ACCELERATOR // Ship2
         ),
         Ship(
             id = "navakeshi_star_pouncer",
@@ -83,7 +86,8 @@ object ShipRepository {
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.RUNNER // Ship3
         ),
         Ship(
             id = "p7h_skyblazer",
@@ -107,7 +111,8 @@ object ShipRepository {
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.WELL_ROUNDED // Ship19 (kept here for continuity)
         ),
         Ship(
             id = "a300_albatross",
@@ -131,7 +136,8 @@ object ShipRepository {
             speed = 120f,
             acceleration = 60f,
             warpConverters = 85f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.WELL_ROUNDED // Ship4
         ),
         Ship(
             id = "b7f_starforce",
@@ -155,7 +161,8 @@ object ShipRepository {
             speed = 120f,
             acceleration = 60f,
             warpConverters = 85f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.RUNNER // Ship5
         ),
         Ship(
             id = "navakeshi_star_crusher",
@@ -179,7 +186,8 @@ object ShipRepository {
             speed = 120f,
             acceleration = 60f,
             warpConverters = 85f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.STABLE // Ship6
         ),
         Ship(
             id = "b15_specter",
@@ -203,7 +211,8 @@ object ShipRepository {
             speed = 135f,
             acceleration = 67f,
             warpConverters = 92f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.WELL_ROUNDED // Ship7
         ),
         Ship(
             id = "n6_98_melina",
@@ -227,7 +236,8 @@ object ShipRepository {
             speed = 140f,
             acceleration = 70f,
             warpConverters = 95f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.WELL_ROUNDED // Ship8
         ),
         Ship(
             id = "model3_tortoise_ccp",
@@ -251,7 +261,8 @@ object ShipRepository {
             speed = 130f,
             acceleration = 65f,
             warpConverters = 90f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.STABLE // Ship9
         ),
         Ship(
             id = "navakeshi_star_ravager",
@@ -275,7 +286,8 @@ object ShipRepository {
             speed = 150f,
             acceleration = 75f,
             warpConverters = 100f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.WELL_ROUNDED // Ship11
         ),
         Ship(
             id = "h98_valkyrie",
@@ -299,7 +311,8 @@ object ShipRepository {
             speed = 200f,
             acceleration = 100f,
             warpConverters = 150f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.STABLE // Ship10
         ),
         Ship(
             id = "silver_lightning",
@@ -323,7 +336,8 @@ object ShipRepository {
             speed = 200f,
             acceleration = 100f,
             warpConverters = 150f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.WELL_ROUNDED // Ship12
         ),
         Ship(
             id = "vulcani_legenda_f1",
@@ -347,7 +361,8 @@ object ShipRepository {
             speed = 200f,
             acceleration = 100f,
             warpConverters = 150f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.RUNNER // Ship13
         ),
         Ship(
             id = "force_of_nature",
@@ -371,7 +386,8 @@ object ShipRepository {
             speed = 250f,
             acceleration = 125f,
             warpConverters = 200f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.ACCELERATOR // Ship14
         ),
         Ship(
             id = "dying_star",
@@ -395,7 +411,8 @@ object ShipRepository {
             speed = 200f,
             acceleration = 170f,
             warpConverters = 150f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.WELL_ROUNDED // Ship15
         ),
         Ship(
             id = "ship22",
@@ -419,7 +436,8 @@ object ShipRepository {
             speed = 200f,
             acceleration = 170f,
             warpConverters = 150f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.STABLE // Ship22
         ),
         Ship(
             id = "ship23",
@@ -443,7 +461,8 @@ object ShipRepository {
             speed = 140f,
             acceleration = 70f,
             warpConverters = 95f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.STABLE // Ship23
         ),
         Ship(
             id = "asn_ag94_centurion",
@@ -467,7 +486,8 @@ object ShipRepository {
             speed = 120f,
             acceleration = 60f,
             warpConverters = 85f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.ACCELERATOR // Ship16
         ),
         Ship(
             id = "isc_m450_phoenix",
@@ -491,7 +511,8 @@ object ShipRepository {
             speed = 150f,
             acceleration = 75f,
             warpConverters = 100f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.ACCELERATOR // Ship17
         ),
         Ship(
             id = "asn_h99_dragoon",
@@ -515,7 +536,8 @@ object ShipRepository {
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.STABLE // Ship18
         ),
         Ship(
             id = "a450_sparrow",
@@ -539,7 +561,8 @@ object ShipRepository {
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.RUNNER // Ship20
         ),
         Ship(
             id = "t47_dolphin",
@@ -563,7 +586,8 @@ object ShipRepository {
             speed = 100f,
             acceleration = 50f,
             warpConverters = 75f,
-            uniqueTrait = null
+            uniqueTrait = null,
+            shipProfile = ShipProfile.STABLE // Ship21
         )
     )
     

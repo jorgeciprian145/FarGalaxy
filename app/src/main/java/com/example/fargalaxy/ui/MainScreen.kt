@@ -640,7 +640,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onRewardsScreenVisibilityChange = { isShown -> isRewardsScreenShown = isShown },
                         onShipUnlockedScreenVisibilityChange = { isShown -> isShipUnlockedScreenShown = isShown },
                         onLocationDiscoveredScreenVisibilityChange = { isShown -> isLocationDiscoveredScreenShown = isShown },
-                        onBoostSelectionBottomSheetVisibilityChange = { isShown -> isBoostSelectionBottomSheetShown = isShown }
+                        onBoostSelectionBottomSheetVisibilityChange = { isShown -> isBoostSelectionBottomSheetShown = isShown },
+                        onShowToast = { message -> toastMessage = message }
                     )
                 }
                 2 -> {

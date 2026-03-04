@@ -18,7 +18,8 @@ data class Ship(
     val speed: Float, // How fast the ship goes
     val acceleration: Float, // The acceleration of the ship
     val warpConverters: Float, // How much energy the ship creates
-    val uniqueTrait: UniqueTrait? = null // Optional bonus effect (only for some ships)
+    val uniqueTrait: UniqueTrait? = null, // Optional bonus effect (only for some ships)
+    val shipProfile: ShipProfile = ShipProfile.WELL_ROUNDED // Design philosophy/profile of the ship
 )
 
 /**
@@ -31,6 +32,18 @@ enum class ShipRarity {
     EPIC,
     LEGENDARY,
     MYTHICAL
+}
+
+/**
+ * High-level design profile of a ship.
+ *
+ * Used by the Flight Environment system to determine environment bonuses.
+ */
+enum class ShipProfile {
+    STABLE,
+    ACCELERATOR,
+    RUNNER,
+    WELL_ROUNDED
 }
 
 /**

@@ -60,6 +60,9 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.UserDataRepository
+import com.example.fargalaxy.data.FlightEnvironmentRepository
+import com.example.fargalaxy.data.ShipPerformanceRepository
+import com.example.fargalaxy.model.Ship
 import kotlinx.coroutines.delay
 import android.media.MediaPlayer
 import androidx.compose.ui.platform.LocalContext
@@ -141,7 +144,8 @@ fun RewardsScreen(
     travelMinutes: Int,
     penaltyCount: Int = 0,
     onContinueClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentShip: Ship
 ) {
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
@@ -161,18 +165,25 @@ fun RewardsScreen(
     val penaltyPercentage = penaltyCount * 5
     val isFlawlessTravel = penaltyCount == 0
     
-    // Space conditions percentage (placeholder - will be implemented later)
-    val spaceConditionsPercentage = 0 // TODO: Implement space conditions logic
+    // Flight Environment bonus: +10% if current ship's profile matches today's environment
+    val spaceConditionsPercentage =
+        FlightEnvironmentRepository.getEnvironmentBonusPercent(currentShip.shipProfile)
+    
+    // Ship performance bonus: 0–20% based on average of acceleration, speed, and stability
+    val shipPerformancePercentage =
+        ShipPerformanceRepository.getPerformanceBonusPercent(currentShip.id)
     
     // Calculate total percentage modifier
-    // If flawless travel: +5% bonus
-    // Otherwise: penalties reduce earnings (negative percentage)
-    // Then add space conditions
-    val totalPercentage = if (isFlawlessTravel) {
-        5 + spaceConditionsPercentage // +5% bonus for flawless travel
+    // 1) Flawless travel: +5% if obtained, or penalties: -5% per penalty
+    // 2) Flight Environment bonus: +10% if profile matches
+    // 3) Ship performance bonus: 0–20% based on stats
+    val penaltyOrFlawlessPercentage = if (isFlawlessTravel) {
+        5 // +5% bonus for flawless travel
     } else {
-        spaceConditionsPercentage - penaltyPercentage // Penalties reduce, space conditions modify
+        -penaltyPercentage // Penalties reduce earnings
     }
+    val totalPercentage =
+        penaltyOrFlawlessPercentage + spaceConditionsPercentage + shipPerformancePercentage
     
     // Calculate final earned rewards after penalties/bonuses and space conditions
     val earnedXP = if (totalPercentage != 0) {
@@ -738,9 +749,46 @@ fun RewardsScreen(
                             modifier = Modifier.alpha(spaceConditionsAlphaAnimated)
                         )
                     }
+                    
+                    // Ship performance row: same style, appears directly under Flight Environment
+                    Spacer(modifier = Modifier.height(0.dp))
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(x = spaceConditionsSectionOffsetAnimated)
+                            .alpha(spaceConditionsSectionAlphaAnimated),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Ship performance",
+                            fontFamily = Exo2,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.White
+                        )
+                        
+                        Spacer(modifier = Modifier.width(4.dp))
+                        
+                        val shipPerformanceAlphaAnimated by animateFloatAsState(
+                            targetValue = spaceConditionsAlpha,
+                            animationSpec = tween(durationMillis = 1000),
+                            label = "ship_performance_fade"
+                        )
+                        
+                        Text(
+                            text = "(${if (shipPerformancePercentage >= 0) "+" else ""}$shipPerformancePercentage%)",
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.White,
+                            modifier = Modifier.alpha(shipPerformanceAlphaAnimated)
+                        )
+                    }
                 }
                 
-                // 8dp spacing (between Space conditions and XP earned)
+                // 8dp spacing (between performance section and XP earned)
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 // XP earned row - appears with slide in from left + fade in (with counter animation, no small label)

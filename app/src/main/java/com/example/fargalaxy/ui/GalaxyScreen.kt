@@ -585,6 +585,8 @@ fun LaunchButton(
 @Composable
 fun BoostSelectionBottomSheet(
     onDismiss: () -> Unit = {},
+    currentShip: Ship,
+    onShowToast: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Animation state for slide-in from bottom
@@ -717,7 +719,10 @@ fun BoostSelectionBottomSheet(
             Spacer(modifier = Modifier.height(24.dp))
             
             // Deep Space Scanners container
-            DeepSpaceScannersContainer()
+            DeepSpaceScannersContainer(
+                currentShip = currentShip,
+                onShowToast = onShowToast
+            )
             
             // Spacing: 24dp below container
             Spacer(modifier = Modifier.height(24.dp))
@@ -847,12 +852,56 @@ private fun BoostItemRow(
 
 /**
  * DeepSpaceScannersContainer composable - displays the deep space scanners section.
- * Container with stroke, white fill at 16% opacity, image, badge, title, description, and button.
+ * When the scanner has not been used for the current environment, it shows the
+ * "Deep space scanners" description and a button to reveal conditions.
+ * After use (once per environment/day), it shows the conditions for the day.
  */
 @Composable
 private fun DeepSpaceScannersContainer(
+    currentShip: Ship,
+    onShowToast: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Track current scanner quantity from inventory
+    var scannerCount by remember {
+        mutableStateOf(com.example.fargalaxy.data.InventoryRepository.getItemQuantity("deep_space_scanner"))
+    }
+    // Track whether scanner has been used for the current environment
+    var hasRevealedToday by remember {
+        mutableStateOf(com.example.fargalaxy.data.FlightEnvironmentRepository.isScannerUsedForCurrentEnvironment())
+    }
+    // Track remaining time until reset (ms)
+    var remainingMillis by remember {
+        mutableStateOf(com.example.fargalaxy.data.FlightEnvironmentRepository.getRemainingMillisUntilReset())
+    }
+
+    // Update remaining time every second while this container is on screen
+    LaunchedEffect(Unit) {
+        while (true) {
+            remainingMillis = com.example.fargalaxy.data.FlightEnvironmentRepository.getRemainingMillisUntilReset()
+            kotlinx.coroutines.delay(1000L)
+        }
+    }
+
+    // Helper to format remaining time as "HH:MM hs"
+    fun formatRemaining(millis: Long): String {
+        val totalSeconds = (millis / 1000L).coerceAtLeast(0L)
+        val hours = totalSeconds / 3600L
+        val minutes = (totalSeconds % 3600L) / 60L
+        return String.format("%02d:%02d hs", hours, minutes)
+    }
+
+    val currentEnvironment = com.example.fargalaxy.data.FlightEnvironmentRepository.getCurrentEnvironment()
+    val environmentName = currentEnvironment.displayName
+    val recommendedProfile = currentEnvironment.recommendedProfile
+    val recommendedProfileText = when (recommendedProfile) {
+        com.example.fargalaxy.model.ShipProfile.STABLE -> "Stable"
+        com.example.fargalaxy.model.ShipProfile.ACCELERATOR -> "Accelerator"
+        com.example.fargalaxy.model.ShipProfile.RUNNER -> "Runner"
+        com.example.fargalaxy.model.ShipProfile.WELL_ROUNDED -> "Well rounded"
+    }
+    val remainingText = formatRemaining(remainingMillis)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -878,20 +927,22 @@ private fun DeepSpaceScannersContainer(
             verticalAlignment = Alignment.Top
         ) {
             // Image: 100x100, maintains aspect ratio, fills full height
-            Box(
-                modifier = Modifier
-                    .height(100.dp)
-                    .width(100.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.scannerselection),
-                    contentDescription = "Deep space scanners",
+            if (!hasRevealedToday) {
+                Box(
                     modifier = Modifier
-                        .height(100.dp) // Fill full height of container (100dp)
-                        .wrapContentWidth(), // Maintain aspect ratio, width adjusts automatically
-                    contentScale = ContentScale.Fit
-                )
+                        .height(100.dp)
+                        .width(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.scannerselection),
+                        contentDescription = "Deep space scanners",
+                        modifier = Modifier
+                            .height(100.dp) // Fill full height of container (100dp)
+                            .wrapContentWidth(), // Maintain aspect ratio, width adjusts automatically
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
             
             // Container to the right: Stretches full remaining width, no spacing from image
@@ -900,81 +951,215 @@ private fun DeepSpaceScannersContainer(
                     .weight(1f)
                     .wrapContentHeight() // Hug content vertically
             ) {
-                // Top container: Badge, title, and description
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Badge: "AVAILABLE" - similar to common ship badge
-                    Box(
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .wrapContentWidth()
-                            .background(
-                                color = Color(0x29FFFFFF) // White at 16% opacity
-                            )
-                            .padding(start = 4.dp, top = 2.dp, end = 4.dp, bottom = 3.dp),
-                        contentAlignment = Alignment.Center
+                if (!hasRevealedToday) {
+                    // Top container: Badge, title, and description
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
+                        // Badge: "AVAILABLE" - similar to common ship badge
+                        Box(
+                            modifier = Modifier
+                                .wrapContentHeight()
+                                .wrapContentWidth()
+                                .background(
+                                    color = Color(0x29FFFFFF) // White at 16% opacity
+                                )
+                                .padding(start = 4.dp, top = 2.dp, end = 4.dp, bottom = 3.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "AVAILABLE",
+                                fontFamily = Exo2,
+                                fontSize = 10.sp,
+                                lineHeight = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFFFFFFFF), // White text
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        
+                        // Spacing: 4dp below badge
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        // Title: "Deep space scanners" - bold, 16sp
                         Text(
-                            text = "AVAILABLE",
+                            text = "Deep space scanners",
                             fontFamily = Exo2,
-                            fontSize = 10.sp,
-                            lineHeight = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFFFFFFFF), // White text
-                            textAlign = TextAlign.Center
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        
+                        // Spacing: 4dp below title
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        // Paragraph: Regular, 14sp with dynamic remaining count
+                        Text(
+                            text = "Reveal the flight environment of the day. x$scannerCount Remaining",
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.White
                         )
                     }
                     
-                    // Spacing: 4dp below badge
-                    Spacer(modifier = Modifier.height(4.dp))
+                    // Button at bottom: "REVEAL ENVIRONMENT" - same format as LAUNCH button, 24dp height, 14sp
+                    // Spacing: Add some space between content and button
+                    Spacer(modifier = Modifier.height(12.dp))
                     
-                    // Title: "Deep space scanners" - bold, 16sp
-                    Text(
-                        text = "Deep space scanners",
-                        fontFamily = Exo2,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    
-                    // Spacing: 4dp below title
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    // Paragraph: Regular, 14sp
-                    Text(
-                        text = "Reveal the flight environment of the day. x2 Remaining",
-                        fontFamily = Exo2,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.White
-                    )
-                }
-                
-                // Button at bottom: "REVEAL ENVIRONMENT" - same format as LAUNCH button, 24dp height, 14sp
-                // Spacing: Add some space between content and button
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(24.dp)
-                        .clip(RoundedCornerShape(80.dp))
-                        .background(Color(0xFFFFFFFF)) // White background (primary style)
-                        .clickable(onClick = { /* TODO: Add callback */ }),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "REVEAL ENVIRONMENT",
-                        fontFamily = Exo2,
-                        fontSize = 14.sp,
-                        lineHeight = 14.sp,
-                        color = Color(0xFF010102), // Dark text (primary style)
-                        textAlign = TextAlign.Center,
+                    val buttonEnabled = scannerCount > 0
+                    Box(
                         modifier = Modifier
-                            .align(Alignment.Center)
-                            .offset(y = (-1).dp) // Smaller offset for 14sp text
-                    )
+                            .fillMaxWidth()
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(80.dp))
+                            .background(Color(0xFFFFFFFF).copy(alpha = if (buttonEnabled) 1f else 0.4f))
+                            .let {
+                                if (buttonEnabled) {
+                                    it.clickable {
+                                        // Consume one scanner and reveal environment
+                                        com.example.fargalaxy.data.InventoryRepository.removeItem("deep_space_scanner", 1)
+                                        scannerCount = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("deep_space_scanner")
+                                        com.example.fargalaxy.data.FlightEnvironmentRepository.markScannerUsedForCurrentEnvironment()
+                                        hasRevealedToday = true
+                                        onShowToast("Flight environment revealed for the day")
+                                    }
+                                } else {
+                                    it
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "REVEAL ENVIRONMENT",
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            lineHeight = 14.sp,
+                            color = Color(0xFF010102), // Dark text (primary style)
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .offset(y = (-1).dp) // Smaller offset for 14sp text
+                        )
+                    }
+                } else {
+                    // Scanner already used for this environment: show conditions for the day
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // Parent Box has 8dp start padding; add 8dp more so effective left padding is 16dp
+                            .padding(start = 8.dp, end = 0.dp)
+                    ) {
+                        // Title: "Conditions for the day"
+                        Text(
+                            text = "Conditions for the day",
+                            fontFamily = Exo2,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        
+                        // 24dp below title: divider
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))
+                        )
+                        
+                        // 24dp below divider: environment/profile container
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "Environment today",
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = environmentName,
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                            
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "Ship profile",
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = recommendedProfileText,
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                        
+                        // 24dp under the container: another divider
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))
+                        )
+                        
+                        // 24dp under the last divider: "Resets in" label and badge
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Resets in:",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White
+                            )
+                            
+                            Spacer(modifier = Modifier.width(8.dp))
+                            
+                            Box(
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .wrapContentHeight()
+                                    .background(
+                                        color = Color(0x29FFFFFF), // 16% white
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = remainingText,
+                                    fontFamily = Exo2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -2014,7 +2199,8 @@ fun GalaxyScreen(
     onRewardsScreenVisibilityChange: (Boolean) -> Unit = {},
     onShipUnlockedScreenVisibilityChange: (Boolean) -> Unit = {},
     onLocationDiscoveredScreenVisibilityChange: (Boolean) -> Unit = {},
-    onBoostSelectionBottomSheetVisibilityChange: (Boolean) -> Unit = {}
+    onBoostSelectionBottomSheetVisibilityChange: (Boolean) -> Unit = {},
+    onShowToast: (String) -> Unit = {}
 ) {
     // State management: All state is saved across configuration changes (screen rotation, etc.)
     // selectedMinutes: The time duration selected by the user (range: 5-60, step: 5)
@@ -3238,7 +3424,8 @@ fun GalaxyScreen(
                             pendingRepairModal = false
                         }
                     }
-                }
+                },
+                currentShip = currentShip
             )
         }
         
@@ -3318,7 +3505,9 @@ fun GalaxyScreen(
                 onDismiss = {
                     playMouseClickSound(context, coroutineScope)
                     showBoostSelectionBottomSheet = false
-                }
+                },
+                currentShip = currentShip,
+                onShowToast = onShowToast
             )
         }
         

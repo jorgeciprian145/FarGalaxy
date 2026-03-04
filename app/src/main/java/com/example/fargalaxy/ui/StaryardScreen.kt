@@ -1,4 +1,4 @@
-package com.example.fargalaxy.ui
+ package com.example.fargalaxy.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

@@ -741,11 +741,11 @@ fun StaryardDetailsScreen(
                         val accelerationValue = when (ship.id) {
                             "b14_phantom" -> 24
                             "type45c_shooting_star" -> 35
-                            "navakeshi_star_pouncer" -> 32
+                            "navakeshi_star_pouncer" -> 29
                             "a300_albatross" -> 28
                             "p7h_skyblazer" -> 32
                             "b7f_starforce" -> 38
-                            "navakeshi_star_crusher" -> 35
+                            "navakeshi_star_crusher" -> 24
                             "asn_ag94_centurion" -> 35
                             "b15_specter" -> 32
                             "n6_98_melina" -> 25
@@ -764,7 +764,7 @@ fun StaryardDetailsScreen(
                         val speedValue = when (ship.id) {
                             "b14_phantom" -> 25
                             "type45c_shooting_star" -> 32
-                            "navakeshi_star_pouncer" -> 30
+                            "navakeshi_star_pouncer" -> 32
                             "a300_albatross" -> 28
                             "p7h_skyblazer" -> 32
                             "b7f_starforce" -> 38
@@ -791,7 +791,7 @@ fun StaryardDetailsScreen(
                             "a300_albatross" -> 38
                             "p7h_skyblazer" -> 38
                             "b7f_starforce" -> 19
-                            "navakeshi_star_crusher" -> 24
+                            "navakeshi_star_crusher" -> 35
                             "asn_ag94_centurion" -> 30
                             "b15_specter" -> 36
                             "n6_98_melina" -> 42

@@ -340,6 +340,8 @@ object GameStateRepository {
         
         // Reset inventory items
         InventoryRepository.resetInventory()
+        // Reset flight environment scanner usage so environment returns to default state
+        FlightEnvironmentRepository.resetScannerUsage()
         
         // Reset to starting state: only B14 Phantom unlocked and owned, no locations
         unlockedShipsReal = setOf("b14_phantom")

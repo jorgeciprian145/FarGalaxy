@@ -318,7 +318,7 @@ fun EquipmentScreen(
                                             "Emergency modulators",
                                             R.drawable.modulatorrender,
                                             2500,
-                                            "Allows to exit the app 1 time without affecting the 'flawless' status. Can be used only one time."
+                                            "Allows to exit the app 1 time without affecting the 'flawless' status. Effect lasts only one travel."
                                         )
                                     }
                             ) {
@@ -763,7 +763,7 @@ fun EquipmentScreen(
                                             "Unstable cargo",
                                             R.drawable.cargorender,
                                             2500,
-                                            "If the next travel is 'flawless' gives a 20% bonus to the XP and credits earned. But if the app is quit even once, all the XP and credits of the travel are lost. Can be used only one time."
+                                            "If the next travel is 'flawless' gives a 20% bonus to the XP and credits earned. But if the app is quit even once, all the XP and credits of the travel are lost. Effect lasts only one travel."
                                         )
                                     }
                             ) {
