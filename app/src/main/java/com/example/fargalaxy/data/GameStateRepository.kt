@@ -338,6 +338,9 @@ object GameStateRepository {
         // Reset user data first (all values to 0)
         UserDataRepository.resetProgress()
         
+        // Reset inventory items
+        InventoryRepository.resetInventory()
+        
         // Reset to starting state: only B14 Phantom unlocked and owned, no locations
         unlockedShipsReal = setOf("b14_phantom")
         ownedShipsReal = setOf("b14_phantom") // Starting ship is owned

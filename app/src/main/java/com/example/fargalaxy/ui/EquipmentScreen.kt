@@ -65,6 +65,7 @@ import com.example.fargalaxy.R
 fun EquipmentScreen(
     onBackClick: () -> Unit = {},
     onEquipmentClick: (String, Int, Int, String) -> Unit = { _, _, _, _ -> }, // name, imageResId, price, description
+    onPurchaseClick: (String, Int) -> Unit = { _, _ -> }, // name, price
     modifier: Modifier = Modifier
 ) {
     // Read credits from global repository
@@ -476,6 +477,15 @@ fun EquipmentScreen(
                                                                     width = 1.dp,
                                                                     color = priceColorCard1,
                                                                     shape = RoundedCornerShape(50.dp)
+                                                                )
+                                                                .then(
+                                                                    if (canAffordCard1) {
+                                                                        Modifier.clickable {
+                                                                            onPurchaseClick("Emergency modulators", 2500)
+                                                                        }
+                                                                    } else {
+                                                                        Modifier // Disabled when can't afford
+                                                                    }
                                                                 ),
                                                             contentAlignment = Alignment.Center
                                                         ) {
@@ -689,6 +699,15 @@ fun EquipmentScreen(
                                                                     width = 1.dp,
                                                                     color = priceColorCard2,
                                                                     shape = RoundedCornerShape(50.dp)
+                                                                )
+                                                                .then(
+                                                                    if (canAffordCard2) {
+                                                                        Modifier.clickable {
+                                                                            onPurchaseClick("Deep space scanners", 2500)
+                                                                        }
+                                                                    } else {
+                                                                        Modifier // Disabled when can't afford
+                                                                    }
                                                                 ),
                                                             contentAlignment = Alignment.Center
                                                         ) {
@@ -888,6 +907,15 @@ fun EquipmentScreen(
                                                             width = 1.dp,
                                                             color = priceColorCard3,
                                                             shape = RoundedCornerShape(50.dp)
+                                                        )
+                                                        .then(
+                                                            if (canAffordCard3) {
+                                                                Modifier.clickable {
+                                                                    onPurchaseClick("Unstable cargo", 2500)
+                                                                }
+                                                            } else {
+                                                                Modifier // Disabled when can't afford
+                                                            }
                                                         ),
                                                     contentAlignment = Alignment.Center
                                                 ) {
@@ -1077,6 +1105,15 @@ fun EquipmentScreen(
                                                             width = 1.dp,
                                                             color = priceColorCard4,
                                                             shape = RoundedCornerShape(50.dp)
+                                                        )
+                                                        .then(
+                                                            if (canAffordCard4) {
+                                                                Modifier.clickable {
+                                                                    onPurchaseClick("Experimental fuel", 2500)
+                                                                }
+                                                            } else {
+                                                                Modifier // Disabled when can't afford
+                                                            }
                                                         ),
                                                     contentAlignment = Alignment.Center
                                                 ) {

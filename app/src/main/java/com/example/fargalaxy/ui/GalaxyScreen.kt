@@ -685,29 +685,32 @@ fun BoostSelectionBottomSheet(
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Row 1: Emergency modulators
-                BoostItemRow(
-                    imageResId = R.drawable.modulatorselection,
-                    itemName = "Emergency modulators",
-                    quantity = "x0", // TODO: Make dynamic based on user inventory
-                    showBottomDivider = false
-                )
-                
-                // Row 2: Unstable cargo
-                BoostItemRow(
-                    imageResId = R.drawable.cargoselection,
-                    itemName = "Unstable cargo",
-                    quantity = "x0", // TODO: Make dynamic based on user inventory
-                    showBottomDivider = false
-                )
-                
-                // Row 3: Experimental fuel (last row - has bottom divider)
-                BoostItemRow(
-                    imageResId = R.drawable.fuelselection,
-                    itemName = "Experimental fuel",
-                    quantity = "x0", // TODO: Make dynamic based on user inventory
-                    showBottomDivider = true
-                )
+                    // Row 1: Emergency modulators
+                    val emergencyModulatorQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("emergency_modulator")
+                    BoostItemRow(
+                        imageResId = R.drawable.modulatorselection,
+                        itemName = "Emergency modulators",
+                        quantity = "x$emergencyModulatorQuantity",
+                        showBottomDivider = false
+                    )
+                    
+                    // Row 2: Unstable cargo
+                    val unstableCargoQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("unstable_cargo")
+                    BoostItemRow(
+                        imageResId = R.drawable.cargoselection,
+                        itemName = "Unstable cargo",
+                        quantity = "x$unstableCargoQuantity",
+                        showBottomDivider = false
+                    )
+                    
+                    // Row 3: Experimental fuel (last row - has bottom divider)
+                    val experimentalFuelQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("experimental_fuel")
+                    BoostItemRow(
+                        imageResId = R.drawable.fuelselection,
+                        itemName = "Experimental fuel",
+                        quantity = "x$experimentalFuelQuantity",
+                        showBottomDivider = true
+                    )
             }
             
             // Spacing: 24dp below last row

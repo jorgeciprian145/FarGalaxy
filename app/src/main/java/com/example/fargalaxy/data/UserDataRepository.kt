@@ -48,6 +48,16 @@ object UserDataRepository {
         }
     }
     
+    /**
+     * Set credits to 50000 in test mode (for testing purposes).
+     * Should be called after GameStateRepository is initialized.
+     */
+    fun setTestModeCreditsIfEnabled() {
+        if (GameStateRepository.isTestMode) {
+            userCredits = 50000
+        }
+    }
+    
     private var _userCredits = mutableStateOf(0)
     private var _userXP = mutableStateOf(0)
     private var _totalFocusTimeMinutes = mutableStateOf(0)

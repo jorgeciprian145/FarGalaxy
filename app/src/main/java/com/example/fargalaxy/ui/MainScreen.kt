@@ -80,6 +80,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track if boost selection bottom sheet is shown (to hide indicator)
     var isBoostSelectionBottomSheetShown by remember { mutableStateOf(false) }
     
+    // Toast state
+    var toastMessage by remember { mutableStateOf<String?>(null) }
+    
     // Track active screen based on current page
     var activeScreen by remember { mutableStateOf(ActiveScreen.CENTER) }
     
@@ -359,8 +362,30 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Handle purchase click from EquipmentDetailsScreen
     val onEquipmentPurchaseClick: () -> Unit = {
-        // TODO: Implement purchase logic
-        // For now, just close the details screen
+        // Check if user has enough credits
+        if (selectedEquipmentPrice <= com.example.fargalaxy.data.UserDataRepository.userCredits) {
+            // Deduct credits
+            com.example.fargalaxy.data.UserDataRepository.addCredits(-selectedEquipmentPrice)
+            
+            // Map equipment name to item ID and add to inventory
+            val itemId = when (selectedEquipmentName) {
+                "Emergency modulators" -> "emergency_modulator"
+                "Unstable cargo" -> "unstable_cargo"
+                "Experimental fuel" -> "experimental_fuel"
+                "Deep space scanners" -> "deep_space_scanner"
+                else -> null
+            }
+            
+            // Add item to inventory if mapping exists
+            itemId?.let {
+                com.example.fargalaxy.data.InventoryRepository.addItem(it, 1)
+            }
+            
+            // Show toast message: "Bought (item name) for (amount of credits)"
+            toastMessage = "Bought $selectedEquipmentName for $selectedEquipmentPrice credits"
+        }
+        
+        // Close the details screen
         showEquipmentDetails = false
         selectedEquipmentName = ""
         selectedEquipmentImageResId = 0
@@ -800,10 +825,34 @@ fun MainScreen(modifier: Modifier = Modifier) {
         // EquipmentScreen overlay - shown on top of everything when showEquipment is true
         if (showEquipment) {
             Box(modifier = Modifier.fillMaxSize()) {
-            EquipmentScreen(
-                onBackClick = onBackFromEquipment,
-                onEquipmentClick = onEquipmentItemClick
-            )
+                EquipmentScreen(
+                    onBackClick = onBackFromEquipment,
+                    onEquipmentClick = onEquipmentItemClick,
+                    onPurchaseClick = { itemName, price ->
+                        // Handle purchase directly from EquipmentScreen
+                        if (price <= com.example.fargalaxy.data.UserDataRepository.userCredits) {
+                            // Deduct credits
+                            com.example.fargalaxy.data.UserDataRepository.addCredits(-price)
+                            
+                            // Map equipment name to item ID and add to inventory
+                            val itemId = when (itemName) {
+                                "Emergency modulators" -> "emergency_modulator"
+                                "Unstable cargo" -> "unstable_cargo"
+                                "Experimental fuel" -> "experimental_fuel"
+                                "Deep space scanners" -> "deep_space_scanner"
+                                else -> null
+                            }
+                            
+                            // Add item to inventory if mapping exists
+                            itemId?.let {
+                                com.example.fargalaxy.data.InventoryRepository.addItem(it, 1)
+                            }
+                            
+                            // Show toast message: "Bought (item name) for (amount of credits)"
+                            toastMessage = "Bought $itemName for $price credits"
+                        }
+                    }
+                )
                 
                 // Block pointer events when EquipmentDetailsScreen is shown
                 if (showEquipmentDetails) {
@@ -884,6 +933,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 .height(navigationBarPadding.calculateBottomPadding())
                 .background(Color.Black)
         )
+        
+        // Custom Toast - shown when toastMessage is not null
+        toastMessage?.let { message ->
+            CustomToast(
+                message = message,
+                onDismiss = { toastMessage = null }
+            )
+        }
     }
 }
 

@@ -53,9 +53,14 @@ class MainActivity : ComponentActivity() {
         com.example.fargalaxy.data.ShipRepository.initialize(this)
         com.example.fargalaxy.data.GameStateRepository.initialize(this)
         com.example.fargalaxy.data.PenaltyTracker.initialize(this)
+        com.example.fargalaxy.data.InventoryRepository.initialize(this)
         
         // TODO: REMOVE TESTING CODE - Reset progress to zero for testing ship unlock
         com.example.fargalaxy.data.GameStateRepository.resetProgress()
+        
+        // Set credits to 50000 in test mode (for testing purposes)
+        // Must be called AFTER resetProgress() to avoid credits being reset to 0
+        com.example.fargalaxy.data.UserDataRepository.setTestModeCreditsIfEnabled()
         
         setContent {
             // Override font scale to always be 1.0 (no scaling) to prevent system font size
