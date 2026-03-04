@@ -77,6 +77,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var showShipAcquiredScreen by remember { mutableStateOf(false) }
     var acquiredShipId by remember { mutableStateOf<String?>(null) }
     
+    // Track if boost selection bottom sheet is shown (to hide indicator)
+    var isBoostSelectionBottomSheetShown by remember { mutableStateOf(false) }
+    
     // Track active screen based on current page
     var activeScreen by remember { mutableStateOf(ActiveScreen.CENTER) }
     
@@ -611,7 +614,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onCollectionClick = onCollectionClick,
                         onRewardsScreenVisibilityChange = { isShown -> isRewardsScreenShown = isShown },
                         onShipUnlockedScreenVisibilityChange = { isShown -> isShipUnlockedScreenShown = isShown },
-                        onLocationDiscoveredScreenVisibilityChange = { isShown -> isLocationDiscoveredScreenShown = isShown }
+                        onLocationDiscoveredScreenVisibilityChange = { isShown -> isLocationDiscoveredScreenShown = isShown },
+                        onBoostSelectionBottomSheetVisibilityChange = { isShown -> isBoostSelectionBottomSheetShown = isShown }
                     )
                 }
                 2 -> {
@@ -644,8 +648,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
-        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, StoreDetailsScreen, SectorDetailsScreen, FactionDetailsScreen, RewardsScreen, ShipUnlockedScreen, LocationDiscoveredScreen, or ShipAcquiredScreen is shown
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !showSectorDetails && !showFactionDetails && !isRewardsScreenShown && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, StoreDetailsScreen, SectorDetailsScreen, FactionDetailsScreen, RewardsScreen, ShipUnlockedScreen, LocationDiscoveredScreen, ShipAcquiredScreen, or BoostSelectionBottomSheet is shown
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !showSectorDetails && !showFactionDetails && !isRewardsScreenShown && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen && !isBoostSelectionBottomSheetShown && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)

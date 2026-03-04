@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -572,6 +573,407 @@ fun LaunchButton(
                 color = textColor,
                 textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+/**
+ * BoostSelectionBottomSheet composable - displays a bottom sheet for selecting boosts to equip.
+ * Shows an overlay with blur, a bottom sheet container with gradient background and title.
+ * Slides up from the bottom with rounded corners on top.
+ */
+@Composable
+fun BoostSelectionBottomSheet(
+    onDismiss: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    // Animation state for slide-in from bottom
+    var isVisible by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+    
+    // Animate the bottom sheet sliding up from bottom
+    val offsetY by animateDpAsState(
+        targetValue = if (isVisible) 0.dp else 1000.dp, // Slide from off-screen bottom
+        animationSpec = tween(
+            durationMillis = 300,
+            easing = FastOutSlowInEasing
+        ),
+        label = "bottom_sheet_slide"
+    )
+    
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                // Block all pointer input (scrolling, dragging, etc.) to prevent pager scrolling
+                detectDragGestures { change, dragAmount ->
+                    // Consume all drag gestures to prevent pager scrolling
+                }
+            }
+    ) {
+        // Blur and overlay: Blurs the content behind and applies dark overlay with 96% opacity
+        // Clickable to dismiss the bottom sheet when tapping outside
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    renderEffect = AndroidRenderEffect.createBlurEffect(
+                        16f,
+                        16f,
+                        Shader.TileMode.CLAMP
+                    ).asComposeRenderEffect()
+                }
+                .background(Color.Black.copy(alpha = 0.96f))
+                .clickable(onClick = onDismiss) // Dismiss when tapping outside
+        )
+        
+        // Bottom Sheet Container: Slides up from bottom
+        // Rounded corners only on top (top-left and top-right, 32dp)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .wrapContentHeight() // Wrap content vertically
+                .offset(y = offsetY) // Animate slide-in from bottom
+                .navigationBarsPadding() // Account for navigation bar to prevent clipping
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF373A3E), // Top color
+                            Color(0xFF2B2E32)  // Bottom color
+                        )
+                    ),
+                    shape = RoundedCornerShape(
+                        topStart = 32.dp,
+                        topEnd = 32.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 0.dp
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFF6B6C6F),
+                    shape = RoundedCornerShape(
+                        topStart = 32.dp,
+                        topEnd = 32.dp,
+                        bottomStart = 0.dp,
+                        bottomEnd = 0.dp
+                    )
+                )
+                .padding(horizontal = 16.dp), // 16dp side padding for all elements
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top // Ensure content starts at top
+        ) {
+                // Title: "Select the boost you want to equip" - bold, 16sp, 24dp from top
+            Text(
+                text = "Select the boost you want to equip",
+                fontFamily = Exo2,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 24.dp)
+            )
+            
+            // Spacing: 24dp below title
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Boost items section: 3 rows
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Row 1: Emergency modulators
+                BoostItemRow(
+                    imageResId = R.drawable.modulatorselection,
+                    itemName = "Emergency modulators",
+                    quantity = "x0", // TODO: Make dynamic based on user inventory
+                    showBottomDivider = false
+                )
+                
+                // Row 2: Unstable cargo
+                BoostItemRow(
+                    imageResId = R.drawable.cargoselection,
+                    itemName = "Unstable cargo",
+                    quantity = "x0", // TODO: Make dynamic based on user inventory
+                    showBottomDivider = false
+                )
+                
+                // Row 3: Experimental fuel (last row - has bottom divider)
+                BoostItemRow(
+                    imageResId = R.drawable.fuelselection,
+                    itemName = "Experimental fuel",
+                    quantity = "x0", // TODO: Make dynamic based on user inventory
+                    showBottomDivider = true
+                )
+            }
+            
+            // Spacing: 24dp below last row
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Deep Space Scanners container
+            DeepSpaceScannersContainer()
+            
+            // Spacing: 24dp below container
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // CANCEL button: Similar to cancel button when preparing launch
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(80.dp))
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFFFFFFFF), // White border
+                        shape = RoundedCornerShape(80.dp)
+                    )
+                    .clickable(onClick = onDismiss),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "CANCEL",
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    lineHeight = 16.sp,
+                    color = Color(0xFFFFFFFF), // White text
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = (-2).dp)
+                )
+            }
+            
+            // Bottom padding: 24dp
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+/**
+ * BoostItemRow composable - displays a single boost item row with image, name, and quantity.
+ * 
+ * @param imageResId The drawable resource ID for the item image
+ * @param itemName The name of the boost item
+ * @param quantity The quantity remaining (e.g., "x3")
+ * @param showBottomDivider Whether to show a divider at the bottom of the row
+ * @param modifier Modifier for the row
+ */
+@Composable
+private fun BoostItemRow(
+    imageResId: Int,
+    itemName: String,
+    quantity: String,
+    showBottomDivider: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(80.dp)
+    ) {
+        // Divider on top: 1dp height, white 32% opacity
+        // Note: Parent Column already has 16dp horizontal padding, so divider respects that
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))
+        )
+        
+        // Row content: Image, name, and quantity
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Image container: 64dp height, maintains aspect ratio, fills full height
+            Box(
+                modifier = Modifier
+                    .height(64.dp)
+                    .width(64.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = imageResId),
+                    contentDescription = itemName,
+                    modifier = Modifier
+                        .height(64.dp) // Fill full height of container (64dp)
+                        .wrapContentWidth(), // Maintain aspect ratio, width adjusts automatically
+                    contentScale = ContentScale.Fit
+                )
+            }
+            
+            // Spacing: 16dp between image and label
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Item name label: Bold, 16sp (same format as title)
+            Text(
+                text = itemName,
+                fontFamily = Exo2,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.weight(1f) // Takes remaining space
+            )
+            
+            // Quantity label: Regular, 16sp, aligned to the right
+            Text(
+                text = quantity,
+                fontFamily = Exo2,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color.White
+            )
+        }
+        
+        // Bottom divider: Only shown on last row
+        if (showBottomDivider) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))
+            )
+        }
+    }
+}
+
+/**
+ * DeepSpaceScannersContainer composable - displays the deep space scanners section.
+ * Container with stroke, white fill at 16% opacity, image, badge, title, description, and button.
+ */
+@Composable
+private fun DeepSpaceScannersContainer(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight() // Vertically hug content
+            .border(
+                width = 1.dp,
+                color = Color(0xFF6B6C6F), // Stroke color
+                shape = RoundedCornerShape(24.dp) // 24dp corner radius
+            )
+            .background(
+                color = Color(0x29FFFFFF), // White at 16% opacity (0x29 = ~16%)
+                shape = RoundedCornerShape(24.dp) // 24dp corner radius
+            )
+            .padding(
+                start = 8.dp,
+                top = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp
+            )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            // Image: 100x100, maintains aspect ratio, fills full height
+            Box(
+                modifier = Modifier
+                    .height(100.dp)
+                    .width(100.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.scannerselection),
+                    contentDescription = "Deep space scanners",
+                    modifier = Modifier
+                        .height(100.dp) // Fill full height of container (100dp)
+                        .wrapContentWidth(), // Maintain aspect ratio, width adjusts automatically
+                    contentScale = ContentScale.Fit
+                )
+            }
+            
+            // Container to the right: Stretches full remaining width, no spacing from image
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .wrapContentHeight() // Hug content vertically
+            ) {
+                // Top container: Badge, title, and description
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Badge: "AVAILABLE" - similar to common ship badge
+                    Box(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .wrapContentWidth()
+                            .background(
+                                color = Color(0x29FFFFFF) // White at 16% opacity
+                            )
+                            .padding(start = 4.dp, top = 2.dp, end = 4.dp, bottom = 3.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "AVAILABLE",
+                            fontFamily = Exo2,
+                            fontSize = 10.sp,
+                            lineHeight = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFFFFFFFF), // White text
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    
+                    // Spacing: 4dp below badge
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    // Title: "Deep space scanners" - bold, 16sp
+                    Text(
+                        text = "Deep space scanners",
+                        fontFamily = Exo2,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    
+                    // Spacing: 4dp below title
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    // Paragraph: Regular, 14sp
+                    Text(
+                        text = "Reveal the flight environment of the day. x2 Remaining",
+                        fontFamily = Exo2,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.White
+                    )
+                }
+                
+                // Button at bottom: "REVEAL ENVIRONMENT" - same format as LAUNCH button, 24dp height, 14sp
+                // Spacing: Add some space between content and button
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(24.dp)
+                        .clip(RoundedCornerShape(80.dp))
+                        .background(Color(0xFFFFFFFF)) // White background (primary style)
+                        .clickable(onClick = { /* TODO: Add callback */ }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "REVEAL ENVIRONMENT",
+                        fontFamily = Exo2,
+                        fontSize = 14.sp,
+                        lineHeight = 14.sp,
+                        color = Color(0xFF010102), // Dark text (primary style)
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = (-1).dp) // Smaller offset for 14sp text
+                    )
+                }
+            }
         }
     }
 }
@@ -1608,7 +2010,8 @@ fun GalaxyScreen(
     onCollectionClick: () -> Unit = {},
     onRewardsScreenVisibilityChange: (Boolean) -> Unit = {},
     onShipUnlockedScreenVisibilityChange: (Boolean) -> Unit = {},
-    onLocationDiscoveredScreenVisibilityChange: (Boolean) -> Unit = {}
+    onLocationDiscoveredScreenVisibilityChange: (Boolean) -> Unit = {},
+    onBoostSelectionBottomSheetVisibilityChange: (Boolean) -> Unit = {}
 ) {
     // State management: All state is saved across configuration changes (screen rotation, etc.)
     // selectedMinutes: The time duration selected by the user (range: 5-60, step: 5)
@@ -1657,6 +2060,14 @@ fun GalaxyScreen(
     
     // pendingRepairModal: Flag to track if repair modal should be shown after all other screens are done
     var pendingRepairModal by remember { mutableStateOf(false) }
+    
+    // showBoostSelectionBottomSheet: Controls visibility of the boost selection bottom sheet
+    var showBoostSelectionBottomSheet by remember { mutableStateOf(false) }
+    
+    // Notify parent when bottom sheet visibility changes
+    LaunchedEffect(showBoostSelectionBottomSheet) {
+        onBoostSelectionBottomSheetVisibilityChange(showBoostSelectionBottomSheet)
+    }
     
     // showRewardsScreen: Controls visibility of the rewards screen
     var showRewardsScreen by remember { mutableStateOf(false) }
@@ -2727,6 +3138,8 @@ fun GalaxyScreen(
         // Current offset: 96dp right/left, 96dp down from center
         if (!isTraveling && !isPreparingLaunch && !showTravelSuccessModal && !showTravelCanceledModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showRepairNeededModal) {
             val isInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
 
             // ADD button on the right side (always visible when idle)
             Box(
@@ -2738,7 +3151,10 @@ fun GalaxyScreen(
                     )
             ) {
                 AddButton(
-                    onClick = { /* TODO: Add callback for ADD button */ }
+                    onClick = {
+                        playMouseClickSound(context, coroutineScope)
+                        showBoostSelectionBottomSheet = true
+                    }
                 )
             }
 
@@ -2886,6 +3302,19 @@ fun GalaxyScreen(
                         // Show next location
                         currentLocationDiscoveredIndex = nextIndex
                     }
+                }
+            )
+        }
+        
+        // Boost Selection Bottom Sheet: Shown when ADD button is tapped
+        // Rendered on top of everything except modals
+        if (showBoostSelectionBottomSheet && !showTravelSuccessModal && !showTravelCanceledModal && !showRepairNeededModal) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
+            BoostSelectionBottomSheet(
+                onDismiss = {
+                    playMouseClickSound(context, coroutineScope)
+                    showBoostSelectionBottomSheet = false
                 }
             )
         }

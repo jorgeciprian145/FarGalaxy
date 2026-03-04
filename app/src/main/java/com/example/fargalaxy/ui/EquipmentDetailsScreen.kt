@@ -117,7 +117,8 @@ fun EquipmentDetailsScreen(
     // Column has -28dp offset, so visual position is adjusted
     // The namePriceHeight already includes the 24dp spacer, so we don't add it again
     // Additional offset: 40dp (same as StaryardDetailsScreen for most ships)
-    val clipBoundaryTop = 64.dp + equipmentImageHeightDp + namePriceHeight + 8.dp // Moved up by 32dp (40dp - 32dp = 8dp)
+    // Spacer between price and divider: 40dp (increased by 16dp for equipment)
+    val clipBoundaryTop = 64.dp + equipmentImageHeightDp + namePriceHeight + 24.dp // 8dp base + 16dp extra spacing = 24dp
     
     Box(
         modifier = modifier.fillMaxSize()
@@ -373,12 +374,12 @@ fun EquipmentDetailsScreen(
                 }
             }
             
-            // Spacing from price container to divider/trim line: 24dp
-            Spacer(modifier = Modifier.height(24.dp))
+            // Spacing from price container to divider/trim line: 40dp (increased by 16dp for equipment)
+            Spacer(modifier = Modifier.height(40.dp))
             }
         }
         
-        // Clip boundary container: Positioned at the trim line, 24dp below price container
+        // Clip boundary container: Positioned at the trim line, 40dp below price container
         // The divider/trim line is at the top of this container
         Box(
             modifier = Modifier
@@ -390,7 +391,7 @@ fun EquipmentDetailsScreen(
                 .clipToBounds()
         ) {
             // Horizontal divider/trim line: Fixed at clip boundary, 32% opacity
-            // Positioned at the very top of the clip boundary container (24dp below price container)
+            // Positioned at the very top of the clip boundary container (40dp below price container)
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
