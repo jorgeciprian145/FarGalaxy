@@ -2759,6 +2759,9 @@ fun GalaxyScreen(
     // travelHasUnstableCargoPenalty: Whether unstable cargo penalty occurred during travel
     var travelHasUnstableCargoPenalty by remember { mutableStateOf(false) }
     
+    // travelEmergencyModulatorUsed: Whether emergency modulator was used during travel (captured before consumption)
+    var travelEmergencyModulatorUsed by remember { mutableStateOf(false) }
+    
     // Track if travel was cancelled (to avoid showing modal if cancelled)
     var wasTravelCancelled by remember { mutableStateOf(false) }
     
@@ -2840,6 +2843,7 @@ fun GalaxyScreen(
                 val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
                 travelEquippedItem = equippedItem
                 travelHasUnstableCargoPenalty = com.example.fargalaxy.data.EquipmentUsageRepository.hasUnstableCargoPenalty()
+                travelEmergencyModulatorUsed = com.example.fargalaxy.data.EquipmentUsageRepository.isEmergencyModulatorUsed()
                 
                 // Handle equipment consumption
                 when (equippedItem) {
@@ -4121,6 +4125,7 @@ fun GalaxyScreen(
                 penaltyCount = travelPenaltyCount,
                 equippedItemAtTravelTime = travelEquippedItem,
                 hasUnstableCargoPenalty = travelHasUnstableCargoPenalty,
+                emergencyModulatorUsedAtTravelTime = travelEmergencyModulatorUsed,
                 onContinueClick = {
                     playMouseClickSound(context, coroutineScope)
                     showRewardsScreen = false

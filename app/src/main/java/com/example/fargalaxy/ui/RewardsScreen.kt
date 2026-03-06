@@ -147,6 +147,7 @@ fun RewardsScreen(
     penaltyCount: Int = 0,
     equippedItemAtTravelTime: String? = null,
     hasUnstableCargoPenalty: Boolean = false,
+    emergencyModulatorUsedAtTravelTime: Boolean = false,
     onContinueClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     currentShip: Ship
@@ -157,12 +158,16 @@ fun RewardsScreen(
     
     // Use equipment info captured at travel time (before consumption)
     val equippedItem = equippedItemAtTravelTime
-    val isEmergencyModulatorUsed = com.example.fargalaxy.data.EquipmentUsageRepository.isEmergencyModulatorUsed()
+    val isEmergencyModulatorUsed = emergencyModulatorUsedAtTravelTime
     
     // Adjust penalty count: if emergency modulator was used, the first penalty should be ignored
-    // So if emergency modulator was used and penaltyCount is 0, it means no actual penalties occurred
-    val adjustedPenaltyCount = if (equippedItem == "emergency_modulator" && isEmergencyModulatorUsed && penaltyCount == 0) {
-        0 // Emergency modulator was used, no actual penalties
+    // Emergency modulator allows one penalty without affecting flawless status
+    // So if emergency modulator was used, we subtract 1 from penalty count (or set to 0 if already 0)
+    val adjustedPenaltyCount = if (equippedItem == "emergency_modulator" && isEmergencyModulatorUsed) {
+        // Emergency modulator was used - ignore the first penalty
+        // If penaltyCount is 0, it means the modulator prevented the penalty (flawless)
+        // If penaltyCount > 0, it means there were additional penalties beyond the one ignored
+        (penaltyCount - 1).coerceAtLeast(0)
     } else {
         penaltyCount
     }
