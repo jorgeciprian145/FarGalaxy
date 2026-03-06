@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
         com.example.fargalaxy.data.PenaltyTracker.initialize(this)
         com.example.fargalaxy.data.InventoryRepository.initialize(this)
         com.example.fargalaxy.data.FlightEnvironmentRepository.initialize(this)
+        com.example.fargalaxy.data.EquipmentRepository.initialize(this)
         
         // TODO: REMOVE TESTING CODE - Reset progress to zero for testing ship unlock
         com.example.fargalaxy.data.GameStateRepository.resetProgress()

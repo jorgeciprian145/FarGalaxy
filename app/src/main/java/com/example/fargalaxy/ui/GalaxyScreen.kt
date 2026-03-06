@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.Spacer
@@ -689,29 +690,86 @@ fun BoostSelectionBottomSheet(
             ) {
                     // Row 1: Emergency modulators
                     val emergencyModulatorQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("emergency_modulator")
+                    val isEmergencyModulatorEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped(currentShip.id, "emergency_modulator")
                     BoostItemRow(
                         imageResId = R.drawable.modulatorselection,
                         itemName = "Emergency modulators",
                         quantity = "x$emergencyModulatorQuantity",
-                        showBottomDivider = false
+                        showBottomDivider = false,
+                        isEquipped = isEmergencyModulatorEquipped,
+                        onClick = {
+                            if (isEmergencyModulatorEquipped) {
+                                // Unequip if already equipped
+                                com.example.fargalaxy.data.EquipmentRepository.unequipItem(currentShip.id)
+                                onDismiss() // Close the bottom sheet
+                            } else {
+                                // Check if user has the item in inventory
+                                if (emergencyModulatorQuantity > 0) {
+                                    // Equip this item (unequips any other item first)
+                                    com.example.fargalaxy.data.EquipmentRepository.equipItem(currentShip.id, "emergency_modulator")
+                                    onDismiss() // Close the bottom sheet
+                                } else {
+                                    // Show toast message if no items available
+                                    onShowToast("You don't have any Emergency modulators remaining")
+                                }
+                            }
+                        }
                     )
                     
                     // Row 2: Unstable cargo
                     val unstableCargoQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("unstable_cargo")
+                    val isUnstableCargoEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped(currentShip.id, "unstable_cargo")
                     BoostItemRow(
                         imageResId = R.drawable.cargoselection,
                         itemName = "Unstable cargo",
                         quantity = "x$unstableCargoQuantity",
-                        showBottomDivider = false
+                        showBottomDivider = false,
+                        isEquipped = isUnstableCargoEquipped,
+                        onClick = {
+                            if (isUnstableCargoEquipped) {
+                                // Unequip if already equipped
+                                com.example.fargalaxy.data.EquipmentRepository.unequipItem(currentShip.id)
+                                onDismiss() // Close the bottom sheet
+                            } else {
+                                // Check if user has the item in inventory
+                                if (unstableCargoQuantity > 0) {
+                                    // Equip this item (unequips any other item first)
+                                    com.example.fargalaxy.data.EquipmentRepository.equipItem(currentShip.id, "unstable_cargo")
+                                    onDismiss() // Close the bottom sheet
+                                } else {
+                                    // Show toast message if no items available
+                                    onShowToast("You don't have any Unstable cargo remaining")
+                                }
+                            }
+                        }
                     )
                     
                     // Row 3: Experimental fuel (last row - has bottom divider)
                     val experimentalFuelQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("experimental_fuel")
+                    val isExperimentalFuelEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped(currentShip.id, "experimental_fuel")
                     BoostItemRow(
                         imageResId = R.drawable.fuelselection,
                         itemName = "Experimental fuel",
                         quantity = "x$experimentalFuelQuantity",
-                        showBottomDivider = true
+                        showBottomDivider = true,
+                        isEquipped = isExperimentalFuelEquipped,
+                        onClick = {
+                            if (isExperimentalFuelEquipped) {
+                                // Unequip if already equipped
+                                com.example.fargalaxy.data.EquipmentRepository.unequipItem(currentShip.id)
+                                onDismiss() // Close the bottom sheet
+                            } else {
+                                // Check if user has the item in inventory
+                                if (experimentalFuelQuantity > 0) {
+                                    // Equip this item (unequips any other item first)
+                                    com.example.fargalaxy.data.EquipmentRepository.equipItem(currentShip.id, "experimental_fuel")
+                                    onDismiss() // Close the bottom sheet
+                                } else {
+                                    // Show toast message if no items available
+                                    onShowToast("You don't have any Experimental fuel remaining")
+                                }
+                            }
+                        }
                     )
             }
             
@@ -767,6 +825,8 @@ fun BoostSelectionBottomSheet(
  * @param itemName The name of the boost item
  * @param quantity The quantity remaining (e.g., "x3")
  * @param showBottomDivider Whether to show a divider at the bottom of the row
+ * @param isEquipped Whether this item is currently equipped
+ * @param onClick Callback when the row is clicked
  * @param modifier Modifier for the row
  */
 @Composable
@@ -775,12 +835,15 @@ private fun BoostItemRow(
     itemName: String,
     quantity: String,
     showBottomDivider: Boolean = false,
+    isEquipped: Boolean = false,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .height(80.dp)
+            .clickable(onClick = onClick) // Make entire row clickable
     ) {
         // Divider on top: 1dp height, white 32% opacity
         // Note: Parent Column already has 16dp horizontal padding, so divider respects that
@@ -829,8 +892,9 @@ private fun BoostItemRow(
             )
             
             // Quantity label: Regular, 16sp, aligned to the right
+            // Show "EQUIPPED" if equipped, otherwise show quantity
             Text(
-                text = quantity,
+                text = if (isEquipped) "EQUIPPED" else quantity,
                 fontFamily = Exo2,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Normal,
@@ -3340,10 +3404,16 @@ fun GalaxyScreen(
                     )
             ) {
                 AddButton(
+                    currentShip = currentShip,
                     onClick = {
                         playMouseClickSound(context, coroutineScope)
                         showBoostSelectionBottomSheet = true
-                    }
+                    },
+                    onCloseClick = {
+                        playMouseClickSound(context, coroutineScope)
+                        com.example.fargalaxy.data.EquipmentRepository.unequipItem(currentShip.id)
+                    },
+                    refreshTrigger = showBoostSelectionBottomSheet // Refresh when bottom sheet visibility changes
                 )
             }
 
@@ -3589,61 +3659,160 @@ private fun RepairButton(
 
 /**
  * AddButton composable - displays the "ADD" button with secondary style and miniplus icon.
+ * When an equipment item is equipped, shows the equipped state with item image, "ADDED" label, and close button.
  *
  * Uses the same visual format as ViewButton but with:
  * - Transparent background with white border
  * - White text
  * - Rounded corners (80dp radius)
- * - Fixed size: 88dp width, 32dp height
+ * - Default size: 88dp width, 32dp height
+ * - Equipped size: max 120dp width, 40dp height
  * - 16sp font size, regular weight
- * - miniplus icon (12dp) to the left of "ADD" text with 8dp spacing
+ * - miniplus icon (12dp) to the left of "ADD" text with 8dp spacing (default state)
+ * - Item image (32x32) to the left of "ADDED" text, close button (16x16) to the right (equipped state)
  *
- * @param onClick Callback when button is clicked
+ * @param currentShip The current ship to check for equipped items
+ * @param onClick Callback when button is clicked (opens inventory)
+ * @param onCloseClick Callback when close button is clicked (unequips item)
  * @param modifier Modifier for the button
  */
 @Composable
 private fun AddButton(
+    currentShip: Ship,
     onClick: () -> Unit = {},
+    onCloseClick: () -> Unit = {},
+    refreshTrigger: Boolean = false, // Trigger to refresh equipment state
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .width(88.dp)
-            .height(32.dp)
-            .clip(RoundedCornerShape(80.dp))
-            .background(Color(0xFF242736)) // Fill color #242736
-            .border(
-                width = 1.dp,
-                color = Color(0xFFFFFFFF), // White border
-                shape = RoundedCornerShape(80.dp)
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 8.dp) // Internal padding for icon and text
+    // Use mutableStateOf to track equipped item and make it reactive
+    var equippedItemId by remember(currentShip.id) {
+        mutableStateOf(com.example.fargalaxy.data.EquipmentRepository.getEquippedItem(currentShip.id))
+    }
+    
+    // Update equipped item when ship changes or when refresh is triggered
+    LaunchedEffect(currentShip.id, refreshTrigger) {
+        equippedItemId = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem(currentShip.id)
+    }
+    
+    // Get image resource ID for equipped item
+    val equippedImageResId = when (equippedItemId) {
+        "emergency_modulator" -> R.drawable.modulatorselection
+        "unstable_cargo" -> R.drawable.cargoselection
+        "experimental_fuel" -> R.drawable.fuelselection
+        else -> null
+    }
+    
+    if (equippedItemId != null && equippedImageResId != null) {
+        // Equipped state: 40dp height, max 120dp width, item image, "ADDED" label, close button
+        Box(
+            modifier = modifier
+                .height(40.dp)
+                .widthIn(max = 120.dp)
+                .wrapContentWidth()
+                .clip(RoundedCornerShape(80.dp))
+                .background(Color(0xFF242736)) // Fill color #242736
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFFFFFFF), // White border
+                    shape = RoundedCornerShape(80.dp)
+                )
+                .clickable(onClick = onClick), // Clicking anywhere opens inventory
+            contentAlignment = Alignment.Center
         ) {
-            // miniplus icon: 12dp size, 8dp spacing to the right of text
-            Image(
-                painter = painterResource(id = R.drawable.miniplus),
-                contentDescription = "Add",
-                modifier = Modifier.size(12.dp),
-                contentScale = ContentScale.Fit
-            )
-            
-            // 8dp spacing between icon and text
-            Spacer(modifier = Modifier.width(8.dp))
-            
-            // "ADD" text: 16sp, regular weight
-            Text(
-                text = "ADD",
-                fontFamily = Exo2,
-                fontSize = 16.sp,
-                color = Color(0xFFFFFFFF), // White text
-                textAlign = TextAlign.Center
-            )
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 8.dp) // 4dp left, 8dp right padding
+            ) {
+                // Item image: 32x32
+                Image(
+                    painter = painterResource(id = equippedImageResId),
+                    contentDescription = "Equipped item",
+                    modifier = Modifier.size(32.dp),
+                    contentScale = ContentScale.Fit
+                )
+                
+                // 0dp spacing between image and label
+                Spacer(modifier = Modifier.width(0.dp))
+                
+                // "ADDED" text: 16sp, regular weight
+                Text(
+                    text = "ADDED",
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    color = Color(0xFFFFFFFF), // White text
+                    textAlign = TextAlign.Center
+                )
+                
+                // 8dp spacing between label and close button
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                // Close button: 16x16, tappable to unequip
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable(
+                            onClick = {
+                                // Update local state immediately
+                                equippedItemId = null
+                                // Call the callback to unequip
+                                onCloseClick()
+                            },
+                            indication = null, // Remove ripple effect
+                            interactionSource = remember { MutableInteractionSource() }
+                        )
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.closebuttonsmall),
+                        contentDescription = "Remove equipment",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+            }
+        }
+    } else {
+        // Default state: 88dp width, 32dp height, miniplus icon + "ADD" text
+        Box(
+            modifier = modifier
+                .width(88.dp)
+                .height(32.dp)
+                .clip(RoundedCornerShape(80.dp))
+                .background(Color(0xFF242736)) // Fill color #242736
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFFFFFFF), // White border
+                    shape = RoundedCornerShape(80.dp)
+                )
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 8.dp) // Internal padding for icon and text
+            ) {
+                // miniplus icon: 12dp size, 8dp spacing to the right of text
+                Image(
+                    painter = painterResource(id = R.drawable.miniplus),
+                    contentDescription = "Add",
+                    modifier = Modifier.size(12.dp),
+                    contentScale = ContentScale.Fit
+                )
+                
+                // 8dp spacing between icon and text
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                // "ADD" text: 16sp, regular weight
+                Text(
+                    text = "ADD",
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    color = Color(0xFFFFFFFF), // White text
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
