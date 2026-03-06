@@ -12,6 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.example.fargalaxy.data.EquipmentRepository
+import com.example.fargalaxy.data.EquipmentUsageRepository
 
 /**
  * PenaltyTracker - Tracks penalties when the app goes to background during travel sessions.
@@ -81,6 +83,7 @@ object PenaltyTracker {
     /**
      * Start tracking penalties for a new travel session.
      * Resets the penalty counter to 0.
+     * Initializes equipment usage state if equipment is equipped.
      */
     fun startTracking() {
         isTracking = true
@@ -92,6 +95,12 @@ object PenaltyTracker {
         cancellationCheckJob?.cancel()
         screenMonitorJob?.cancel()
         
+        // Initialize equipment usage state for new travel (resets single-use equipment, preserves multi-use)
+        val equippedItem = EquipmentRepository.getEquippedItem()
+        equippedItem?.let {
+            EquipmentUsageRepository.initializeUsageForNewTravel(it)
+        }
+        
         // Start checking for trip cancellation (if user is away for >20 seconds)
         // Only cancel if screen was on when app went to background (user switched apps),
         // not if phone was locked or sleeping
@@ -102,7 +111,14 @@ object PenaltyTracker {
                     val timeAway = System.currentTimeMillis() - backgroundStartTime
                     if (timeAway > 20000) { // 20 seconds
                         // User has been away for more than 20 seconds (and screen was on), cancel trip
-                        onTripCancelled?.invoke("timeout")
+                        // Check for unstable cargo: if equipped, mark penalty
+                        val equippedItem = EquipmentRepository.getEquippedItem()
+                        if (equippedItem == "unstable_cargo") {
+                            EquipmentUsageRepository.markUnstableCargoPenalty()
+                            onTripCancelled?.invoke("unstable_cargo")
+                        } else {
+                            onTripCancelled?.invoke("timeout")
+                        }
                         break
                     }
                 }
@@ -176,11 +192,31 @@ object PenaltyTracker {
                 // Don't count if phone was locked/sleeping when app went to background
                 if (isAppInBackground && isTracking) {
                     if (!isPhoneCallActive() && wasScreenOnWhenBackgrounded) {
-                        penaltyCount++
+                        // Check if emergency modulator is equipped and not yet used
+                        val equippedItem = EquipmentRepository.getEquippedItem()
+                        val isEmergencyModulator = equippedItem == "emergency_modulator"
+                        val isEmergencyModulatorUsed = EquipmentUsageRepository.isEmergencyModulatorUsed()
                         
-                        // Check if penalty count reached 5 - cancel trip
-                        if (penaltyCount >= 5) {
-                            onTripCancelled?.invoke("penalties")
+                        if (isEmergencyModulator && !isEmergencyModulatorUsed) {
+                            // Emergency modulator: ignore first penalty, mark as used
+                            // DO NOT increment penaltyCount - it should remain 0
+                            EquipmentUsageRepository.markEmergencyModulatorUsed()
+                            // Explicitly ensure penaltyCount is 0 (safeguard in case of any timing issues)
+                            penaltyCount = 0
+                        } else {
+                            // Normal penalty or emergency modulator already used
+                            penaltyCount++
+                            
+                            // Check for unstable cargo: if equipped, mark penalty and cancel trip
+                            if (equippedItem == "unstable_cargo") {
+                                EquipmentUsageRepository.markUnstableCargoPenalty()
+                                onTripCancelled?.invoke("unstable_cargo")
+                            }
+                            
+                            // Check if penalty count reached 5 - cancel trip
+                            if (penaltyCount >= 5) {
+                                onTripCancelled?.invoke("penalties")
+                            }
                         }
                     }
                 }

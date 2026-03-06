@@ -62,6 +62,8 @@ import com.example.fargalaxy.R
 import com.example.fargalaxy.data.UserDataRepository
 import com.example.fargalaxy.data.FlightEnvironmentRepository
 import com.example.fargalaxy.data.ShipPerformanceRepository
+import com.example.fargalaxy.data.EquipmentRepository
+import com.example.fargalaxy.data.EquipmentUsageRepository
 import com.example.fargalaxy.model.Ship
 import kotlinx.coroutines.delay
 import android.media.MediaPlayer
@@ -143,6 +145,8 @@ private fun calculateLevelFromXP(xp: Int): Int {
 fun RewardsScreen(
     travelMinutes: Int,
     penaltyCount: Int = 0,
+    equippedItemAtTravelTime: String? = null,
+    hasUnstableCargoPenalty: Boolean = false,
     onContinueClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     currentShip: Ship
@@ -150,6 +154,18 @@ fun RewardsScreen(
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
     val screenWidth = with(density) { configuration.screenWidthDp.dp }
+    
+    // Use equipment info captured at travel time (before consumption)
+    val equippedItem = equippedItemAtTravelTime
+    val isEmergencyModulatorUsed = com.example.fargalaxy.data.EquipmentUsageRepository.isEmergencyModulatorUsed()
+    
+    // Adjust penalty count: if emergency modulator was used, the first penalty should be ignored
+    // So if emergency modulator was used and penaltyCount is 0, it means no actual penalties occurred
+    val adjustedPenaltyCount = if (equippedItem == "emergency_modulator" && isEmergencyModulatorUsed && penaltyCount == 0) {
+        0 // Emergency modulator was used, no actual penalties
+    } else {
+        penaltyCount
+    }
     
     // Calculate earned rewards
     // If travelMinutes is 0, it's test mode (10 seconds), so calculate based on 10 seconds
@@ -162,8 +178,8 @@ fun RewardsScreen(
     val baseEarnedCredits = (actualMinutes * 100).toInt() // 1 min = 100 credits
     
     // Calculate penalty percentage (5% per penalty)
-    val penaltyPercentage = penaltyCount * 5
-    val isFlawlessTravel = penaltyCount == 0
+    val penaltyPercentage = adjustedPenaltyCount * 5
+    val isFlawlessTravel = adjustedPenaltyCount == 0
     
     // Flight Environment bonus: +10% if current ship's profile matches today's environment
     val spaceConditionsPercentage =
@@ -172,6 +188,29 @@ fun RewardsScreen(
     // Ship performance bonus: 0–20% based on average of acceleration, speed, and stability
     val shipPerformancePercentage =
         ShipPerformanceRepository.getPerformanceBonusPercent(currentShip.id)
+    
+    // Equipment effects
+    var equipmentXPModifier = 0f
+    var equipmentCreditsModifier = 0f
+    
+    when (equippedItem) {
+        "unstable_cargo" -> {
+            if (hasUnstableCargoPenalty) {
+                // Lose all XP and credits if penalty occurred
+                equipmentXPModifier = -1f // -100%
+                equipmentCreditsModifier = -1f // -100%
+            } else if (isFlawlessTravel) {
+                // +20% bonus if flawless
+                equipmentXPModifier = 0.2f
+                equipmentCreditsModifier = 0.2f
+            }
+        }
+        "experimental_fuel" -> {
+            // -10% reduction to XP and credits
+            equipmentXPModifier = -0.1f
+            equipmentCreditsModifier = -0.1f
+        }
+    }
     
     // Calculate total percentage modifier
     // 1) Flawless travel: +5% if obtained, or penalties: -5% per penalty
@@ -185,16 +224,30 @@ fun RewardsScreen(
     val totalPercentage =
         penaltyOrFlawlessPercentage + spaceConditionsPercentage + shipPerformancePercentage
     
-    // Calculate final earned rewards after penalties/bonuses and space conditions
-    val earnedXP = if (totalPercentage != 0) {
+    // Calculate base rewards after penalties/bonuses and space conditions
+    val baseRewardsXP = if (totalPercentage != 0) {
         (baseEarnedXP * (1f + totalPercentage / 100f)).toInt()
     } else {
         baseEarnedXP
     }
-    val earnedCredits = if (totalPercentage != 0) {
+    val baseRewardsCredits = if (totalPercentage != 0) {
         (baseEarnedCredits * (1f + totalPercentage / 100f)).toInt()
     } else {
         baseEarnedCredits
+    }
+    
+    // Apply equipment effects
+    val earnedXP = if (equipmentXPModifier == -1f) {
+        // Unstable cargo penalty: lose all
+        0
+    } else {
+        (baseRewardsXP * (1f + equipmentXPModifier)).toInt()
+    }
+    val earnedCredits = if (equipmentCreditsModifier == -1f) {
+        // Unstable cargo penalty: lose all
+        0
+    } else {
+        (baseRewardsCredits * (1f + equipmentCreditsModifier)).toInt()
     }
     
     // Get current user data
@@ -658,7 +711,7 @@ fun RewardsScreen(
                         // Penalty counter or Flawless travel label
                         if (!showFlawlessTravel) {
                             Text(
-                                text = "$penaltyCount penalties",
+                                text = "$adjustedPenaltyCount penalties",
                                 fontFamily = Exo2,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Normal,
@@ -785,6 +838,85 @@ fun RewardsScreen(
                             color = Color.White,
                             modifier = Modifier.alpha(shipPerformanceAlphaAnimated)
                         )
+                    }
+                    
+                    // Equipment labels: appear directly under Ship performance (0dp spacing)
+                    // Unstable cargo: show if equipped and travel was flawless
+                    if (equippedItem == "unstable_cargo" && isFlawlessTravel && !hasUnstableCargoPenalty) {
+                        Spacer(modifier = Modifier.height(0.dp))
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset(x = spaceConditionsSectionOffsetAnimated)
+                                .alpha(spaceConditionsSectionAlphaAnimated),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Unstable cargo",
+                                fontFamily = Exo2,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White
+                            )
+                            
+                            Spacer(modifier = Modifier.width(4.dp))
+                            
+                            val equipmentAlphaAnimated by animateFloatAsState(
+                                targetValue = spaceConditionsAlpha,
+                                animationSpec = tween(durationMillis = 1000),
+                                label = "equipment_fade"
+                            )
+                            
+                            Text(
+                                text = "(+20%)",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White,
+                                modifier = Modifier.alpha(equipmentAlphaAnimated)
+                            )
+                        }
+                    }
+                    
+                    // Experimental fuel: show if equipped
+                    if (equippedItem == "experimental_fuel") {
+                        Spacer(modifier = Modifier.height(0.dp))
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset(x = spaceConditionsSectionOffsetAnimated)
+                                .alpha(spaceConditionsSectionAlphaAnimated),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Experimental fuel",
+                                fontFamily = Exo2,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White
+                            )
+                            
+                            Spacer(modifier = Modifier.width(4.dp))
+                            
+                            val equipmentAlphaAnimated by animateFloatAsState(
+                                targetValue = spaceConditionsAlpha,
+                                animationSpec = tween(durationMillis = 1000),
+                                label = "equipment_fade"
+                            )
+                            
+                            Text(
+                                text = "(-10%)",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White,
+                                modifier = Modifier.alpha(equipmentAlphaAnimated)
+                            )
+                        }
                     }
                 }
                 

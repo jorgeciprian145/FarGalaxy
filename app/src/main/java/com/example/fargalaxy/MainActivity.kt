@@ -56,9 +56,12 @@ class MainActivity : ComponentActivity() {
         com.example.fargalaxy.data.InventoryRepository.initialize(this)
         com.example.fargalaxy.data.FlightEnvironmentRepository.initialize(this)
         com.example.fargalaxy.data.EquipmentRepository.initialize(this)
+        com.example.fargalaxy.data.EquipmentUsageRepository.initialize(this)
         
         // TODO: REMOVE TESTING CODE - Reset progress to zero for testing ship unlock
-        com.example.fargalaxy.data.GameStateRepository.resetProgress()
+        // NOTE: Commented out to preserve progress across app sessions
+        // Uncomment only when testing reset functionality
+        // com.example.fargalaxy.data.GameStateRepository.resetProgress()
         
         // Set credits to 50000 in test mode (for testing purposes)
         // Must be called AFTER resetProgress() to avoid credits being reset to 0

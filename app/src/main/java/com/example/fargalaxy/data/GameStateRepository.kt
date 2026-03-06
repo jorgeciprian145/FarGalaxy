@@ -47,16 +47,9 @@ object GameStateRepository {
                 _isTestMode = mutableStateOf(false)
             }
             
-            // TODO: TESTING ONLY - Reset consumed travels and maintenance status on app start
-            // In final app, remove this to keep daily reset behavior and maintenance persistence
-            prefs!!.edit()
-                .remove(KEY_CONSUMED_TRAVELS)
-                .remove(KEY_CONSUMED_TRAVELS_DATE)
-                .remove(KEY_MAINTENANCE_START_TIME)
-                .remove(KEY_MAINTENANCE_DURATION)
-                .apply()
-            
             // Sync unlocked ships and locations based on current focus time (in case user already has enough focus time)
+            // Note: Consumed travels and maintenance state persist across app sessions
+            // They are only reset when resetProgress() is called manually
             syncUnlockedShipsFromFocusTime()
             syncUnlockedLocationsFromFocusTime()
         }
@@ -343,6 +336,18 @@ object GameStateRepository {
         // Reset flight environment scanner usage so environment returns to default state
         FlightEnvironmentRepository.resetScannerUsage()
         
+        // Reset equipped equipment
+        com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+        com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+        
+        // Reset consumed travels and maintenance status
+        prefs?.edit()
+            ?.remove(KEY_CONSUMED_TRAVELS)
+            ?.remove(KEY_CONSUMED_TRAVELS_DATE)
+            ?.remove(KEY_MAINTENANCE_START_TIME)
+            ?.remove(KEY_MAINTENANCE_DURATION)
+            ?.apply()
+        
         // Reset to starting state: only B14 Phantom unlocked and owned, no locations
         unlockedShipsReal = setOf("b14_phantom")
         ownedShipsReal = setOf("b14_phantom") // Starting ship is owned
@@ -350,6 +355,9 @@ object GameStateRepository {
         
         // Reset current ship to default
         ShipRepository.setCurrentShip(ShipRepository.getAllShips().first().id)
+        
+        // Reapply test mode credits if test mode is enabled (so credits are always 50000 in test mode)
+        UserDataRepository.setTestModeCreditsIfEnabled()
     }
     
     /**

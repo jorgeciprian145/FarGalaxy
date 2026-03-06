@@ -5,12 +5,9 @@ import android.content.SharedPreferences
 import org.json.JSONObject
 
 /**
- * EquipmentRepository - manages equipped equipment items per ship.
+ * EquipmentRepository - manages equipped equipment items globally (not per ship).
  * 
- * Stores equipped equipment as a JSON object mapping ship IDs to item IDs.
- * Example: {"b14_phantom": "emergency_modulator", "crusher": "unstable_cargo"}
- * 
- * Only one equipment item can be equipped per ship at a time.
+ * Stores equipped equipment as a single item ID (only one equipment can be equipped at a time).
  * 
  * Item IDs:
  * - "emergency_modulator" - Emergency modulators
@@ -19,7 +16,7 @@ import org.json.JSONObject
  */
 object EquipmentRepository {
     private const val PREFS_NAME = "equipment_prefs"
-    private const val KEY_EQUIPPED = "equipped" // JSON object: {"shipId": "itemId"}
+    private const val KEY_EQUIPPED = "equipped" // String: itemId or null
     
     private var prefs: SharedPreferences? = null
     
@@ -34,73 +31,37 @@ object EquipmentRepository {
     }
     
     /**
-     * Get the equipped item ID for a specific ship.
+     * Get the currently equipped item ID.
      * 
-     * @param shipId The ship ID (e.g., "b14_phantom")
      * @return The equipped item ID, or null if no item is equipped
      */
-    fun getEquippedItem(shipId: String): String? {
-        val equippedJson = prefs?.getString(KEY_EQUIPPED, null) ?: return null
-        
-        return try {
-            val equipped = JSONObject(equippedJson)
-            if (equipped.has(shipId)) {
-                equipped.getString(shipId)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            null
-        }
+    fun getEquippedItem(): String? {
+        return prefs?.getString(KEY_EQUIPPED, null)
     }
     
     /**
-     * Equip an item to a ship.
+     * Equip an item globally.
      * 
-     * @param shipId The ship ID (e.g., "b14_phantom")
      * @param itemId The item ID to equip (e.g., "emergency_modulator")
      */
-    fun equipItem(shipId: String, itemId: String) {
-        val equippedJson = prefs?.getString(KEY_EQUIPPED, null)
-        val equipped = if (equippedJson != null) {
-            try {
-                JSONObject(equippedJson)
-            } catch (e: Exception) {
-                JSONObject()
-            }
-        } else {
-            JSONObject()
-        }
-        
-        equipped.put(shipId, itemId)
-        prefs?.edit()?.putString(KEY_EQUIPPED, equipped.toString())?.apply()
+    fun equipItem(itemId: String) {
+        prefs?.edit()?.putString(KEY_EQUIPPED, itemId)?.apply()
     }
     
     /**
-     * Unequip the item from a ship.
-     * 
-     * @param shipId The ship ID (e.g., "b14_phantom")
+     * Unequip the currently equipped item.
      */
-    fun unequipItem(shipId: String) {
-        val equippedJson = prefs?.getString(KEY_EQUIPPED, null) ?: return
-        val equipped = try {
-            JSONObject(equippedJson)
-        } catch (e: Exception) {
-            return
-        }
-        
-        equipped.remove(shipId)
-        prefs?.edit()?.putString(KEY_EQUIPPED, equipped.toString())?.apply()
+    fun unequipItem() {
+        prefs?.edit()?.remove(KEY_EQUIPPED)?.apply()
     }
     
     /**
-     * Check if a specific item is equipped to a ship.
+     * Check if a specific item is equipped.
      * 
-     * @param shipId The ship ID
      * @param itemId The item ID to check
      * @return true if the item is equipped, false otherwise
      */
-    fun isItemEquipped(shipId: String, itemId: String): Boolean {
-        return getEquippedItem(shipId) == itemId
+    fun isItemEquipped(itemId: String): Boolean {
+        return getEquippedItem() == itemId
     }
 }

@@ -1,5 +1,6 @@
 package com.example.fargalaxy.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -381,7 +382,10 @@ fun TimeLabel(
 
 /**
  * PenaltyCounter composable - displays the penalty counter with icon and label.
- * Shows "(value) Penalties suffered" with a penalty icon.
+ * Shows different labels based on equipped equipment:
+ * - Emergency modulator: "Emergency modulator use 0/1" or "1/1" (for 5 seconds) then "0/5 penalties"
+ * - Unstable cargo: "No penalties allowed"
+ * - Default: "#/5 penalties"
  * 
  * @param penaltyCount The current penalty count
  * @param modifier Modifier for the component
@@ -391,6 +395,56 @@ fun PenaltyCounter(
     penaltyCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    val equippedItem = remember {
+        com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
+    }
+    
+    // For emergency modulator: track if it's been used and show "1/1" for 5 seconds
+    var showEmergencyModulatorUsed by remember { mutableStateOf(false) }
+    val isEmergencyModulatorUsed = com.example.fargalaxy.data.EquipmentUsageRepository.isEmergencyModulatorUsed()
+    
+    LaunchedEffect(isEmergencyModulatorUsed) {
+        if (isEmergencyModulatorUsed && equippedItem == "emergency_modulator") {
+            showEmergencyModulatorUsed = true
+            delay(5000) // Show "1/1" for 5 seconds
+            showEmergencyModulatorUsed = false
+        }
+    }
+    
+    // Get the actual penalty count - if emergency modulator was used, it should be 0
+    // Read directly from PenaltyTracker to ensure we have the latest value
+    val actualPenaltyCount = remember(penaltyCount, isEmergencyModulatorUsed, equippedItem) {
+        // If emergency modulator is equipped and was used, the penalty count must be 0
+        if (equippedItem == "emergency_modulator" && isEmergencyModulatorUsed) {
+            // Read directly from PenaltyTracker to get the latest value
+            val trackerCount = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
+            // Emergency modulator was used, so count should be 0 (force to 0 if somehow it's not)
+            trackerCount.coerceAtMost(0) // Ensure it's never > 0 when modulator was used
+        } else {
+            penaltyCount
+        }
+    }
+    
+    // Determine label text based on equipped equipment
+    val labelText = when (equippedItem) {
+        "emergency_modulator" -> {
+            if (showEmergencyModulatorUsed) {
+                "Emergency modulator use 1/1"
+            } else if (!isEmergencyModulatorUsed) {
+                "Emergency modulator use 0/1"
+            } else {
+                // Emergency modulator was used, show actual penalty count (should be 0)
+                "$actualPenaltyCount/5 penalties"
+            }
+        }
+        "unstable_cargo" -> {
+            "No penalties allowed"
+        }
+        else -> {
+            "$penaltyCount/5 penalties"
+        }
+    }
+    
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center,
@@ -407,9 +461,9 @@ fun PenaltyCounter(
         // 4dp spacing between icon and label
         Spacer(modifier = Modifier.width(4.dp))
         
-        // Label: "#/5 penalties" - 18sp, regular weight
+        // Label: Dynamic based on equipment - 18sp, regular weight
         Text(
-            text = "$penaltyCount/5 penalties",
+            text = labelText,
             fontFamily = Exo2,
             fontSize = 18.sp,
             fontWeight = FontWeight.W400, // Regular
@@ -588,6 +642,8 @@ fun BoostSelectionBottomSheet(
     onDismiss: () -> Unit = {},
     currentShip: Ship,
     onShowToast: (String) -> Unit = {},
+    onShowScannerProgress: () -> Unit = {},
+    onShowExperimentalFuelRemoveModal: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Animation state for slide-in from bottom
@@ -690,7 +746,7 @@ fun BoostSelectionBottomSheet(
             ) {
                     // Row 1: Emergency modulators
                     val emergencyModulatorQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("emergency_modulator")
-                    val isEmergencyModulatorEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped(currentShip.id, "emergency_modulator")
+                    val isEmergencyModulatorEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped("emergency_modulator")
                     BoostItemRow(
                         imageResId = R.drawable.modulatorselection,
                         itemName = "Emergency modulators",
@@ -700,13 +756,15 @@ fun BoostSelectionBottomSheet(
                         onClick = {
                             if (isEmergencyModulatorEquipped) {
                                 // Unequip if already equipped
-                                com.example.fargalaxy.data.EquipmentRepository.unequipItem(currentShip.id)
+                                com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                                com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
                                 onDismiss() // Close the bottom sheet
                             } else {
                                 // Check if user has the item in inventory
                                 if (emergencyModulatorQuantity > 0) {
                                     // Equip this item (unequips any other item first)
-                                    com.example.fargalaxy.data.EquipmentRepository.equipItem(currentShip.id, "emergency_modulator")
+                                    com.example.fargalaxy.data.EquipmentRepository.equipItem("emergency_modulator")
+                                    com.example.fargalaxy.data.EquipmentUsageRepository.initializeUsage("emergency_modulator")
                                     onDismiss() // Close the bottom sheet
                                 } else {
                                     // Show toast message if no items available
@@ -718,7 +776,7 @@ fun BoostSelectionBottomSheet(
                     
                     // Row 2: Unstable cargo
                     val unstableCargoQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("unstable_cargo")
-                    val isUnstableCargoEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped(currentShip.id, "unstable_cargo")
+                    val isUnstableCargoEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped("unstable_cargo")
                     BoostItemRow(
                         imageResId = R.drawable.cargoselection,
                         itemName = "Unstable cargo",
@@ -728,13 +786,15 @@ fun BoostSelectionBottomSheet(
                         onClick = {
                             if (isUnstableCargoEquipped) {
                                 // Unequip if already equipped
-                                com.example.fargalaxy.data.EquipmentRepository.unequipItem(currentShip.id)
+                                com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                                com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
                                 onDismiss() // Close the bottom sheet
                             } else {
                                 // Check if user has the item in inventory
                                 if (unstableCargoQuantity > 0) {
                                     // Equip this item (unequips any other item first)
-                                    com.example.fargalaxy.data.EquipmentRepository.equipItem(currentShip.id, "unstable_cargo")
+                                    com.example.fargalaxy.data.EquipmentRepository.equipItem("unstable_cargo")
+                                    com.example.fargalaxy.data.EquipmentUsageRepository.initializeUsage("unstable_cargo")
                                     onDismiss() // Close the bottom sheet
                                 } else {
                                     // Show toast message if no items available
@@ -746,7 +806,7 @@ fun BoostSelectionBottomSheet(
                     
                     // Row 3: Experimental fuel (last row - has bottom divider)
                     val experimentalFuelQuantity = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("experimental_fuel")
-                    val isExperimentalFuelEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped(currentShip.id, "experimental_fuel")
+                    val isExperimentalFuelEquipped = com.example.fargalaxy.data.EquipmentRepository.isItemEquipped("experimental_fuel")
                     BoostItemRow(
                         imageResId = R.drawable.fuelselection,
                         itemName = "Experimental fuel",
@@ -755,14 +815,25 @@ fun BoostSelectionBottomSheet(
                         isEquipped = isExperimentalFuelEquipped,
                         onClick = {
                             if (isExperimentalFuelEquipped) {
-                                // Unequip if already equipped
-                                com.example.fargalaxy.data.EquipmentRepository.unequipItem(currentShip.id)
+                                // Check if there are remaining travels - show confirmation modal
+                                val remainingTravels = com.example.fargalaxy.data.EquipmentUsageRepository.getExperimentalFuelRemaining()
+                                if (remainingTravels > 0) {
+                                    // Show removal confirmation modal
+                                    onShowExperimentalFuelRemoveModal()
+                                } else {
+                                    // No remaining travels, safe to unequip
+                                    com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                                    com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                                }
                                 onDismiss() // Close the bottom sheet
                             } else {
                                 // Check if user has the item in inventory
                                 if (experimentalFuelQuantity > 0) {
                                     // Equip this item (unequips any other item first)
-                                    com.example.fargalaxy.data.EquipmentRepository.equipItem(currentShip.id, "experimental_fuel")
+                                    // Remove item from inventory immediately when equipped
+                                    com.example.fargalaxy.data.InventoryRepository.removeItem("experimental_fuel", 1)
+                                    com.example.fargalaxy.data.EquipmentRepository.equipItem("experimental_fuel")
+                                    com.example.fargalaxy.data.EquipmentUsageRepository.initializeUsage("experimental_fuel")
                                     onDismiss() // Close the bottom sheet
                                 } else {
                                     // Show toast message if no items available
@@ -779,7 +850,8 @@ fun BoostSelectionBottomSheet(
             // Deep Space Scanners container
             DeepSpaceScannersContainer(
                 currentShip = currentShip,
-                onShowToast = onShowToast
+                onShowToast = onShowToast,
+                onShowScannerProgress = onShowScannerProgress
             )
             
             // Spacing: 24dp below container
@@ -915,6 +987,350 @@ private fun BoostItemRow(
 }
 
 /**
+ * ScannerProgressScreen composable - displays the scanning progress screen.
+ * Shows radar animation and "Deep space scanning in progress" text.
+ * Plays for 3 seconds then fades out.
+ */
+@Composable
+private fun ScannerProgressScreen(
+    onComplete: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
+    val screenWidth = with(density) { configuration.screenWidthDp.dp }
+    
+    // Animation states
+    var alpha by remember { mutableStateOf(1f) }
+    
+    // Load radar JSON composition
+    val radarComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.radar))
+    
+    // Auto-advance after 3 seconds with fade out
+    LaunchedEffect(Unit) {
+        delay(3000) // Play for 3 seconds
+        // Fade out animation
+        alpha = 0f
+        delay(600) // Wait for fade animation to complete
+        onComplete()
+    }
+    
+    // Animate alpha
+    val animatedAlpha by animateFloatAsState(
+        targetValue = alpha,
+        animationSpec = tween(durationMillis = 600),
+        label = "fade_out"
+    )
+    
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    // Block drag gestures
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // Blur and overlay: Same as modals (96% opacity black overlay)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    renderEffect = AndroidRenderEffect.createBlurEffect(
+                        16f,
+                        16f,
+                        Shader.TileMode.CLAMP
+                    ).asComposeRenderEffect()
+                }
+                .background(Color.Black.copy(alpha = 0.96f))
+                .clickable(enabled = false) { } // Block all clicks
+        )
+        
+        // Content container: Centered vertically and horizontally
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .alpha(animatedAlpha),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Radar animation: 85% of screen width, maintaining aspect ratio
+            Box(
+                modifier = Modifier
+                    .width(screenWidth * 0.85f)
+                    .wrapContentHeight()
+            ) {
+                LottieAnimation(
+                    composition = radarComposition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.fillMaxWidth(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+            
+            // 32dp spacing below animation
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Label: "Deep space scanning in progress" - bold, 28sp
+            Text(
+                text = "Deep space scanning in progress",
+                fontFamily = Exo2,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 32.dp) // 32dp side padding
+            )
+        }
+    }
+}
+
+/**
+ * ScannerResultsScreen composable - displays the scanner results.
+ * Shows environment, recommended profile, and reset time.
+ */
+@Composable
+private fun ScannerResultsScreen(
+    onContinueClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    // Get environment data
+    val currentEnvironment = com.example.fargalaxy.data.FlightEnvironmentRepository.getCurrentEnvironment()
+    val environmentName = currentEnvironment.displayName
+    val recommendedProfile = currentEnvironment.recommendedProfile
+    val recommendedProfileText = when (recommendedProfile) {
+        com.example.fargalaxy.model.ShipProfile.STABLE -> "Stable"
+        com.example.fargalaxy.model.ShipProfile.ACCELERATOR -> "Accelerator"
+        com.example.fargalaxy.model.ShipProfile.RUNNER -> "Runner"
+        com.example.fargalaxy.model.ShipProfile.WELL_ROUNDED -> "Well rounded"
+    }
+    
+    // Track remaining time until reset
+    var remainingMillis by remember {
+        mutableStateOf(com.example.fargalaxy.data.FlightEnvironmentRepository.getRemainingMillisUntilReset())
+    }
+    
+    // Update remaining time every second
+    LaunchedEffect(Unit) {
+        while (true) {
+            remainingMillis = com.example.fargalaxy.data.FlightEnvironmentRepository.getRemainingMillisUntilReset()
+            kotlinx.coroutines.delay(1000L)
+        }
+    }
+    
+    // Helper to format remaining time as "HH:MM hs"
+    fun formatRemaining(millis: Long): String {
+        val totalSeconds = (millis / 1000L).coerceAtLeast(0L)
+        val hours = totalSeconds / 3600L
+        val minutes = (totalSeconds % 3600L) / 60L
+        return String.format("%02d:%02d hs", hours, minutes)
+    }
+    
+    val remainingText = formatRemaining(remainingMillis)
+    
+    // Fade in animation
+    var alpha by remember { mutableStateOf(0f) }
+    LaunchedEffect(Unit) {
+        alpha = 1f
+    }
+    
+    val animatedAlpha by animateFloatAsState(
+        targetValue = alpha,
+        animationSpec = tween(durationMillis = 600),
+        label = "fade_in"
+    )
+    
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    // Block drag gestures
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // Blur and overlay: Same as modals (96% opacity black overlay)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    renderEffect = AndroidRenderEffect.createBlurEffect(
+                        16f,
+                        16f,
+                        Shader.TileMode.CLAMP
+                    ).asComposeRenderEffect()
+                }
+                .background(Color.Black.copy(alpha = 0.96f))
+                .clickable(enabled = false) { } // Block all clicks
+        )
+        
+        // Content container: 16dp side padding, vertically and horizontally centered
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .alpha(animatedAlpha),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Title: "Scanner results" - bold, 28sp
+            Text(
+                text = "Scanner results",
+                fontFamily = Exo2,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            
+            // 4dp spacing below title
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Label: "This is how the flight environment is today" - regular, 16sp
+            Text(
+                text = "This is how the flight environment is today",
+                fontFamily = Exo2,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+            
+            // 16dp spacing below label
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Divider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))
+            )
+            
+            // 16dp spacing below divider
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // First pair: Environment today
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Environment today",
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = environmentName,
+                    fontFamily = Exo2,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
+            
+            // 16dp spacing below first pair
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Second pair: Boosted ship profile
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Boosted ship profile",
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = recommendedProfileText,
+                    fontFamily = Exo2,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
+            
+            // 16dp spacing below second pair
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Divider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0xFFFFFFFF).copy(alpha = 0.32f))
+            )
+            
+            // 16dp spacing below divider
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Third pair: Flight environment will reset in
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Flight environment will reset in:",
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = remainingText,
+                    fontFamily = Exo2,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
+            
+            // 24dp spacing before button
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // CONTINUE button: Full width, white background, black text
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(80.dp))
+                    .background(Color(0xFFFFFFFF))
+                    .clickable(onClick = onContinueClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "CONTINUE",
+                    fontFamily = Exo2,
+                    fontSize = 24.sp,
+                    lineHeight = 24.sp,
+                    color = Color(0xFF010102),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = (-2).dp)
+                )
+            }
+        }
+    }
+}
+
+/**
  * DeepSpaceScannersContainer composable - displays the deep space scanners section.
  * When the scanner has not been used for the current environment, it shows the
  * "Deep space scanners" description and a button to reveal conditions.
@@ -924,6 +1340,7 @@ private fun BoostItemRow(
 private fun DeepSpaceScannersContainer(
     currentShip: Ship,
     onShowToast: (String) -> Unit = {},
+    onShowScannerProgress: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Track current scanner quantity from inventory
@@ -1078,18 +1495,13 @@ private fun DeepSpaceScannersContainer(
                             .height(24.dp)
                             .clip(RoundedCornerShape(80.dp))
                             .background(Color(0xFFFFFFFF).copy(alpha = if (buttonEnabled) 1f else 0.4f))
-                            .let {
+                            .clickable {
                                 if (buttonEnabled) {
-                                    it.clickable {
-                                        // Consume one scanner and reveal environment
-                                        com.example.fargalaxy.data.InventoryRepository.removeItem("deep_space_scanner", 1)
-                                        scannerCount = com.example.fargalaxy.data.InventoryRepository.getItemQuantity("deep_space_scanner")
-                                        com.example.fargalaxy.data.FlightEnvironmentRepository.markScannerUsedForCurrentEnvironment()
-                                        hasRevealedToday = true
-                                        onShowToast("Flight environment revealed for the day")
-                                    }
+                                    // Show first intermediate screen instead of immediately revealing
+                                    onShowScannerProgress()
                                 } else {
-                                    it
+                                    // Show toast message if no scanners available
+                                    onShowToast("You don't have any Deep space scanners remaining")
                                 }
                             },
                         contentAlignment = Alignment.Center
@@ -2317,6 +2729,16 @@ fun GalaxyScreen(
     // showBoostSelectionBottomSheet: Controls visibility of the boost selection bottom sheet
     var showBoostSelectionBottomSheet by remember { mutableStateOf(false) }
     
+    // Scanner screen states
+    var showScannerProgress by remember { mutableStateOf(false) }
+    var showScannerResults by remember { mutableStateOf(false) }
+    
+    // Experimental fuel removal confirmation modal
+    var showExperimentalFuelRemoveModal by remember { mutableStateOf(false) }
+    
+    // Unstable cargo cancellation modal
+    var showUnstableCargoCanceledModal by remember { mutableStateOf(false) }
+    
     // Notify parent when bottom sheet visibility changes
     LaunchedEffect(showBoostSelectionBottomSheet) {
         onBoostSelectionBottomSheetVisibilityChange(showBoostSelectionBottomSheet)
@@ -2331,11 +2753,20 @@ fun GalaxyScreen(
     // travelPenaltyCount: The penalty count for the completed travel (captured before reset)
     var travelPenaltyCount by remember { mutableStateOf(0) }
     
+    // travelEquippedItem: The equipped item at the time of travel completion (captured before consumption)
+    var travelEquippedItem by remember { mutableStateOf<String?>(null) }
+    
+    // travelHasUnstableCargoPenalty: Whether unstable cargo penalty occurred during travel
+    var travelHasUnstableCargoPenalty by remember { mutableStateOf(false) }
+    
     // Track if travel was cancelled (to avoid showing modal if cancelled)
     var wasTravelCancelled by remember { mutableStateOf(false) }
     
     // Track travel session start time to calculate elapsed focus time
     var travelStartTime by remember { mutableStateOf(0L) } // System time in milliseconds
+    
+    // Track actual travel duration in seconds (may be reduced by experimental fuel)
+    var actualTravelDurationSeconds by remember { mutableStateOf(0) }
     
     // TODO: REMOVE TESTING CODE - Track if in test mode (10 seconds)
     var isTestMode by remember { mutableStateOf(false) }
@@ -2378,10 +2809,10 @@ fun GalaxyScreen(
     
     // Calculate remaining time based on elapsed time (works even when app is in background)
     // This derived state recalculates whenever travelStartTime or timerTrigger changes
+    // Uses actualTravelDurationSeconds which accounts for experimental fuel reduction
     val calculatedRemainingSeconds = derivedStateOf {
-        if (isTraveling && travelStartTime > 0) {
-            val travelDurationSeconds = if (isTestMode) 10 else selectedMinutes * 60
-            val travelDurationMillis = travelDurationSeconds * 1000L
+        if (isTraveling && travelStartTime > 0 && actualTravelDurationSeconds > 0) {
+            val travelDurationMillis = actualTravelDurationSeconds * 1000L
             val elapsedMillis = System.currentTimeMillis() - travelStartTime
             ((travelDurationMillis - elapsedMillis) / 1000).toInt().coerceAtLeast(0)
         } else {
@@ -2405,6 +2836,36 @@ fun GalaxyScreen(
                 } else {
                     selectedMinutes
                 }
+                // Capture equipment info BEFORE consumption (for RewardsScreen display)
+                val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
+                travelEquippedItem = equippedItem
+                travelHasUnstableCargoPenalty = com.example.fargalaxy.data.EquipmentUsageRepository.hasUnstableCargoPenalty()
+                
+                // Handle equipment consumption
+                when (equippedItem) {
+                    "emergency_modulator" -> {
+                        // Consumed after 1 travel - remove from inventory and unequip
+                        com.example.fargalaxy.data.InventoryRepository.removeItem("emergency_modulator", 1)
+                        com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                        com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                    }
+                    "unstable_cargo" -> {
+                        // Consumed after 1 travel - remove from inventory and unequip
+                        com.example.fargalaxy.data.InventoryRepository.removeItem("unstable_cargo", 1)
+                        com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                        com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                    }
+                    "experimental_fuel" -> {
+                        // Decrement remaining travels
+                        val remaining = com.example.fargalaxy.data.EquipmentUsageRepository.decrementExperimentalFuel()
+                        if (remaining <= 0) {
+                            // All travels consumed - unequip
+                            com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                            com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                        }
+                    }
+                }
+                
                 // Consume one travel after trip completes
                 com.example.fargalaxy.data.GameStateRepository.consumeTravel(currentShip.id)
                 
@@ -2543,6 +3004,33 @@ fun GalaxyScreen(
             isTraveling = false
             isInitialRingAppearance = false // Reset for next launch
             wasTravelCancelled = true // Mark as cancelled
+            
+            // Handle equipment consumption for manually stopped travel
+            val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
+            when (equippedItem) {
+                "emergency_modulator" -> {
+                    // Consumed after 1 travel - remove from inventory and unequip
+                    com.example.fargalaxy.data.InventoryRepository.removeItem("emergency_modulator", 1)
+                    com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                    com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                }
+                "unstable_cargo" -> {
+                    // Consumed after 1 travel - remove from inventory and unequip
+                    com.example.fargalaxy.data.InventoryRepository.removeItem("unstable_cargo", 1)
+                    com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                    com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                }
+                "experimental_fuel" -> {
+                    // Decrement remaining travels
+                    val remaining = com.example.fargalaxy.data.EquipmentUsageRepository.decrementExperimentalFuel()
+                    if (remaining <= 0) {
+                        // All travels consumed - unequip
+                        com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                        com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                    }
+                }
+            }
+            
             // Consume one travel after trip is manually cancelled
             com.example.fargalaxy.data.GameStateRepository.consumeTravel(currentShip.id)
             
@@ -2553,8 +3041,11 @@ fun GalaxyScreen(
                 val wasAlreadyInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
                 com.example.fargalaxy.data.GameStateRepository.startMaintenance(currentShip.id)
                 // Mark repair modal as pending - will show after all other screens (success modal, rewards, unlocks)
+                // For manual cancellation, show directly since there's no cancellation modal
                 if (!wasAlreadyInMaintenance) {
                     pendingRepairModal = true
+                    // Show repairs modal directly since manual cancellation doesn't show a cancellation modal
+                    // LaunchedEffect will handle it, but we can also trigger it here as a fallback
                 }
             }
             
@@ -2574,18 +3065,22 @@ fun GalaxyScreen(
                     com.example.fargalaxy.data.GameStateRepository.syncUnlockedShipsFromFocusTime()
                 }
                 
-                // Reset start time
+                // Reset start time and travel duration
                 travelStartTime = 0L
+                actualTravelDurationSeconds = 0
             }
         }
     }
     
     // Initialize travel start time and penalty tracking when travel begins
     // This LaunchedEffect only sets up the initial state
-    LaunchedEffect(isTraveling) {
+    LaunchedEffect(isTraveling, currentShip.id) {
         if (isTraveling && travelStartTime == 0L) {
             wasTravelCancelled = false // Reset cancelled flag when travel starts
             travelStartTime = System.currentTimeMillis() // Record start time
+            
+            // Capture ship ID for use in callback
+            val shipIdForCallback = currentShip.id
             
             // Start penalty tracking when travel begins
             // Set up callback for trip cancellation (if user is away for >20 seconds or has 5+ penalties)
@@ -2614,11 +3109,70 @@ fun GalaxyScreen(
                     travelStartTime = 0L
                 }
                 
-                // Consume one travel after trip is cancelled
-                com.example.fargalaxy.data.GameStateRepository.consumeTravel(currentShip.id)
+                // Handle equipment consumption for trip cancellation
+                val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
+                var willShowCancellationModal = false
+                when (equippedItem) {
+                    "emergency_modulator" -> {
+                        // Consumed after 1 travel - remove from inventory and unequip
+                        com.example.fargalaxy.data.InventoryRepository.removeItem("emergency_modulator", 1)
+                        com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                        com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                        // Show cancellation modal even with emergency modulator
+                        showTravelCanceledModal = true
+                        willShowCancellationModal = true
+                    }
+                    "unstable_cargo" -> {
+                        // Consumed after 1 travel - remove from inventory and unequip
+                        com.example.fargalaxy.data.InventoryRepository.removeItem("unstable_cargo", 1)
+                        com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                        com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                        // Show unstable cargo cancellation modal if penalty occurred
+                        if (reason == "unstable_cargo") {
+                            showUnstableCargoCanceledModal = true
+                        } else {
+                            showTravelCanceledModal = true
+                        }
+                        willShowCancellationModal = true
+                    }
+                    "experimental_fuel" -> {
+                        // Decrement remaining travels
+                        val remaining = com.example.fargalaxy.data.EquipmentUsageRepository.decrementExperimentalFuel()
+                        if (remaining <= 0) {
+                            // All travels consumed - unequip
+                            com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                            com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                        }
+                        // Show cancellation modal
+                        showTravelCanceledModal = true
+                        willShowCancellationModal = true
+                    }
+                    else -> {
+                        // No equipment - show regular cancellation modal
+                        showTravelCanceledModal = true
+                        willShowCancellationModal = true
+                    }
+                }
                 
-                // Show cancellation modal
-                showTravelCanceledModal = true
+                // Consume one travel after trip is cancelled
+                com.example.fargalaxy.data.GameStateRepository.consumeTravel(shipIdForCallback)
+                
+                // Check if all travels are consumed - if so, start maintenance
+                val durability = getDurabilityValue(shipIdForCallback)
+                val consumedTravels = com.example.fargalaxy.data.GameStateRepository.getConsumedTravels(shipIdForCallback)
+                if (consumedTravels >= durability) {
+                    val wasAlreadyInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(shipIdForCallback)
+                    com.example.fargalaxy.data.GameStateRepository.startMaintenance(shipIdForCallback)
+                    // Mark repair modal as pending - will show after cancelled modal is closed, or directly if no modal is shown
+                    if (!wasAlreadyInMaintenance) {
+                        pendingRepairModal = true
+                        // If no cancellation modal will be shown, show repairs modal directly
+                        if (!willShowCancellationModal) {
+                            showRepairNeededModal = true
+                            pendingRepairModal = false
+                        }
+                    }
+                }
             }
             com.example.fargalaxy.data.PenaltyTracker.startTracking()
         } else if (!isTraveling && travelStartTime > 0L) {
@@ -2668,8 +3222,9 @@ fun GalaxyScreen(
                     newlyDiscoveredLocations = (unlockedLocationsAfter - unlockedLocationsBeforeSession).toList()
                 }
                 
-                // Reset start time
+                // Reset start time and travel duration
                 travelStartTime = 0L
+                actualTravelDurationSeconds = 0
             }
         }
     }
@@ -2684,7 +3239,9 @@ fun GalaxyScreen(
     }
     
     // Update penalty count periodically while traveling (uses timerTrigger to update even in background)
-    LaunchedEffect(isTraveling, timerTrigger) {
+    // Also watch for emergency modulator usage to update immediately
+    val isEmergencyModulatorUsedForUpdate = com.example.fargalaxy.data.EquipmentUsageRepository.isEmergencyModulatorUsed()
+    LaunchedEffect(isTraveling, timerTrigger, isEmergencyModulatorUsedForUpdate) {
         if (isTraveling) {
             penaltyCount = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
         } else {
@@ -2773,7 +3330,15 @@ fun GalaxyScreen(
                 isPreparingLaunch = false
                 isTraveling = true
                 // TODO: REMOVE TESTING CODE - Use 10 seconds in test mode
-                remainingSeconds = if (isTestMode) 10 else selectedMinutes * 60
+                // Apply 10% reduction for experimental fuel if equipped
+                val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
+                val baseSeconds = if (isTestMode) 10 else selectedMinutes * 60
+                actualTravelDurationSeconds = if (equippedItem == "experimental_fuel") {
+                    (baseSeconds * 0.9f).toInt() // 10% reduction
+                } else {
+                    baseSeconds
+                }
+                remainingSeconds = actualTravelDurationSeconds
                 isInitialRingAppearance = true // Trigger initial drawing animation
                 launchCountdown = 3 // Reset for next time
             }
@@ -3372,6 +3937,26 @@ fun GalaxyScreen(
             )
         }
         
+        // Watch for cancellation modal closing to show repairs modal if pending
+        // Also handles case when trip is manually cancelled (no cancellation modal shown)
+        LaunchedEffect(showTravelCanceledModal, showUnstableCargoCanceledModal, pendingRepairModal, showRewardsScreen, showShipUnlockedScreen, showLocationDiscoveredScreen, showTravelSuccessModal) {
+            // When both cancellation modals are closed (or never shown) and repair is pending, show repairs modal
+            if (!showTravelCanceledModal && !showUnstableCargoCanceledModal && pendingRepairModal) {
+                // Only show if no other critical screens are showing
+                if (!showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showTravelSuccessModal) {
+                    // Small delay to ensure cancellation modal is fully closed (if one was shown)
+                    // For manual cancellation, this delay is minimal and won't hurt
+                    delay(150)
+                    // Double-check conditions after delay (in case state changed)
+                    if (pendingRepairModal && !showTravelCanceledModal && !showUnstableCargoCanceledModal && 
+                        !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showTravelSuccessModal) {
+                        showRepairNeededModal = true
+                        pendingRepairModal = false
+                    }
+                }
+            }
+        }
+        
         // Travel Canceled Modal: Shown when trip is canceled (due to being away for >20 seconds or 5+ penalties)
         if (showTravelCanceledModal) {
             val context = LocalContext.current
@@ -3384,12 +3969,44 @@ fun GalaxyScreen(
                 }
             )
         }
+        
+        // Unstable Cargo Canceled Modal: Shown when unstable cargo penalty occurs
+        if (showUnstableCargoCanceledModal) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
+            UnstableCargoCanceledModal(
+                onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    showUnstableCargoCanceledModal = false
+                }
+            )
+        }
+        
+        // Experimental Fuel Remove Modal: Shown when user tries to remove experimental fuel with remaining travels
+        if (showExperimentalFuelRemoveModal) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
+            val remainingTravels = com.example.fargalaxy.data.EquipmentUsageRepository.getExperimentalFuelRemaining()
+            ExperimentalFuelRemoveModal(
+                remainingTravels = remainingTravels,
+                onRemoveClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                    com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                    showExperimentalFuelRemoveModal = false
+                },
+                onCancelClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    showExperimentalFuelRemoveModal = false
+                }
+            )
+        }
 
         // ADD / REPAIR buttons: Positioned on top of everything, centered on screen with offset
         // Only visible when idle (not traveling, not preparing) and no screens/modals are showing
         // TODO: Adjust offset values below to reposition the buttons manually
         // Current offset: 96dp right/left, 96dp down from center
-        if (!isTraveling && !isPreparingLaunch && !showTravelSuccessModal && !showTravelCanceledModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showRepairNeededModal) {
+        if (!isTraveling && !isPreparingLaunch && !showTravelSuccessModal && !showTravelCanceledModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showRepairNeededModal && !showExperimentalFuelRemoveModal && !showUnstableCargoCanceledModal && !showBoostSelectionBottomSheet) {
             val isInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
@@ -3404,14 +4021,29 @@ fun GalaxyScreen(
                     )
             ) {
                 AddButton(
-                    currentShip = currentShip,
                     onClick = {
                         playMouseClickSound(context, coroutineScope)
                         showBoostSelectionBottomSheet = true
                     },
                     onCloseClick = {
                         playMouseClickSound(context, coroutineScope)
-                        com.example.fargalaxy.data.EquipmentRepository.unequipItem(currentShip.id)
+                        // Check if experimental fuel has remaining travels - show confirmation modal
+                        val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
+                        if (equippedItem == "experimental_fuel") {
+                            val remainingTravels = com.example.fargalaxy.data.EquipmentUsageRepository.getExperimentalFuelRemaining()
+                            if (remainingTravels > 0) {
+                                // Show removal confirmation modal
+                                showExperimentalFuelRemoveModal = true
+                            } else {
+                                // No remaining travels, safe to unequip
+                                com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                                com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                            }
+                        } else {
+                            // Other equipment - unequip directly
+                            com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                            com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                        }
                     },
                     refreshTrigger = showBoostSelectionBottomSheet // Refresh when bottom sheet visibility changes
                 )
@@ -3427,8 +4059,18 @@ fun GalaxyScreen(
                             y = 96.dp     // Vertical offset downwards
                         )
                 ) {
+                    val context = LocalContext.current
+                    val coroutineScope = rememberCoroutineScope()
+                    // Use proportional repair cost based on remaining maintenance time
+                    val repairCost = remember(timerTrigger) {
+                        com.example.fargalaxy.data.GameStateRepository.getShipRepairCostProportional(currentShip.id)
+                    }
                     RepairButton(
-                        onClick = { /* TODO: Add callback for REPAIR button (pay credits to repair) */ }
+                        onClick = {
+                            playMouseClickSound(context, coroutineScope)
+                            // Show repairs needed modal with current time remaining and proportional cost
+                            showRepairNeededModal = true
+                        }
                     )
                 }
             }
@@ -3438,7 +4080,7 @@ fun GalaxyScreen(
         // Shows remaining maintenance time in minutes
         // Rendered on top of everything to ensure visibility
         // Hidden when screens/modals are showing
-        if (!isTraveling && !isPreparingLaunch && !showTravelSuccessModal && !showTravelCanceledModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showRepairNeededModal) {
+        if (!isTraveling && !isPreparingLaunch && !showTravelSuccessModal && !showTravelCanceledModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showRepairNeededModal && !showExperimentalFuelRemoveModal && !showUnstableCargoCanceledModal && !showBoostSelectionBottomSheet) {
             val isInMaintenance = com.example.fargalaxy.data.GameStateRepository.isShipInMaintenance(currentShip.id)
             if (isInMaintenance) {
                 val remainingMaintenanceSeconds = remember(timerTrigger) {
@@ -3477,6 +4119,8 @@ fun GalaxyScreen(
             RewardsScreen(
                 travelMinutes = travelMinutes,
                 penaltyCount = travelPenaltyCount,
+                equippedItemAtTravelTime = travelEquippedItem,
+                hasUnstableCargoPenalty = travelHasUnstableCargoPenalty,
                 onContinueClick = {
                     playMouseClickSound(context, coroutineScope)
                     showRewardsScreen = false
@@ -3571,20 +4215,62 @@ fun GalaxyScreen(
         if (showBoostSelectionBottomSheet && !showTravelSuccessModal && !showTravelCanceledModal && !showRepairNeededModal) {
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
+            
+            // Handle back button press to close bottom sheet
+            BackHandler(enabled = true) {
+                playMouseClickSound(context, coroutineScope)
+                showBoostSelectionBottomSheet = false
+            }
+            
             BoostSelectionBottomSheet(
                 onDismiss = {
                     playMouseClickSound(context, coroutineScope)
                     showBoostSelectionBottomSheet = false
                 },
                 currentShip = currentShip,
-                onShowToast = onShowToast
+                onShowToast = onShowToast,
+                onShowScannerProgress = {
+                    playMouseClickSound(context, coroutineScope)
+                    showBoostSelectionBottomSheet = false // Close bottom sheet
+                    showScannerProgress = true // Show first intermediate screen
+                },
+                onShowExperimentalFuelRemoveModal = {
+                    playMouseClickSound(context, coroutineScope)
+                    showExperimentalFuelRemoveModal = true
+                }
+            )
+        }
+        
+        // Scanner Progress Screen: First intermediate screen (shows scanning animation)
+        if (showScannerProgress) {
+            ScannerProgressScreen(
+                onComplete = {
+                    showScannerProgress = false
+                    showScannerResults = true
+                }
+            )
+        }
+        
+        // Scanner Results Screen: Second intermediate screen (shows results)
+        if (showScannerResults) {
+            val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
+            ScannerResultsScreen(
+                onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    // Consume one scanner and reveal environment
+                    com.example.fargalaxy.data.InventoryRepository.removeItem("deep_space_scanner", 1)
+                    com.example.fargalaxy.data.FlightEnvironmentRepository.markScannerUsedForCurrentEnvironment()
+                    onShowToast("Flight environment revealed for the day")
+                    showScannerResults = false
+                }
             )
         }
         
         // Repair Needed Modal: Shown when ship runs out of travels and enters maintenance
         // Rendered last to ensure it appears on top of everything
-        // Only show when no other screens are visible
-        if (showRepairNeededModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen) {
+        // Only show when no other critical screens are visible (can show on top of bottom sheet and other modals)
+        if (showRepairNeededModal && !showRewardsScreen && !showShipUnlockedScreen && !showLocationDiscoveredScreen && !showTravelSuccessModal && !showTravelCanceledModal && !showUnstableCargoCanceledModal) {
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
             // Use proportional repair cost based on remaining maintenance time
@@ -3598,10 +4284,20 @@ fun GalaxyScreen(
                 maintenanceMinutes = maintenanceMinutes,
                 onRepairClick = {
                     playMouseClickSound(context, coroutineScope)
-                    // TODO: Implement credit payment logic
-                    // For now, just complete maintenance (in final app, check if user has enough credits)
-                    com.example.fargalaxy.data.GameStateRepository.completeMaintenance(currentShip.id)
-                    showRepairNeededModal = false
+                    // Check if user has enough credits
+                    val currentCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
+                    if (currentCredits >= repairCost) {
+                        // Deduct credits
+                        com.example.fargalaxy.data.UserDataRepository.userCredits = currentCredits - repairCost
+                        // Complete maintenance
+                        com.example.fargalaxy.data.GameStateRepository.completeMaintenance(currentShip.id)
+                        showRepairNeededModal = false
+                    } else {
+                        // TODO: Show error message if not enough credits
+                        // For now, still complete maintenance (testing mode)
+                        com.example.fargalaxy.data.GameStateRepository.completeMaintenance(currentShip.id)
+                        showRepairNeededModal = false
+                    }
                 },
                 onWaitClick = {
                     playMouseClickSound(context, coroutineScope)
@@ -3671,27 +4367,26 @@ private fun RepairButton(
  * - miniplus icon (12dp) to the left of "ADD" text with 8dp spacing (default state)
  * - Item image (32x32) to the left of "ADDED" text, close button (16x16) to the right (equipped state)
  *
- * @param currentShip The current ship to check for equipped items
  * @param onClick Callback when button is clicked (opens inventory)
  * @param onCloseClick Callback when close button is clicked (unequips item)
+ * @param refreshTrigger Boolean trigger to refresh equipment state
  * @param modifier Modifier for the button
  */
 @Composable
 private fun AddButton(
-    currentShip: Ship,
     onClick: () -> Unit = {},
     onCloseClick: () -> Unit = {},
     refreshTrigger: Boolean = false, // Trigger to refresh equipment state
     modifier: Modifier = Modifier
 ) {
     // Use mutableStateOf to track equipped item and make it reactive
-    var equippedItemId by remember(currentShip.id) {
-        mutableStateOf(com.example.fargalaxy.data.EquipmentRepository.getEquippedItem(currentShip.id))
+    var equippedItemId by remember {
+        mutableStateOf(com.example.fargalaxy.data.EquipmentRepository.getEquippedItem())
     }
     
-    // Update equipped item when ship changes or when refresh is triggered
-    LaunchedEffect(currentShip.id, refreshTrigger) {
-        equippedItemId = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem(currentShip.id)
+    // Update equipped item when refresh is triggered
+    LaunchedEffect(refreshTrigger) {
+        equippedItemId = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
     }
     
     // Get image resource ID for equipped item
