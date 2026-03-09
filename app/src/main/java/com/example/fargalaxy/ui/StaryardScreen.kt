@@ -241,127 +241,124 @@ fun StaryardScreen(
                 .fillMaxHeight()
                 .clipToBounds() // Clip content that goes above this boundary
         ) {
-            if (availableShips.isEmpty()) {
-                // Empty state: Show centered message when no ships are available
-                // Vertically centered to the screen
+            // Scrollable content column: Content can scroll up and get clipped at the boundary
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .verticalScroll(scrollState)
+                    .navigationBarsPadding() // Account for navigation bar height
+                    .padding(bottom = 32.dp), // Allow last row to be 32dp above bottom bar
+                verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control
+            ) {
+                // Tab toggle: Positioned with extra spacing below the header (clip boundary)
+                // and 16dp above the label. Same visual style as the ShipDetailsScreen tabs,
+                // with 16dp side padding.
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight()
-                        .navigationBarsPadding() // Account for navigation bar height
-                        .padding(horizontal = 24.dp), // 24dp side padding
-                    contentAlignment = Alignment.Center // Center horizontally and vertically
+                        .padding(horizontal = 16.dp)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(60.dp))
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFFFFFFF),
+                            shape = RoundedCornerShape(60.dp)
+                        )
+                        .padding(4.dp)
                 ) {
-                    Text(
-                        text = "Unlocked ships will appear here for you to buy",
-                        fontFamily = Exo2,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W400, // Regular
-                        color = Color(0xFFFFFFFF),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                // Scrollable content column: Content can scroll up and get clipped at the boundary
-                // Initially, content starts 16dp below clip line (via spacer)
-                // Column fills available height to enable proper scrolling
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .verticalScroll(scrollState)
-                        .navigationBarsPadding() // Account for navigation bar height
-                        .padding(bottom = 32.dp), // Allow last row to be 32dp above bottom bar
-                    verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control
-                ) {
-                    // Tab toggle: Positioned with extra spacing below the header (clip boundary)
-                    // and 16dp above the label. Same visual style as the ShipDetailsScreen tabs,
-                    // with 16dp side padding.
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .height(40.dp)
-                            .clip(RoundedCornerShape(60.dp))
-                            .border(
-                                width = 1.dp,
-                                color = Color(0xFFFFFFFF),
-                                shape = RoundedCornerShape(60.dp)
-                            )
-                            .padding(4.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(0.dp)
+                        // UNLOCKED SHIPS tab
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(60.dp))
+                                .then(
+                                    if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
+                                        Modifier.background(Color(0xFFFFFFFF))
+                                    } else {
+                                        Modifier
+                                    }
+                                )
+                                .clickable { selectedTab = StaryardTab.UNLOCKED_SHIPS },
+                            contentAlignment = Alignment.Center
                         ) {
-                            // UNLOCKED SHIPS tab
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .clip(RoundedCornerShape(60.dp))
-                                    .then(
-                                        if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
-                                            Modifier.background(Color(0xFFFFFFFF))
-                                        } else {
-                                            Modifier
-                                        }
-                                    )
-                                    .clickable { selectedTab = StaryardTab.UNLOCKED_SHIPS },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Unlocked ships",
-                                    fontFamily = Exo2,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
-                                        Color(0xFF010102)
-                                    } else {
-                                        Color(0xFFFFFFFF)
-                                    },
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            Text(
+                                text = "Unlocked ships",
+                                fontFamily = Exo2,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W400,
+                                color = if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
+                                    Color(0xFF010102)
+                                } else {
+                                    Color(0xFFFFFFFF)
+                                },
+                                textAlign = TextAlign.Center
+                            )
+                        }
 
-                            // SHIPCARDS tab
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .clip(RoundedCornerShape(60.dp))
-                                    .then(
-                                        if (selectedTab == StaryardTab.SHIPCARDS) {
-                                            Modifier.background(Color(0xFFFFFFFF))
-                                        } else {
-                                            Modifier
-                                        }
-                                    )
-                                    .clickable { selectedTab = StaryardTab.SHIPCARDS },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Shipcards",
-                                    fontFamily = Exo2,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.W400,
-                                    color = if (selectedTab == StaryardTab.SHIPCARDS) {
-                                        Color(0xFF010102)
+                        // SHIPCARDS tab
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(60.dp))
+                                .then(
+                                    if (selectedTab == StaryardTab.SHIPCARDS) {
+                                        Modifier.background(Color(0xFFFFFFFF))
                                     } else {
-                                        Color(0xFFFFFFFF)
-                                    },
-                                    textAlign = TextAlign.Center
+                                        Modifier
+                                    }
                                 )
-                            }
+                                .clickable { selectedTab = StaryardTab.SHIPCARDS },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Shipcards",
+                                fontFamily = Exo2,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.W400,
+                                color = if (selectedTab == StaryardTab.SHIPCARDS) {
+                                    Color(0xFF010102)
+                                } else {
+                                    Color(0xFFFFFFFF)
+                                },
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
+                }
 
-                    // 16dp spacing below the tabs and above the section labels
-                    Spacer(modifier = Modifier.height(16.dp))
+                // 16dp spacing below the tabs and above the section labels
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
+                if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
+                    if (availableShips.isEmpty()) {
+                        // Empty state: message when there are no unlocked ships to buy
+                        // Use wrapContentHeight instead of fillMaxHeight to avoid layout issues
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(horizontal = 24.dp, vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Unlocked ships will appear here for you to buy",
+                                fontFamily = Exo2,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.W400,
+                                color = Color(0xFFFFFFFF),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    } else {
                         // Label: "Purchase unlocked starships" - center aligned, 14sp, regular weight
                         Text(
                             text = "Purchase unlocked starships",
@@ -476,54 +473,54 @@ fun StaryardScreen(
                                 }
                             }
                         }
-                    } else {
-                        // Shipcards tab: Intro label + 3 empty shipcard containers (ship16, ship17, ship18)
-                        Text(
-                            text = "View your progress towards unlocking ships with shipcards",
-                            fontFamily = Exo2,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.W400, // Regular
-                            color = Color(0xFFFFFFFF),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                        )
+                    }
+                } else {
+                    // Shipcards tab: Intro label + 3 empty shipcard containers (ship16, ship17, ship18)
+                    Text(
+                        text = "View your progress towards unlocking ships with shipcards",
+                        fontFamily = Exo2,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W400, // Regular
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                        // Three shipcard items using same container style as ships but empty for now
-                        val shipCardConfigs = listOf(
-                            "ship16" to ShipRarity.UNCOMMON,
-                            "ship17" to ShipRarity.EPIC,
-                            "ship18" to ShipRarity.LEGENDARY
-                        )
+                    // Three shipcard items using same container style as ships but empty for now
+                    val shipCardConfigs = listOf(
+                        "ship16" to ShipRarity.UNCOMMON,
+                        "ship17" to ShipRarity.EPIC,
+                        "ship18" to ShipRarity.LEGENDARY
+                    )
 
-                        BoxWithConstraints(
-                            modifier = Modifier.fillMaxWidth()
+                    BoxWithConstraints(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val containerWidth = (maxWidth - 32.dp - 8.dp) / 2
+                        val rows = shipCardConfigs.chunked(2)
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val containerWidth = (maxWidth - 32.dp - 8.dp) / 2
-                            val rows = shipCardConfigs.chunked(2)
-
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                rows.forEach { rowItems ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        rowItems.forEach { (shipId, rarity) ->
-                                            ShipCardPlaceholderContainer(
-                                                rarity = rarity,
-                                                containerWidth = containerWidth,
-                                                onClick = { onShipCardClick(shipId) },
-                                                modifier = Modifier.width(containerWidth)
-                                            )
-                                        }
+                            rows.forEach { rowItems ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    rowItems.forEach { (shipId, rarity) ->
+                                        ShipCardPlaceholderContainer(
+                                            rarity = rarity,
+                                            containerWidth = containerWidth,
+                                            onClick = { onShipCardClick(shipId) },
+                                            modifier = Modifier.width(containerWidth)
+                                        )
                                     }
                                 }
                             }
@@ -531,7 +528,7 @@ fun StaryardScreen(
                     }
                 }
             }
-            
+
             // White divider line: Only visible when content is being clipped
             // Positioned on top of the Column so it appears above clipped content
             if (isContentClipped.value) {

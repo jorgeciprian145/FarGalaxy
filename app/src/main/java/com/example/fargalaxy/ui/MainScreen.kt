@@ -34,6 +34,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.fargalaxy.R
+import com.example.fargalaxy.data.CrateOpenResult
+import com.example.fargalaxy.data.CrateRepository
+import com.example.fargalaxy.data.CrateType
+import com.example.fargalaxy.data.GameStateRepository
 import com.example.fargalaxy.data.ShipRepository
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
@@ -107,6 +111,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Track if ShipCardProgressModal should be shown (shipcards detail overlay)
     var showShipCardProgressModal by remember { mutableStateOf(false) }
+    var shipCardProgressShipId by remember { mutableStateOf("asn_ag94_centurion") }
     var shipCardProgressRarity by remember { mutableStateOf(ShipRarity.UNCOMMON) }
     var shipCardOwnedCards by remember { mutableStateOf(0) }
     
@@ -197,6 +202,19 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track scroll to top trigger for CareerScreen (incremented to trigger scroll)
     var scrollToTopTrigger by remember { mutableStateOf(0) }
     
+    // Crate inventory state (backed by CrateRepository, but mirrored here for Compose state)
+    var standardCrates by remember { mutableStateOf(CrateRepository.getCrateCount(CrateType.STANDARD)) }
+    var advancedCrates by remember { mutableStateOf(CrateRepository.getCrateCount(CrateType.ADVANCED)) }
+    var eliteCrates by remember { mutableStateOf(CrateRepository.getCrateCount(CrateType.ELITE)) }
+
+    // Crate opening overlay state
+    var showCrateOpeningOverlay by remember { mutableStateOf(false) }
+    var openingCrateType by remember { mutableStateOf<CrateType?>(null) }
+    var crateOpenResult by remember { mutableStateOf<CrateOpenResult?>(null) }
+    
+    // Track ship unlocked via crate cards
+    var shipUnlockedFromCrate by remember { mutableStateOf<String?>(null) }
+
     // Get activity context for exiting app
     val context = LocalContext.current
     val activity = context as? Activity
@@ -335,16 +353,79 @@ fun MainScreen(modifier: Modifier = Modifier) {
         selectedStoreItemDescription = ""
     }
     
+    // Helper function to handle store purchases (used by both detail view and direct BUY buttons)
+    fun handleStorePurchase(itemName: String, price: Int) {
+        // Determine if it's a credit purchase or dollar purchase
+        val isCreditPurchase = price >= 1000 // Credits are >= 1000, dollars are < 1000 (199 = $1.99)
+        
+        if (isCreditPurchase) {
+            // Credit purchase
+            if (price > 0 && price <= com.example.fargalaxy.data.UserDataRepository.userCredits) {
+                // Deduct credits
+                com.example.fargalaxy.data.UserDataRepository.addCredits(-price)
+
+                when (itemName) {
+                    "Elite Spacer's crate" -> {
+                        CrateRepository.addCrate(CrateType.ELITE)
+                        eliteCrates = CrateRepository.getCrateCount(CrateType.ELITE)
+                    }
+                    "Advanced Spacer's crate" -> {
+                        CrateRepository.addCrate(CrateType.ADVANCED)
+                        advancedCrates = CrateRepository.getCrateCount(CrateType.ADVANCED)
+                    }
+                    "Standard Spacer's crate" -> {
+                        CrateRepository.addCrate(CrateType.STANDARD)
+                        standardCrates = CrateRepository.getCrateCount(CrateType.STANDARD)
+                    }
+                    else -> {
+                        // Non‑crate credit‑priced items (if any) can be handled here later.
+                    }
+                }
+
+                // Toast in same style as equipment purchases
+                toastMessage = "Bought $itemName for $price credits"
+            }
+        } else {
+            // Dollar purchase
+            when (itemName) {
+                "Interstellar credits pack" -> {
+                    com.example.fargalaxy.data.UserDataRepository.addCredits(100_000)
+                    toastMessage = "Bought Interstellar credits pack"
+                }
+                "Dying Star" -> {
+                    // Handle Dying Star purchase (if needed)
+                    toastMessage = "Bought $itemName"
+                }
+            }
+        }
+    }
+    
     // Handle purchase click from StoreDetailsScreen
     val onStorePurchaseClick: () -> Unit = {
-        // TODO: Implement purchase logic
-        // For now, just close the details screen
+        if (selectedStoreItemName.isNotEmpty()) {
+            if (selectedStoreItemPriceType == "credits") {
+                val priceInt = selectedStoreItemPrice.toIntOrNull() ?: 0
+                handleStorePurchase(selectedStoreItemName, priceInt)
+            } else {
+                // Dollar‑priced items
+                val priceInt = 199 // $1.99 in cents
+                handleStorePurchase(selectedStoreItemName, priceInt)
+            }
+        }
+
+        // Close the details screen
         showStoreDetails = false
         selectedStoreItemName = ""
         selectedStoreItemImageResId = 0
         selectedStoreItemPrice = ""
         selectedStoreItemPriceType = "credits"
         selectedStoreItemDescription = ""
+    }
+    
+    // Handle direct purchase from StoreScreen BUY buttons
+    val onStoreDirectPurchaseClick: (String, Int) -> Unit = { name, price ->
+        playMouseClickSound(context, coroutineScope)
+        handleStorePurchase(name, price)
     }
     
     // Handle equipment click from EquipmentScreen
@@ -599,6 +680,17 @@ fun MainScreen(modifier: Modifier = Modifier) {
             pagerState.currentPage == 2 -> {
                 navigateToPage(1)
             }
+            // If ship unlocked from crate is shown, close it
+            shipUnlockedFromCrate != null -> {
+                playMouseClickSound(context, coroutineScope)
+                shipUnlockedFromCrate = null
+            }
+            // If Crate opening overlay is shown, close it
+            showCrateOpeningOverlay -> {
+                showCrateOpeningOverlay = false
+                openingCrateType = null
+                crateOpenResult = null
+            }
             // If on GalaxyScreen (page 1), exit the app
             pagerState.currentPage == 1 -> {
                 activity?.finish()
@@ -667,7 +759,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)
         // Hide noise when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, StoreDetailsScreen, SectorDetailsScreen, or FactionDetailsScreen is shown (they have their own backgrounds)
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !showSectorDetails && !showFactionDetails) {
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !showSectorDetails && !showFactionDetails && !showCrateOpeningOverlay) {
             Image(
                 painter = painterResource(id = R.drawable.noise_8bit),
                 contentDescription = null,
@@ -681,7 +773,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         // Static indicator - positioned above everything (rendered last so it's on top)
         // Hide indicator when traveling or preparing (only show when idle or on CareerScreen/VaultScreen)
         // Also hide when ShipDetailsScreen, ShipSelectionScreen, LocationsScreen, LocationDetailsScreen, StaryardScreen, StaryardDetailsScreen, EquipmentScreen, EquipmentDetailsScreen, StoreScreen, StoreDetailsScreen, SectorDetailsScreen, FactionDetailsScreen, RewardsScreen, ShipUnlockedScreen, LocationDiscoveredScreen, ShipAcquiredScreen, or BoostSelectionBottomSheet is shown
-        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !showSectorDetails && !showFactionDetails && !isRewardsScreenShown && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen && !isBoostSelectionBottomSheetShown && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
+        if (!showShipDetails && !showShipSelection && !showLocations && !showLocationDetails && !showStaryard && !showStaryardDetails && !showEquipment && !showEquipmentDetails && !showStore && !showStoreDetails && !showSectorDetails && !showFactionDetails && !isRewardsScreenShown && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen && !isBoostSelectionBottomSheetShown && !showCrateOpeningOverlay && shipUnlockedFromCrate == null && (pagerState.currentPage == 0 || pagerState.currentPage == 2 || isGalaxyIdle)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -814,8 +906,15 @@ fun MainScreen(modifier: Modifier = Modifier) {
                             else -> ShipRarity.UNCOMMON
                         }
 
-                        // For now, show empty maps (0/6). Will be wired to real progress later.
-                        shipCardOwnedCards = 0
+                        // Map shipId to actual ship ID and get card count from repository
+                        val actualShipId = when (shipId) {
+                            "ship16" -> "asn_ag94_centurion"
+                            "ship17" -> "isc_m450_phoenix"
+                            "ship18" -> "asn_h99_dragoon"
+                            else -> "asn_ag94_centurion"
+                        }
+                        shipCardProgressShipId = actualShipId
+                        shipCardOwnedCards = com.example.fargalaxy.data.ShipCardRepository.getOwnedCardCount(actualShipId)
                         showShipCardProgressModal = true
                     }
                 )
@@ -847,6 +946,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         // ShipCardProgressModal overlay - shown on top of everything when viewing shipcard maps
         if (showShipCardProgressModal) {
             ShipCardProgressModal(
+                shipId = shipCardProgressShipId,
                 rarity = shipCardProgressRarity,
                 ownedCards = shipCardOwnedCards,
                 onContinueClick = {
@@ -907,7 +1007,25 @@ fun MainScreen(modifier: Modifier = Modifier) {
             Box(modifier = Modifier.fillMaxSize()) {
             StoreScreen(
                     onBackClick = onBackFromStore,
-                    onStoreItemClick = onStoreItemClick
+                    onStoreItemClick = onStoreItemClick,
+                    onPurchaseClick = onStoreDirectPurchaseClick,
+                    standardCrates = standardCrates,
+                    advancedCrates = advancedCrates,
+                    eliteCrates = eliteCrates,
+                    onOpenCrateClick = { crateType ->
+                        // Open crate through repository and show opening overlay
+                        val result = CrateRepository.openCrate(crateType, GameStateRepository.isTestMode)
+                        if (result != null) {
+                            // Refresh counts after consumption
+                            standardCrates = CrateRepository.getCrateCount(CrateType.STANDARD)
+                            advancedCrates = CrateRepository.getCrateCount(CrateType.ADVANCED)
+                            eliteCrates = CrateRepository.getCrateCount(CrateType.ELITE)
+
+                            openingCrateType = crateType
+                            crateOpenResult = result
+                            showCrateOpeningOverlay = true
+                        }
+                    }
                 )
                 
                 // Block pointer events when StoreDetailsScreen is shown
@@ -946,6 +1064,39 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 description = selectedStoreItemDescription,
                 onBackClick = onBackFromStoreDetails,
                 onPurchaseClick = onStorePurchaseClick
+            )
+        }
+
+        // Crate opening overlay - crate animation + reward reveal
+        if (showCrateOpeningOverlay && openingCrateType != null && crateOpenResult != null) {
+            CrateOpeningScreen(
+                crateType = openingCrateType!!,
+                result = crateOpenResult!!,
+                onContinue = {
+                    playMouseClickSound(context, coroutineScope)
+                    // Check if a ship was unlocked via crate cards
+                    val unlockedShipId = crateOpenResult!!.unlockedShipId
+                    showCrateOpeningOverlay = false
+                    openingCrateType = null
+                    val result = crateOpenResult
+                    crateOpenResult = null
+                    
+                    // If a ship was unlocked, show the ship unlocked screen
+                    if (unlockedShipId != null) {
+                        shipUnlockedFromCrate = unlockedShipId
+                    }
+                }
+            )
+        }
+        
+        // Show ship unlocked screen if a ship was unlocked via crate cards
+        if (shipUnlockedFromCrate != null) {
+            ShipUnlockedScreen(
+                shipId = shipUnlockedFromCrate!!,
+                onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    shipUnlockedFromCrate = null
+                }
             )
         }
         

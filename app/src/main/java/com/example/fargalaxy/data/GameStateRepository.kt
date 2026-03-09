@@ -356,6 +356,9 @@ object GameStateRepository {
         // Reset current ship to default
         ShipRepository.setCurrentShip(ShipRepository.getAllShips().first().id)
         
+        // Reset ship card progress
+        com.example.fargalaxy.data.ShipCardRepository.resetAllCards()
+        
         // Reapply test mode credits if test mode is enabled (so credits are always 50000 in test mode)
         UserDataRepository.setTestModeCreditsIfEnabled()
     }

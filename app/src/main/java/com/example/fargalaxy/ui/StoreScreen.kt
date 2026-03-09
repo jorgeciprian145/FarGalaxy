@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fargalaxy.R
+import com.example.fargalaxy.data.CrateType
 
 /**
  * StoreScreen composable - displays the store screen where users can browse crates and offers.
@@ -66,6 +68,11 @@ import com.example.fargalaxy.R
 fun StoreScreen(
     onBackClick: () -> Unit = {},
     onStoreItemClick: (String, Int, Int, String) -> Unit = { _, _, _, _ -> }, // name, imageResId, price, description
+    onPurchaseClick: (String, Int) -> Unit = { _, _ -> }, // name, price - for direct purchase from BUY button
+    standardCrates: Int = 0,
+    advancedCrates: Int = 0,
+    eliteCrates: Int = 0,
+    onOpenCrateClick: (CrateType) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Read credits from global repository
@@ -204,66 +211,120 @@ fun StoreScreen(
                 // 16dp spacing below label
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Container: Items count on left, credits on right
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Left: Items count label - bold, 20sp
-                    Text(
-                        text = "5 items available",
-                        fontFamily = Exo2,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFFFFF)
-                    )
-                    
-                    // Right: Credits container
-                    // Height: 32dp, padding: 16dp, border: 1dp #6B6C6F, background: #373A3E, corner radius: 8dp
-                    Box(
+                val hasCrates = standardCrates > 0 || advancedCrates > 0 || eliteCrates > 0
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Top row: either "Your crates" or "5 items available" + credits
+                    Row(
                         modifier = Modifier
-                            .height(32.dp)
-                            .background(
-                                color = Color(0xFF373A3E), // Background fill
-                                shape = RoundedCornerShape(8.dp) // 8dp corner radius
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = Color(0xFF6B6C6F), // Border color
-                                shape = RoundedCornerShape(8.dp) // 8dp corner radius
-                            ),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Text(
+                            text = if (hasCrates) "Your crates" else "5 items available",
+                            fontFamily = Exo2,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFFFFFF)
+                        )
+                        
+                        // Credits container
+                        Box(
+                            modifier = Modifier
+                                .height(32.dp)
+                                .background(
+                                    color = Color(0xFF373A3E),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFF6B6C6F),
+                                    shape = RoundedCornerShape(8.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.creditsicon),
+                                    contentDescription = "Credits",
+                                    modifier = Modifier.width(24.dp),
+                                    contentScale = ContentScale.Fit,
+                                    colorFilter = ColorFilter.tint(Color(0xFFFFFFFF))
+                                )
+                                
+                                Text(
+                                    text = userCredits.toString(),
+                                    fontFamily = Exo2,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFFFFFFFF)
+                                )
+                            }
+                        }
+                    }
+
+                    if (hasCrates) {
+                        // 8dp below "Your crates" label: crate thumbnails row
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         Row(
-                            modifier = Modifier.padding(horizontal = 16.dp), // 16dp internal padding
-                            horizontalArrangement = Arrangement.spacedBy(8.dp), // 8dp spacing between icon and label
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Credits icon: 24dp width, maintaining aspect ratio (on the left)
-                            Image(
-                                painter = painterResource(id = R.drawable.creditsicon),
-                                contentDescription = "Credits",
-                                modifier = Modifier.width(24.dp), // 24dp width, maintaining aspect ratio
-                                contentScale = ContentScale.Fit,
-                                colorFilter = ColorFilter.tint(Color(0xFFFFFFFF)) // White tint for icon
-                            )
-                            
-                            // Credits amount label: 16sp, medium weight, white color
+                            if (eliteCrates > 0) {
+                                CrateInventoryItem(
+                                    imageRes = R.drawable.elitecrateselection,
+                                    count = eliteCrates,
+                                    onClick = { onOpenCrateClick(CrateType.ELITE) }
+                                )
+                            }
+                            if (advancedCrates > 0) {
+                                CrateInventoryItem(
+                                    imageRes = R.drawable.advancedcrateselection,
+                                    count = advancedCrates,
+                                    onClick = { onOpenCrateClick(CrateType.ADVANCED) }
+                                )
+                            }
+                            if (standardCrates > 0) {
+                                CrateInventoryItem(
+                                    imageRes = R.drawable.standardcrateselection,
+                                    count = standardCrates,
+                                    onClick = { onOpenCrateClick(CrateType.STANDARD) }
+                                )
+                            }
+                        }
+
+                        // 8dp below crates row: original items section header
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = userCredits.toString(),
+                                text = "5 items available",
                                 fontFamily = Exo2,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFFFFFFFF) // White color
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFFFFF)
                             )
                         }
                     }
                 }
-                
-                // 24dp spacing below the credits container
+
+                // 24dp spacing below the header section
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // Store items: 3 horizontal full-width cards + 2 vertical cards
@@ -467,7 +528,8 @@ fun StoreScreen(
                                                                 width = 1.dp,
                                                                 color = Color(0xFFFFFFFF),
                                                                 shape = RoundedCornerShape(50.dp)
-                                                            ),
+                                                            )
+                                                            .clickable { onPurchaseClick("Dying Star", 199) },
                                                         contentAlignment = Alignment.Center
                                                     ) {
                                                         Text(
@@ -650,7 +712,8 @@ fun StoreScreen(
                                                                 width = 1.dp,
                                                                 color = Color(0xFFFFFFFF),
                                                                 shape = RoundedCornerShape(50.dp)
-                                                            ),
+                                                            )
+                                                            .clickable { onPurchaseClick("Interstellar credits pack", 199) },
                                                         contentAlignment = Alignment.Center
                                                     ) {
                                                         Text(
@@ -704,7 +767,7 @@ fun StoreScreen(
                                         "Elite Spacer's crate",
                                         R.drawable.elitecrateselection,
                                         20000,
-                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (6% chance)\nLegendary ship card (20% chance)\nEpic ship card (30% chance)\nUncommon ship card (22% chance)\nEquipment part (30% chance)"
+                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (3% chance)\nLegendary ship card (20% chance)\nEpic ship card (30% chance)\nUncommon ship card (22% chance)\nEquipment part (25% chance)"
                                     )
                                 }
                         ) {
@@ -851,6 +914,13 @@ fun StoreScreen(
                                                                 width = 1.dp,
                                                                 color = priceColorCard3,
                                                                 shape = RoundedCornerShape(50.dp)
+                                                            )
+                                                            .then(
+                                                                if (canAffordCard3) {
+                                                                    Modifier.clickable { onPurchaseClick("Elite Spacer's crate", 20000) }
+                                                                } else {
+                                                                    Modifier // Disabled when can't afford
+                                                                }
                                                             ),
                                                         contentAlignment = Alignment.Center
                                                     ) {
@@ -906,7 +976,7 @@ fun StoreScreen(
                                         "Advanced Spacer's crate",
                                         R.drawable.advancedcrateselection,
                                         10000,
-                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (4% chance)\nLegendary ship card (6% chance)\nEpic ship card (20% chance)\nUncommon ship card (30% chance)\nEquipment part (40% chance)"
+                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (1% chance)\nLegendary ship card (6% chance)\nEpic ship card (20% chance)\nUncommon ship card (30% chance)\nEquipment part (43% chance)"
                                     )
                                 }
                         ) {
@@ -1041,6 +1111,13 @@ fun StoreScreen(
                                                         width = 1.dp,
                                                         color = priceColorCard4,
                                                         shape = RoundedCornerShape(50.dp)
+                                                    )
+                                                    .then(
+                                                        if (canAffordCard4) {
+                                                            Modifier.clickable { onPurchaseClick("Advanced Spacer's crate", 10000) }
+                                                        } else {
+                                                            Modifier // Disabled when can't afford
+                                                        }
                                                     ),
                                                 contentAlignment = Alignment.Center
                                             ) {
@@ -1086,7 +1163,7 @@ fun StoreScreen(
                                         "Standard Spacer's crate",
                                         R.drawable.standardcrateselection,
                                         5000,
-                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (2% chance)\nLegendary ship card (3% chance)\nEpic ship card (10% chance)\nUncommon ship card (35% chance)\nEquipment part (50% chance)"
+                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (0.5% chance)\nLegendary ship card (3% chance)\nEpic ship card (10% chance)\nUncommon ship card (35% chance)\nEquipment part (51.5% chance)"
                                     )
                                 }
                         ) {
@@ -1221,6 +1298,13 @@ fun StoreScreen(
                                                         width = 1.dp,
                                                         color = priceColorCard5,
                                                         shape = RoundedCornerShape(50.dp)
+                                                    )
+                                                    .then(
+                                                        if (canAffordCard5) {
+                                                            Modifier.clickable { onPurchaseClick("Standard Spacer's crate", 5000) }
+                                                        } else {
+                                                            Modifier // Disabled when can't afford
+                                                        }
                                                     ),
                                                 contentAlignment = Alignment.Center
                                             ) {
@@ -1244,6 +1328,55 @@ fun StoreScreen(
                 }
             }
         }
+        }
+    }
+}
+
+@Composable
+private fun CrateInventoryItem(
+    imageRes: Int,
+    count: Int,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(80.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = "Crate",
+            modifier = Modifier
+                .fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        if (count > 1) {
+            // Badge similar in spirit to CURRENT SHIP badge, centered over the crate
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .background(
+                        color = Color(0xFFFFFFFF),
+                        shape = RoundedCornerShape(80.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF6B6C6F),
+                        shape = RoundedCornerShape(80.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "x$count",
+                    fontFamily = Exo2,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF010102),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

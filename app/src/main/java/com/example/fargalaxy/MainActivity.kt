@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             window.navigationBarColor = Color.BLACK
             // Ensure the navigation bar is opaque (not translucent)
+            @Suppress("DEPRECATION")
             window.statusBarColor = Color.TRANSPARENT // Keep status bar transparent
         }
         
@@ -57,6 +58,8 @@ class MainActivity : ComponentActivity() {
         com.example.fargalaxy.data.FlightEnvironmentRepository.initialize(this)
         com.example.fargalaxy.data.EquipmentRepository.initialize(this)
         com.example.fargalaxy.data.EquipmentUsageRepository.initialize(this)
+        com.example.fargalaxy.data.ShipCardRepository.initialize(this)
+        com.example.fargalaxy.data.CrateRepository.initialize(this)
         
         // TODO: REMOVE TESTING CODE - Reset progress to zero for testing ship unlock
         // NOTE: Commented out to preserve progress across app sessions

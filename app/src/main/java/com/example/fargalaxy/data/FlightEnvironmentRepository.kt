@@ -3,8 +3,8 @@ package com.example.fargalaxy.data
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.fargalaxy.model.ShipProfile
-import java.util.Calendar
-import java.util.TimeZone
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 /**
  * Represents the different possible daily flight environments.
@@ -90,9 +90,10 @@ object FlightEnvironmentRepository {
         // We need a new environment if none exists yet, or if the stored date is not today
         val needsNewEnvironment = storedType == null || storedDate == null || storedDate != todayDate
 
-        return if (!needsNewEnvironment && storedType != null) {
+        return if (!needsNewEnvironment) {
             // Same day and we already have an environment → reuse it
-            storedType
+            // storedType is guaranteed to be non-null when !needsNewEnvironment is true
+            storedType!!
         } else {
             // When generating a new environment, don't repeat yesterday's environment
             val previousType = if (storedDate != null && storedType != null && storedDate != todayDate) {
@@ -186,28 +187,22 @@ object FlightEnvironmentRepository {
      * Returns current date in Central Time as yyyy-MM-dd (e.g., 2026-03-04).
      */
     private fun getCurrentCentralDateString(): String {
-        val tz = TimeZone.getTimeZone("America/Chicago")
-        val cal = Calendar.getInstance(tz)
-        val year = cal.get(Calendar.YEAR)
-        val month = cal.get(Calendar.MONTH) + 1 // Calendar months are 0-based
-        val day = cal.get(Calendar.DAY_OF_MONTH)
-        return String.format("%04d-%02d-%02d", year, month, day)
+        val zoneId = ZoneId.of("America/Chicago")
+        val now = ZonedDateTime.now(zoneId)
+        return String.format("%04d-%02d-%02d", now.year, now.monthValue, now.dayOfMonth)
     }
 
     /**
      * Returns the timestamp (in millis) of the next midnight in Central Time.
      */
     private fun getNextCentralMidnightMillis(): Long {
-        val tz = TimeZone.getTimeZone("America/Chicago")
-        val cal = Calendar.getInstance(tz)
-        // Move to next day
-        cal.add(Calendar.DAY_OF_YEAR, 1)
-        // Set time to 00:00:00.000
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.timeInMillis
+        val zoneId = ZoneId.of("America/Chicago")
+        val now = ZonedDateTime.now(zoneId)
+        // Get next day at midnight
+        val nextMidnight = now.toLocalDate()
+            .plusDays(1)
+            .atStartOfDay(zoneId)
+        return nextMidnight.toInstant().toEpochMilli()
     }
 
     /**

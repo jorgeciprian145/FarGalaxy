@@ -1,5 +1,7 @@
 package com.example.fargalaxy.ui
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,10 +26,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fargalaxy.R
+import com.example.fargalaxy.data.ShipCardRepository
 import com.example.fargalaxy.model.ShipRarity
 import android.graphics.RenderEffect as AndroidRenderEffect
 import android.graphics.Shader
@@ -38,6 +44,7 @@ import android.graphics.Shader
  * This follows the same overlay style as the other modals (blur + dark overlay +
  * rounded gradient container with a primary button at the bottom).
  *
+ * @param shipId The actual ship ID (e.g., "asn_ag94_centurion", "isc_m450_phoenix", "asn_h99_dragoon")
  * @param rarity The rarity of the ship these cards belong to (UNCOMMON, EPIC, LEGENDARY)
  * @param ownedCards The number of cards currently owned for this ship (0..6)
  * @param onContinueClick Callback when the "CONTINUE" button is clicked
@@ -45,11 +52,14 @@ import android.graphics.Shader
  */
 @Composable
 fun ShipCardProgressModal(
+    shipId: String,
     rarity: ShipRarity,
     ownedCards: Int,
     onContinueClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Handle back button to close modal
+    BackHandler(onBack = onContinueClick)
     val baseColor = getShipCardBaseColor(rarity)
     val strokeColor = baseColor.copy(alpha = 0.32f)
     val fillColor = baseColor.copy(alpha = 0.24f)
@@ -103,6 +113,7 @@ fun ShipCardProgressModal(
                 Row {
                     for (index in 1..3) {
                         ShipCardMapCell(
+                            shipId = shipId,
                             index = index,
                             textColor = textColor,
                             strokeColor = strokeColor,
@@ -113,6 +124,7 @@ fun ShipCardProgressModal(
                 Row {
                     for (index in 4..6) {
                         ShipCardMapCell(
+                            shipId = shipId,
                             index = index,
                             textColor = textColor,
                             strokeColor = strokeColor,
@@ -176,14 +188,48 @@ fun ShipCardProgressModal(
 
 /**
  * Single cell in the 2x3 shipcard map.
+ * Shows the card image if owned, otherwise shows the number.
  */
 @Composable
 private fun ShipCardMapCell(
+    shipId: String,
     index: Int,
     textColor: Color,
     strokeColor: Color,
     fillColor: Color
 ) {
+    val hasCard = ShipCardRepository.hasCard(shipId, index)
+    
+    // Get the card image resource ID if the card is owned
+    val cardImageRes = if (hasCard) {
+        when (shipId to index) {
+            "asn_ag94_centurion" to 1 -> R.drawable.ship16card1
+            "asn_ag94_centurion" to 2 -> R.drawable.ship16card2
+            "asn_ag94_centurion" to 3 -> R.drawable.ship16card3
+            "asn_ag94_centurion" to 4 -> R.drawable.ship16card4
+            "asn_ag94_centurion" to 5 -> R.drawable.ship16card5
+            "asn_ag94_centurion" to 6 -> R.drawable.ship16card6
+
+            "isc_m450_phoenix" to 1 -> R.drawable.ship17card1
+            "isc_m450_phoenix" to 2 -> R.drawable.ship17card2
+            "isc_m450_phoenix" to 3 -> R.drawable.ship17card3
+            "isc_m450_phoenix" to 4 -> R.drawable.ship17card4
+            "isc_m450_phoenix" to 5 -> R.drawable.ship17card5
+            "isc_m450_phoenix" to 6 -> R.drawable.ship17card6
+
+            "asn_h99_dragoon" to 1 -> R.drawable.ship18card1
+            "asn_h99_dragoon" to 2 -> R.drawable.ship18card2
+            "asn_h99_dragoon" to 3 -> R.drawable.ship18card3
+            "asn_h99_dragoon" to 4 -> R.drawable.ship18card4
+            "asn_h99_dragoon" to 5 -> R.drawable.ship18card5
+            "asn_h99_dragoon" to 6 -> R.drawable.ship18card6
+
+            else -> null
+        }
+    } else {
+        null
+    }
+
     Box(
         modifier = Modifier
             .width(100.dp)
@@ -197,14 +243,26 @@ private fun ShipCardMapCell(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = index.toString(),
-            fontFamily = Exo2,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Normal,
-            color = textColor,
-            textAlign = TextAlign.Center
-        )
+        if (hasCard && cardImageRes != null) {
+            // Show the card image if owned - fills the entire rectangle
+            Image(
+                painter = painterResource(id = cardImageRes),
+                contentDescription = "Card $index",
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentScale = ContentScale.FillBounds
+            )
+        } else {
+            // Show the number if card is not owned
+            Text(
+                text = index.toString(),
+                fontFamily = Exo2,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Normal,
+                color = textColor,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

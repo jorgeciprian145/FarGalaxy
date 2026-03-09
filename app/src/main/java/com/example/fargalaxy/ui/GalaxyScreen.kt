@@ -4035,8 +4035,14 @@ fun GalaxyScreen(
                         val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
                         if (equippedItem == "experimental_fuel") {
                             val remainingTravels = com.example.fargalaxy.data.EquipmentUsageRepository.getExperimentalFuelRemaining()
-                            if (remainingTravels > 0) {
-                                // Show removal confirmation modal
+                            if (remainingTravels == 3) {
+                                // Unused (3 trips left) - safely return to inventory without modal
+                                com.example.fargalaxy.data.EquipmentRepository.unequipItem()
+                                com.example.fargalaxy.data.EquipmentUsageRepository.resetUsage()
+                                // Return to inventory
+                                com.example.fargalaxy.data.InventoryRepository.addItem("experimental_fuel", 1)
+                            } else if (remainingTravels > 0) {
+                                // Partially used - show removal confirmation modal
                                 showExperimentalFuelRemoveModal = true
                             } else {
                                 // No remaining travels, safe to unequip
