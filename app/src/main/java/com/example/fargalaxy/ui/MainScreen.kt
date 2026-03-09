@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.ShipRepository
 import com.example.fargalaxy.model.Ship
+import com.example.fargalaxy.model.ShipRarity
 import com.example.fargalaxy.utils.playMouseClickSound
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -103,6 +104,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Track if StaryardDetailsScreen should be shown
     var showStaryardDetails by remember { mutableStateOf(false) }
+    
+    // Track if ShipCardProgressModal should be shown (shipcards detail overlay)
+    var showShipCardProgressModal by remember { mutableStateOf(false) }
+    var shipCardProgressRarity by remember { mutableStateOf(ShipRarity.UNCOMMON) }
+    var shipCardOwnedCards by remember { mutableStateOf(0) }
     
     // Track if EquipmentScreen should be shown
     var showEquipment by remember { mutableStateOf(false) }
@@ -796,7 +802,22 @@ fun MainScreen(modifier: Modifier = Modifier) {
             Box(modifier = Modifier.fillMaxSize()) {
                 StaryardScreen(
                     onBackClick = onBackFromStaryard,
-                    onShipClick = onStaryardShipClick
+                    onShipClick = onStaryardShipClick,
+                    onShipCardClick = { shipId ->
+                        // Play click sound and open shipcard progress overlay
+                        playMouseClickSound(context, coroutineScope)
+
+                        shipCardProgressRarity = when (shipId) {
+                            "ship16" -> ShipRarity.UNCOMMON
+                            "ship17" -> ShipRarity.EPIC
+                            "ship18" -> ShipRarity.LEGENDARY
+                            else -> ShipRarity.UNCOMMON
+                        }
+
+                        // For now, show empty maps (0/6). Will be wired to real progress later.
+                        shipCardOwnedCards = 0
+                        showShipCardProgressModal = true
+                    }
                 )
                 
                 // Block pointer events when StaryardDetailsScreen is shown
@@ -820,6 +841,18 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 price = selectedShipPrice,
                 onBackClick = onBackFromStaryardDetails,
                 onPurchaseClick = onPurchaseClick
+            )
+        }
+
+        // ShipCardProgressModal overlay - shown on top of everything when viewing shipcard maps
+        if (showShipCardProgressModal) {
+            ShipCardProgressModal(
+                rarity = shipCardProgressRarity,
+                ownedCards = shipCardOwnedCards,
+                onContinueClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    showShipCardProgressModal = false
+                }
             )
         }
         

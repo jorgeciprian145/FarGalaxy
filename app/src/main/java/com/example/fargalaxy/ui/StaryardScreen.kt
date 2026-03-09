@@ -28,6 +28,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +49,14 @@ import com.example.fargalaxy.R
 import com.example.fargalaxy.data.ShipRepository
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
+
+/**
+ * Enum to represent the selected tab in StaryardScreen.
+ */
+private enum class StaryardTab {
+    UNLOCKED_SHIPS,
+    SHIPCARDS
+}
 
 /**
  * StaryardScreen composable - displays the staryard screen where users can purchase ships.
@@ -69,10 +80,14 @@ import com.example.fargalaxy.model.ShipRarity
 fun StaryardScreen(
     onBackClick: () -> Unit = {},
     onShipClick: (Ship) -> Unit = {},
+    onShipCardClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Scroll state
     val scrollState = rememberScrollState()
+
+    // Tab state: Track which tab is selected (Unlocked ships or Shipcards)
+    var selectedTab by remember { mutableStateOf(StaryardTab.UNLOCKED_SHIPS) }
     
     // Get density to convert dp to pixels
     val density = LocalDensity.current
@@ -259,118 +274,256 @@ fun StaryardScreen(
                         .padding(bottom = 32.dp), // Allow last row to be 32dp above bottom bar
                     verticalArrangement = Arrangement.spacedBy(0.dp) // Manual spacing control
                 ) {
-                    // Initial spacer: Push content down 4dp from clip line
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    // Label: "Purchase unlocked starships" - center aligned, 14sp, regular weight
-                    Text(
-                        text = "Purchase unlocked starships",
-                        fontFamily = Exo2,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W400, // Regular
-                        color = Color(0xFFFFFFFF),
-                        textAlign = TextAlign.Center,
+                    // Tab toggle: Positioned with extra spacing below the header (clip boundary)
+                    // and 16dp above the label. Same visual style as the ShipDetailsScreen tabs,
+                    // with 16dp side padding.
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
-                    )
-                    
-                    // 16dp spacing below label
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Container: Ships count on left, credits on right
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(60.dp))
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFFFFFFFF),
+                                shape = RoundedCornerShape(60.dp)
+                            )
+                            .padding(4.dp)
                     ) {
-                        // Left: Ships count label - bold, 20sp
-                        Text(
-                            text = "${availableShips.size} unlocked ships",
-                            fontFamily = Exo2,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFFFFFF)
-                        )
-                        
-                        // Right: Credits container
-                        // Height: 32dp, padding: 16dp, border: 1dp #6B6C6F, background: #373A3E, corner radius: 8dp
-                        Box(
-                            modifier = Modifier
-                                .height(32.dp)
-                                .background(
-                                    color = Color(0xFF373A3E), // Background fill
-                                    shape = RoundedCornerShape(8.dp) // 8dp corner radius
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = Color(0xFF6B6C6F), // Border color
-                                    shape = RoundedCornerShape(8.dp) // 8dp corner radius
-                                ),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(0.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 16.dp), // 16dp internal padding
-                                horizontalArrangement = Arrangement.spacedBy(8.dp), // 8dp spacing between icon and label
-                                verticalAlignment = Alignment.CenterVertically
+                            // UNLOCKED SHIPS tab
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(60.dp))
+                                    .then(
+                                        if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
+                                            Modifier.background(Color(0xFFFFFFFF))
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                                    .clickable { selectedTab = StaryardTab.UNLOCKED_SHIPS },
+                                contentAlignment = Alignment.Center
                             ) {
-                                // Credits icon: 24dp width, maintaining aspect ratio (on the left)
-                                Image(
-                                    painter = painterResource(id = R.drawable.creditsicon),
-                                    contentDescription = "Credits",
-                                    modifier = Modifier.width(24.dp), // 24dp width, maintaining aspect ratio
-                                    contentScale = ContentScale.Fit,
-                                    colorFilter = ColorFilter.tint(Color(0xFFFFFFFF)) // White tint for icon
-                                )
-                                
-                                // Credits amount label: 16sp, medium weight, white color
                                 Text(
-                                    text = userCredits.toString(),
+                                    text = "Unlocked ships",
                                     fontFamily = Exo2,
                                     fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFFFFFFFF) // White color
+                                    fontWeight = FontWeight.W400,
+                                    color = if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
+                                        Color(0xFF010102)
+                                    } else {
+                                        Color(0xFFFFFFFF)
+                                    },
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+
+                            // SHIPCARDS tab
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(60.dp))
+                                    .then(
+                                        if (selectedTab == StaryardTab.SHIPCARDS) {
+                                            Modifier.background(Color(0xFFFFFFFF))
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                                    .clickable { selectedTab = StaryardTab.SHIPCARDS },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Shipcards",
+                                    fontFamily = Exo2,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.W400,
+                                    color = if (selectedTab == StaryardTab.SHIPCARDS) {
+                                        Color(0xFF010102)
+                                    } else {
+                                        Color(0xFFFFFFFF)
+                                    },
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }
                     }
-                    
-                    // 16dp spacing below the ships count/credits row
+
+                    // 16dp spacing below the tabs and above the section labels
                     Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Ship grid: Rows of 1:1 containers, 2 per row, 8dp gap between containers
-                    // 16dp side padding, containers maintain 1:1 ratio even when alone in a row
-                    BoxWithConstraints(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        val containerWidth = (maxWidth - 32.dp - 8.dp) / 2 // (screen width - 32dp padding - 8dp spacing) / 2
-                        
-                        // Group ships into rows (chunks of 2)
-                        val rows = availableShips.chunked(2)
-                        
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
+
+                    if (selectedTab == StaryardTab.UNLOCKED_SHIPS) {
+                        // Label: "Purchase unlocked starships" - center aligned, 14sp, regular weight
+                        Text(
+                            text = "Purchase unlocked starships",
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W400, // Regular
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        )
+
+                        // 16dp spacing below label
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Container: Ships count on left, credits on right
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            rows.forEach { rowShips ->
+                            // Left: Ships count label - bold, 20sp
+                            Text(
+                                text = "${availableShips.size} unlocked ships",
+                                fontFamily = Exo2,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFFFFF)
+                            )
+
+                            // Right: Credits container
+                            // Height: 32dp, padding: 16dp, border: 1dp #6B6C6F, background: #373A3E, corner radius: 8dp
+                            Box(
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .background(
+                                        color = Color(0xFF373A3E), // Background fill
+                                        shape = RoundedCornerShape(8.dp) // 8dp corner radius
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = Color(0xFF6B6C6F), // Border color
+                                        shape = RoundedCornerShape(8.dp) // 8dp corner radius
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp), // 16dp side padding
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between containers
+                                    modifier = Modifier.padding(horizontal = 16.dp), // 16dp internal padding
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp), // 8dp spacing between icon and label
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    rowShips.forEach { ship ->
-                                        val shipPrice = shipPrices[ship.id] ?: 0
-                                        StaryardShipContainer(
-                                            ship = ship,
-                                            price = shipPrice,
-                                            userCredits = userCredits,
-                                            containerWidth = containerWidth,
-                                            onShipClick = { onShipClick(ship) },
-                                            modifier = Modifier.width(containerWidth)
-                                        )
+                                    // Credits icon: 24dp width, maintaining aspect ratio (on the left)
+                                    Image(
+                                        painter = painterResource(id = R.drawable.creditsicon),
+                                        contentDescription = "Credits",
+                                        modifier = Modifier.width(24.dp), // 24dp width, maintaining aspect ratio
+                                        contentScale = ContentScale.Fit,
+                                        colorFilter = ColorFilter.tint(Color(0xFFFFFFFF)) // White tint for icon
+                                    )
+
+                                    // Credits amount label: 16sp, medium weight, white color
+                                    Text(
+                                        text = userCredits.toString(),
+                                        fontFamily = Exo2,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFFFFFFFF) // White color
+                                    )
+                                }
+                            }
+                        }
+
+                        // 16dp spacing below the ships count/credits row
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Ship grid: Rows of 1:1 containers, 2 per row, 8dp gap between containers
+                        // 16dp side padding, containers maintain 1:1 ratio even when alone in a row
+                        BoxWithConstraints(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            val containerWidth = (maxWidth - 32.dp - 8.dp) / 2 // (screen width - 32dp padding - 8dp spacing) / 2
+
+                            // Group ships into rows (chunks of 2)
+                            val rows = availableShips.chunked(2)
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
+                            ) {
+                                rows.forEach { rowShips ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp), // 16dp side padding
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between containers
+                                    ) {
+                                        rowShips.forEach { ship ->
+                                            val shipPrice = shipPrices[ship.id] ?: 0
+                                            StaryardShipContainer(
+                                                ship = ship,
+                                                price = shipPrice,
+                                                userCredits = userCredits,
+                                                containerWidth = containerWidth,
+                                                onShipClick = { onShipClick(ship) },
+                                                modifier = Modifier.width(containerWidth)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Shipcards tab: Intro label + 3 empty shipcard containers (ship16, ship17, ship18)
+                        Text(
+                            text = "View your progress towards unlocking ships with shipcards",
+                            fontFamily = Exo2,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W400, // Regular
+                            color = Color(0xFFFFFFFF),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Three shipcard items using same container style as ships but empty for now
+                        val shipCardConfigs = listOf(
+                            "ship16" to ShipRarity.UNCOMMON,
+                            "ship17" to ShipRarity.EPIC,
+                            "ship18" to ShipRarity.LEGENDARY
+                        )
+
+                        BoxWithConstraints(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            val containerWidth = (maxWidth - 32.dp - 8.dp) / 2
+                            val rows = shipCardConfigs.chunked(2)
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                rows.forEach { rowItems ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        rowItems.forEach { (shipId, rarity) ->
+                                            ShipCardPlaceholderContainer(
+                                                rarity = rarity,
+                                                containerWidth = containerWidth,
+                                                onClick = { onShipCardClick(shipId) },
+                                                modifier = Modifier.width(containerWidth)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -457,6 +610,40 @@ private fun StaryardShipContainer(
                 canAfford = price <= userCredits
             )
         }
+    }
+}
+
+/**
+ * ShipCardPlaceholderContainer composable - displays an empty 1:1 container
+ * using the same background style as ships, for shipcard progress entries.
+ *
+ * @param rarity The rarity of the target ship (controls background style)
+ * @param containerWidth The calculated width for the container
+ * @param onClick Callback when the container is clicked
+ * @param modifier Modifier for the container
+ */
+@Composable
+private fun ShipCardPlaceholderContainer(
+    rarity: ShipRarity,
+    containerWidth: androidx.compose.ui.unit.Dp,
+    onClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val backgroundResId = getStaryardBackgroundResId(rarity)
+
+    Box(
+        modifier = modifier
+            .width(containerWidth)
+            .aspectRatio(1f)
+            .clickable(onClick = onClick)
+    ) {
+        // Background SVG only – no inner content yet
+        Image(
+            painter = painterResource(id = backgroundResId),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds
+        )
     }
 }
 
