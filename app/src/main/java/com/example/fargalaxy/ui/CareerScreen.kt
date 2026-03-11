@@ -525,30 +525,37 @@ fun CareerScreen(
                 Spacer(modifier = Modifier.height(20.dp))
                 
                 // Session log rows container
+                // Get real data from UserDataRepository
+                val lastSessionDate = com.example.fargalaxy.data.UserDataRepository.getLastSessionFormattedDate()
+                val sessionsThisWeek = com.example.fargalaxy.data.UserDataRepository.getSessionsThisWeek()
+                val sessionsThisMonthValue = com.example.fargalaxy.data.UserDataRepository.sessionsThisMonth
+                val averageSessionTime = com.example.fargalaxy.data.UserDataRepository.getAverageSessionTimeMinutes()
+                val longestSession = com.example.fargalaxy.data.UserDataRepository.getLongestSessionMinutes()
+                
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp) // 8dp spacing between rows
                 ) {
                     TravelLogRow(
                         label = "Last session",
-                        value = "Today",
+                        value = lastSessionDate,
                         isValueBold = true
                     )
                     TravelLogRow(
                         label = "Sessions this week",
-                        value = "2"
+                        value = sessionsThisWeek.toString()
                     )
                     TravelLogRow(
                         label = "Sessions this month",
-                        value = "2"
+                        value = sessionsThisMonthValue.toString()
                     )
                     TravelLogRow(
                         label = "Average session time",
-                        value = "15 m"
+                        value = com.example.fargalaxy.data.UserDataRepository.formatSessionTime(averageSessionTime)
                     )
                     TravelLogRow(
                         label = "Longest session",
-                        value = "20 mins",
+                        value = com.example.fargalaxy.data.UserDataRepository.formatSessionTime(longestSession),
                         isValueBold = true
                     )
                 }

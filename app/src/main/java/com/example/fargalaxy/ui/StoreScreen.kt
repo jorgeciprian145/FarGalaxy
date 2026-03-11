@@ -767,7 +767,7 @@ fun StoreScreen(
                                         "Elite Spacer's crate",
                                         R.drawable.elitecrateselection,
                                         20000,
-                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (3% chance)\nLegendary ship card (20% chance)\nEpic ship card (30% chance)\nUncommon ship card (22% chance)\nEquipment part (25% chance)"
+                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (1% chance)\nLegendary ship card (5% chance)\nEpic ship card (15% chance)\nUncommon ship card (45% chance)\nEquipment part (34% chance)"
                                     )
                                 }
                         ) {
@@ -976,7 +976,7 @@ fun StoreScreen(
                                         "Advanced Spacer's crate",
                                         R.drawable.advancedcrateselection,
                                         10000,
-                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (1% chance)\nLegendary ship card (6% chance)\nEpic ship card (20% chance)\nUncommon ship card (30% chance)\nEquipment part (43% chance)"
+                                        "Earn a random reward consisting on one of the following possible item's:\nLegendary ship card (1% chance)\nEpic ship card (9% chance)\nUncommon ship card (30% chance)\nEquipment part (60% chance)"
                                     )
                                 }
                         ) {
@@ -1163,7 +1163,7 @@ fun StoreScreen(
                                         "Standard Spacer's crate",
                                         R.drawable.standardcrateselection,
                                         5000,
-                                        "Earn a random reward consisting on one of the following possible item's:\n50000 credits (0.5% chance)\nLegendary ship card (3% chance)\nEpic ship card (10% chance)\nUncommon ship card (35% chance)\nEquipment part (51.5% chance)"
+                                        "Earn a random reward consisting on one of the following possible item's:\nEpic ship card (5% chance)\nUncommon ship card (20% chance)\nEquipment part (75% chance)"
                                     )
                                 }
                         ) {

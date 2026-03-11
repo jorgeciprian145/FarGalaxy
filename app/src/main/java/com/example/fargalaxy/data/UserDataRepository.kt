@@ -24,6 +24,11 @@ object UserDataRepository {
     private const val KEY_TOTAL_SESSIONS = "total_sessions"
     private const val KEY_LAST_SESSION_DATE = "last_session_date" // Format: "yyyy-MM-dd"
     private const val KEY_LAST_SESSION_MONTH = "last_session_month" // Format: "yyyy-MM"
+    private const val KEY_LAST_SESSION_WEEK = "last_session_week" // Format: "yyyy-Www" (ISO week)
+    private const val KEY_SESSIONS_THIS_WEEK = "sessions_this_week"
+    private const val KEY_SESSION_DURATIONS = "session_durations" // Comma-separated list of session durations in minutes
+    private const val KEY_LONGEST_SESSION = "longest_session_minutes" // Longest session duration in minutes
+    private const val KEY_LAST_SESSION_DURATION = "last_session_duration_minutes" // Last session duration in minutes
     
     private var prefs: SharedPreferences? = null
     
@@ -45,6 +50,8 @@ object UserDataRepository {
             
             // Check if we need to reset sessions this month (new month)
             checkAndResetMonthlySessions()
+            // Check if we need to reset sessions this week (new week)
+            checkAndResetWeeklySessions()
         }
     }
     
@@ -156,10 +163,13 @@ object UserDataRepository {
     
     /**
      * Record a completed session (successful travel).
-     * Updates streak, sessions this month, and total sessions.
+     * Updates streak, sessions this month, sessions this week, and total sessions.
+     * Tracks session duration for average and longest session calculations.
      * Should only be called when a travel session completes successfully (not cancelled).
+     * 
+     * @param sessionDurationMinutes The duration of the session in minutes
      */
-    fun recordCompletedSession() {
+    fun recordCompletedSession(sessionDurationMinutes: Int = 0) {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH) + 1 // Calendar.MONTH is 0-based
@@ -224,15 +234,79 @@ object UserDataRepository {
             currentStreakDays = 1
         }
         
+        // Calculate current week (ISO week format: yyyy-Www)
+        val weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR)
+        val currentWeek = String.format(Locale.US, "%04d-W%02d", year, weekOfYear)
+        
+        // Get last session week
+        val lastSessionWeek = prefs?.getString(KEY_LAST_SESSION_WEEK, null)
+        
+        // Check if we need to reset sessions this week (new week)
+        if (lastSessionWeek != currentWeek) {
+            prefs?.edit()?.putInt(KEY_SESSIONS_THIS_WEEK, 0)?.apply()
+        }
+        
         // Increment counters
         sessionsThisMonth += 1
         totalSessions += 1
         
-        // Save last session date and month
+        // Increment sessions this week
+        val currentSessionsThisWeek = prefs?.getInt(KEY_SESSIONS_THIS_WEEK, 0) ?: 0
+        prefs?.edit()?.putInt(KEY_SESSIONS_THIS_WEEK, currentSessionsThisWeek + 1)?.apply()
+        
+        // Track session duration
+        if (sessionDurationMinutes > 0) {
+            // Save last session duration
+            prefs?.edit()?.putInt(KEY_LAST_SESSION_DURATION, sessionDurationMinutes)?.apply()
+            
+            // Update longest session if this is longer
+            val currentLongest = prefs?.getInt(KEY_LONGEST_SESSION, 0) ?: 0
+            if (sessionDurationMinutes > currentLongest) {
+                prefs?.edit()?.putInt(KEY_LONGEST_SESSION, sessionDurationMinutes)?.apply()
+            }
+            
+            // Add to session durations list (keep last 100 sessions for average calculation)
+            val durationsString = prefs?.getString(KEY_SESSION_DURATIONS, "") ?: ""
+            val durationsList = if (durationsString.isEmpty()) {
+                mutableListOf<Int>()
+            } else {
+                durationsString.split(",").mapNotNull { it.toIntOrNull() }.toMutableList()
+            }
+            
+            durationsList.add(sessionDurationMinutes)
+            
+            // Keep only last 100 sessions
+            if (durationsList.size > 100) {
+                durationsList.removeAt(0)
+            }
+            
+            prefs?.edit()?.putString(KEY_SESSION_DURATIONS, durationsList.joinToString(","))?.apply()
+        }
+        
+        // Save last session date, month, and week
         prefs?.edit()
             ?.putString(KEY_LAST_SESSION_DATE, todayString)
             ?.putString(KEY_LAST_SESSION_MONTH, currentMonth)
+            ?.putString(KEY_LAST_SESSION_WEEK, currentWeek)
             ?.apply()
+    }
+    
+    /**
+     * Check if we need to reset sessions this week (when week changes).
+     * Called on app initialization.
+     */
+    private fun checkAndResetWeeklySessions() {
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR)
+        val currentWeek = String.format(Locale.US, "%04d-W%02d", year, weekOfYear)
+        
+        val lastSessionWeek = prefs?.getString(KEY_LAST_SESSION_WEEK, null)
+        
+        if (lastSessionWeek != null && lastSessionWeek != currentWeek) {
+            // Week changed: reset sessions this week
+            prefs?.edit()?.putInt(KEY_SESSIONS_THIS_WEEK, 0)?.apply()
+        }
     }
     
     /**
@@ -393,6 +467,111 @@ object UserDataRepository {
     }
     
     /**
+     * Get sessions this week.
+     * 
+     * @return Number of sessions completed this week
+     */
+    fun getSessionsThisWeek(): Int {
+        return prefs?.getInt(KEY_SESSIONS_THIS_WEEK, 0) ?: 0
+    }
+    
+    /**
+     * Get formatted last session date.
+     * Returns "Today", "Yesterday", or the formatted date.
+     * 
+     * @return Formatted last session date string
+     */
+    fun getLastSessionFormattedDate(): String {
+        val lastSessionDateString = prefs?.getString(KEY_LAST_SESSION_DATE, null) ?: return "Never"
+        
+        try {
+            val parts = lastSessionDateString.split("-")
+            if (parts.size == 3) {
+                val lastYear = parts[0].toInt()
+                val lastMonth = parts[1].toInt()
+                val lastDay = parts[2].toInt()
+                
+                val lastCalendar = Calendar.getInstance()
+                lastCalendar.set(lastYear, lastMonth - 1, lastDay)
+                lastCalendar.set(Calendar.HOUR_OF_DAY, 0)
+                lastCalendar.set(Calendar.MINUTE, 0)
+                lastCalendar.set(Calendar.SECOND, 0)
+                lastCalendar.set(Calendar.MILLISECOND, 0)
+                
+                val todayCalendar = Calendar.getInstance()
+                todayCalendar.set(Calendar.HOUR_OF_DAY, 0)
+                todayCalendar.set(Calendar.MINUTE, 0)
+                todayCalendar.set(Calendar.SECOND, 0)
+                todayCalendar.set(Calendar.MILLISECOND, 0)
+                
+                val daysBetween = ((todayCalendar.timeInMillis - lastCalendar.timeInMillis) / (1000 * 60 * 60 * 24)).toInt()
+                
+                return when (daysBetween) {
+                    0 -> "Today"
+                    1 -> "Yesterday"
+                    else -> {
+                        // Format as "MMM d" (e.g., "Jan 15")
+                        val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+                        "${monthNames[lastMonth - 1]} $lastDay"
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // If parsing fails, return the raw string
+        }
+        
+        return lastSessionDateString
+    }
+    
+    /**
+     * Get average session time in minutes.
+     * 
+     * @return Average session time in minutes, or 0 if no sessions
+     */
+    fun getAverageSessionTimeMinutes(): Int {
+        val durationsString = prefs?.getString(KEY_SESSION_DURATIONS, "") ?: ""
+        if (durationsString.isEmpty()) return 0
+        
+        val durations = durationsString.split(",").mapNotNull { it.toIntOrNull() }
+        if (durations.isEmpty()) return 0
+        
+        val sum = durations.sum()
+        return sum / durations.size
+    }
+    
+    /**
+     * Get longest session time in minutes.
+     * 
+     * @return Longest session time in minutes, or 0 if no sessions
+     */
+    fun getLongestSessionMinutes(): Int {
+        return prefs?.getInt(KEY_LONGEST_SESSION, 0) ?: 0
+    }
+    
+    /**
+     * Format minutes as a readable string (e.g., "15 m", "1 h 30 m", "20 mins").
+     * 
+     * @param minutes The number of minutes
+     * @return Formatted string
+     */
+    fun formatSessionTime(minutes: Int): String {
+        if (minutes == 0) return "0 m"
+        
+        if (minutes < 60) {
+            return "$minutes m"
+        } else {
+            val hours = minutes / 60
+            val remainingMinutes = minutes % 60
+            return if (remainingMinutes == 0) {
+                "$hours h"
+            } else {
+                "$hours h $remainingMinutes m"
+            }
+        }
+    }
+    
+    /**
      * Reset all user data to starting state.
      * Sets all values to 0 (starting state for new users).
      */
@@ -405,10 +584,15 @@ object UserDataRepository {
         sessionsThisMonth = 0
         totalSessions = 0
         
-        // Clear last session date/month
+        // Clear last session date/month/week and session data
         prefs?.edit()
             ?.remove(KEY_LAST_SESSION_DATE)
             ?.remove(KEY_LAST_SESSION_MONTH)
+            ?.remove(KEY_LAST_SESSION_WEEK)
+            ?.remove(KEY_SESSIONS_THIS_WEEK)
+            ?.remove(KEY_SESSION_DURATIONS)
+            ?.remove(KEY_LONGEST_SESSION)
+            ?.remove(KEY_LAST_SESSION_DURATION)
             ?.apply()
     }
 }

@@ -330,7 +330,8 @@ fun RewardsScreen(
     // Note: Focus time is already added in GalaxyScreen when travel ends, so we don't add it again here
     LaunchedEffect(Unit) {
         // Record the completed session (updates streak, sessions count, etc.)
-        UserDataRepository.recordCompletedSession()
+        // Pass the actual travel minutes (or 0 for test mode)
+        UserDataRepository.recordCompletedSession(travelMinutes)
     }
     
     // Sound playback for XP animation

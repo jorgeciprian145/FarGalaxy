@@ -94,6 +94,17 @@ object CrateRepository {
     private const val KEY_FAILS_SINCE_CARD_STANDARD = "fails_since_card_standard"
     private const val KEY_FAILS_SINCE_CARD_ADVANCED = "fails_since_card_advanced"
     private const val KEY_FAILS_SINCE_CARD_ELITE = "fails_since_card_elite"
+    
+    // Standard crate special tracking
+    private const val KEY_STANDARD_TOTAL_OPENED = "standard_total_opened" // Total Standard crates opened (for 5-crate guarantee)
+    private const val KEY_STANDARD_SINCE_CARD = "standard_since_card" // Crates since last ship card (for 2-crate cooldown)
+    
+    // Advanced crate special tracking
+    private const val KEY_ADVANCED_SINCE_CARD = "advanced_since_card" // Crates since last ship card (for 1-crate cooldown)
+    
+    // Elite crate special tracking
+    private const val KEY_ELITE_SINCE_CREDITS = "elite_since_credits" // Crates since last credits (for 2-crate cooldown)
+    private const val KEY_ELITE_SINCE_CARD = "elite_since_card" // Crates since last ship card (for 1-crate cooldown)
 
     private var prefs: SharedPreferences? = null
 
@@ -175,33 +186,109 @@ object CrateRepository {
     private fun resetPity(crateType: CrateType) {
         setFailsSinceCard(crateType, 0)
     }
+    
+    // --- Standard crate special tracking ---
+    
+    private fun getStandardTotalOpened(): Int {
+        return getPrefs().getInt(KEY_STANDARD_TOTAL_OPENED, 0)
+    }
+    
+    private fun incrementStandardTotalOpened() {
+        val current = getStandardTotalOpened()
+        getPrefs().edit().putInt(KEY_STANDARD_TOTAL_OPENED, current + 1).apply()
+    }
+    
+    private fun getStandardSinceCard(): Int {
+        return getPrefs().getInt(KEY_STANDARD_SINCE_CARD, 0)
+    }
+    
+    private fun setStandardSinceCard(value: Int) {
+        getPrefs().edit().putInt(KEY_STANDARD_SINCE_CARD, value.coerceAtLeast(0)).apply()
+    }
+    
+    private fun incrementStandardSinceCard() {
+        setStandardSinceCard(getStandardSinceCard() + 1)
+    }
+    
+    private fun resetStandardSinceCard() {
+        setStandardSinceCard(0)
+    }
+    
+    // --- Advanced crate special tracking ---
+    
+    private fun getAdvancedSinceCard(): Int {
+        return getPrefs().getInt(KEY_ADVANCED_SINCE_CARD, 0)
+    }
+    
+    private fun setAdvancedSinceCard(value: Int) {
+        getPrefs().edit().putInt(KEY_ADVANCED_SINCE_CARD, value.coerceAtLeast(0)).apply()
+    }
+    
+    private fun incrementAdvancedSinceCard() {
+        setAdvancedSinceCard(getAdvancedSinceCard() + 1)
+    }
+    
+    private fun resetAdvancedSinceCard() {
+        setAdvancedSinceCard(0)
+    }
+    
+    // --- Elite crate special tracking ---
+    
+    private fun getEliteSinceCredits(): Int {
+        return getPrefs().getInt(KEY_ELITE_SINCE_CREDITS, 0)
+    }
+    
+    private fun setEliteSinceCredits(value: Int) {
+        getPrefs().edit().putInt(KEY_ELITE_SINCE_CREDITS, value.coerceAtLeast(0)).apply()
+    }
+    
+    private fun incrementEliteSinceCredits() {
+        setEliteSinceCredits(getEliteSinceCredits() + 1)
+    }
+    
+    private fun resetEliteSinceCredits() {
+        setEliteSinceCredits(0)
+    }
+    
+    private fun getEliteSinceCard(): Int {
+        return getPrefs().getInt(KEY_ELITE_SINCE_CARD, 0)
+    }
+    
+    private fun setEliteSinceCard(value: Int) {
+        getPrefs().edit().putInt(KEY_ELITE_SINCE_CARD, value.coerceAtLeast(0)).apply()
+    }
+    
+    private fun incrementEliteSinceCard() {
+        setEliteSinceCard(getEliteSinceCard() + 1)
+    }
+    
+    private fun resetEliteSinceCard() {
+        setEliteSinceCard(0)
+    }
 
     // --- Reward tables (weights reflect your percentages) ---
     // Using base 200 for Standard and Advanced to allow 0.5% precision
     // Elite uses base 108 to maintain current proportions
 
     private val standardTable = listOf(
-        RewardEntry(RewardCategory.CREDITS_50000, weight = 1),      // 0.5% (1/200)
-        RewardEntry(RewardCategory.SHIP_CARD_LEGENDARY, weight = 6), // 3% (6/200)
-        RewardEntry(RewardCategory.SHIP_CARD_EPIC, weight = 20),    // 10% (20/200)
-        RewardEntry(RewardCategory.SHIP_CARD_UNCOMMON, weight = 70), // 35% (70/200)
-        RewardEntry(RewardCategory.EQUIPMENT, weight = 103)          // 51.5% (103/200)
+        RewardEntry(RewardCategory.SHIP_CARD_EPIC, weight = 10),    // 5% (10/200)
+        RewardEntry(RewardCategory.SHIP_CARD_UNCOMMON, weight = 40), // 20% (40/200)
+        RewardEntry(RewardCategory.EQUIPMENT, weight = 150)          // 75% (150/200)
     )
 
     private val advancedTable = listOf(
-        RewardEntry(RewardCategory.CREDITS_50000, weight = 2),      // 1% (2/200)
-        RewardEntry(RewardCategory.SHIP_CARD_LEGENDARY, weight = 12), // 6% (12/200)
-        RewardEntry(RewardCategory.SHIP_CARD_EPIC, weight = 40),    // 20% (40/200)
+        RewardEntry(RewardCategory.SHIP_CARD_LEGENDARY, weight = 2), // 1% (2/200)
+        RewardEntry(RewardCategory.SHIP_CARD_EPIC, weight = 18),    // 9% (18/200)
         RewardEntry(RewardCategory.SHIP_CARD_UNCOMMON, weight = 60), // 30% (60/200)
-        RewardEntry(RewardCategory.EQUIPMENT, weight = 86)          // 43% (86/200)
+        RewardEntry(RewardCategory.EQUIPMENT, weight = 120)          // 60% (120/200)
     )
 
     private val eliteTable = listOf(
-        RewardEntry(RewardCategory.CREDITS_50000, weight = 3),      // 3% (3/100)
-        RewardEntry(RewardCategory.SHIP_CARD_LEGENDARY, weight = 20), // 20% (20/100)
-        RewardEntry(RewardCategory.SHIP_CARD_EPIC, weight = 30),    // 30% (30/100)
-        RewardEntry(RewardCategory.SHIP_CARD_UNCOMMON, weight = 22), // 22% (22/100)
-        RewardEntry(RewardCategory.EQUIPMENT, weight = 25)          // 25% (25/100)
+        RewardEntry(RewardCategory.CREDITS_50000, weight = 1),      // 1% (1/100)
+        RewardEntry(RewardCategory.SHIP_CARD_LEGENDARY, weight = 5), // 5% (5/100)
+        RewardEntry(RewardCategory.SHIP_CARD_EPIC, weight = 15),    // 15% (15/100)
+        RewardEntry(RewardCategory.SHIP_CARD_UNCOMMON, weight = 45), // 45% (45/100)
+        RewardEntry(RewardCategory.EQUIPMENT, weight = 34)          // 34% (34/100)
     )
 
     private fun getTable(crateType: CrateType): List<RewardEntry> {
@@ -229,6 +316,360 @@ object CrateRepository {
     )
 
     /**
+     * Special handler for Standard crate with custom rules:
+     * - Every 5th crate guarantees an uncommon ship card (if available)
+     * - After getting a ship card, next 2 crates won't give ship cards
+     * - Otherwise: 5% epic, 20% uncommon, 75% equipment
+     */
+    private fun openStandardCrate(isTestMode: Boolean): CrateOpenResult? {
+        incrementStandardTotalOpened()
+        val totalOpened = getStandardTotalOpened()
+        
+        // Increment cooldown counter first (for tracking crates since last ship card)
+        // This happens before we check, so if we got a card last time (counter was reset to 0),
+        // this crate will have counter = 1, meaning "1 crate since last card"
+        incrementStandardSinceCard()
+        val sinceCard = getStandardSinceCard()
+        
+        // Check if it's the 5th crate (every 5 crates = 5, 10, 15, 20, etc.)
+        val is5thCrate = totalOpened % 5 == 0
+        
+        // Check if we're in the 2-crate cooldown period (1 or 2 crates since last card)
+        val inCooldown = sinceCard <= 2
+        
+        // Determine reward category
+        val rewardCategory = when {
+            // 5th crate: force uncommon ship card if available (overrides cooldown)
+            is5thCrate && hasEligibleShipForRarity(ShipRarity.UNCOMMON) -> {
+                RewardCategory.SHIP_CARD_UNCOMMON
+            }
+            // In cooldown: force equipment
+            inCooldown -> {
+                RewardCategory.EQUIPMENT
+            }
+            // Otherwise: use weighted selection (epic, uncommon, or equipment)
+            else -> {
+                chooseRandomCategory(standardTable)
+            }
+        }
+        
+        // Apply the reward
+        val reward = when (rewardCategory) {
+            RewardCategory.EQUIPMENT -> {
+                val equipmentId = equipmentPool.random()
+                InventoryRepository.addItem(equipmentId, 1)
+                CrateReward.Equipment(equipmentId)
+            }
+            
+            RewardCategory.SHIP_CARD_UNCOMMON -> {
+                val (shipCardReward, unlockedShipId) = giveShipCard(CrateType.STANDARD, ShipRarity.UNCOMMON)
+                if (shipCardReward != null) {
+                    // Reset cooldown counter (next crate will be 1, then 2, then 3+ allows cards)
+                    resetStandardSinceCard()
+                    // Return reward with unlocked ship ID if ship was just unlocked
+                    return CrateOpenResult(
+                        crateType = CrateType.STANDARD,
+                        reward = shipCardReward,
+                        wasForcedByPity = is5thCrate, // Mark as forced if it was the 5th crate
+                        unlockedShipId = unlockedShipId
+                    )
+                } else {
+                    // No eligible ship card - fallback to equipment
+                    val equipmentId = equipmentPool.random()
+                    InventoryRepository.addItem(equipmentId, 1)
+                    CrateReward.Equipment(equipmentId)
+                }
+            }
+            
+            RewardCategory.SHIP_CARD_EPIC -> {
+                val (shipCardReward, unlockedShipId) = giveShipCard(CrateType.STANDARD, ShipRarity.EPIC)
+                if (shipCardReward != null) {
+                    // Reset cooldown counter
+                    resetStandardSinceCard()
+                    return CrateOpenResult(
+                        crateType = CrateType.STANDARD,
+                        reward = shipCardReward,
+                        wasForcedByPity = false,
+                        unlockedShipId = unlockedShipId
+                    )
+                } else {
+                    // No eligible ship card - fallback to equipment
+                    val equipmentId = equipmentPool.random()
+                    InventoryRepository.addItem(equipmentId, 1)
+                    CrateReward.Equipment(equipmentId)
+                }
+            }
+            
+            else -> {
+                // Should not happen, but fallback to equipment
+                val equipmentId = equipmentPool.random()
+                InventoryRepository.addItem(equipmentId, 1)
+                CrateReward.Equipment(equipmentId)
+            }
+        }
+        
+        return CrateOpenResult(
+            crateType = CrateType.STANDARD,
+            reward = reward,
+            wasForcedByPity = is5thCrate,
+            unlockedShipId = null
+        )
+    }
+    
+    /**
+     * Special handler for Advanced crate with custom rules:
+     * - After getting a ship card, next 1 crate won't give ship cards
+     * - Otherwise: 1% legendary, 9% epic, 30% uncommon, 60% equipment
+     */
+    private fun openAdvancedCrate(isTestMode: Boolean): CrateOpenResult? {
+        // Increment cooldown counter first (for tracking crates since last ship card)
+        incrementAdvancedSinceCard()
+        val sinceCard = getAdvancedSinceCard()
+        
+        // Check if we're in the 1-crate cooldown period (1 crate since last card)
+        val inCooldown = sinceCard <= 1
+        
+        // Determine reward category
+        val rewardCategory = when {
+            // In cooldown: force equipment
+            inCooldown -> {
+                RewardCategory.EQUIPMENT
+            }
+            // Otherwise: use weighted selection (legendary, epic, uncommon, or equipment)
+            else -> {
+                chooseRandomCategory(advancedTable)
+            }
+        }
+        
+        // Apply the reward
+        val reward = when (rewardCategory) {
+            RewardCategory.EQUIPMENT -> {
+                val equipmentId = equipmentPool.random()
+                InventoryRepository.addItem(equipmentId, 1)
+                CrateReward.Equipment(equipmentId)
+            }
+            
+            RewardCategory.SHIP_CARD_LEGENDARY -> {
+                val (shipCardReward, unlockedShipId) = giveShipCard(CrateType.ADVANCED, ShipRarity.LEGENDARY)
+                if (shipCardReward != null) {
+                    // Reset cooldown counter (next crate will be 1, then 2+ allows cards)
+                    resetAdvancedSinceCard()
+                    return CrateOpenResult(
+                        crateType = CrateType.ADVANCED,
+                        reward = shipCardReward,
+                        wasForcedByPity = false,
+                        unlockedShipId = unlockedShipId
+                    )
+                } else {
+                    // No eligible ship card - fallback to equipment
+                    val equipmentId = equipmentPool.random()
+                    InventoryRepository.addItem(equipmentId, 1)
+                    CrateReward.Equipment(equipmentId)
+                }
+            }
+            
+            RewardCategory.SHIP_CARD_EPIC -> {
+                val (shipCardReward, unlockedShipId) = giveShipCard(CrateType.ADVANCED, ShipRarity.EPIC)
+                if (shipCardReward != null) {
+                    // Reset cooldown counter
+                    resetAdvancedSinceCard()
+                    return CrateOpenResult(
+                        crateType = CrateType.ADVANCED,
+                        reward = shipCardReward,
+                        wasForcedByPity = false,
+                        unlockedShipId = unlockedShipId
+                    )
+                } else {
+                    // No eligible ship card - fallback to equipment
+                    val equipmentId = equipmentPool.random()
+                    InventoryRepository.addItem(equipmentId, 1)
+                    CrateReward.Equipment(equipmentId)
+                }
+            }
+            
+            RewardCategory.SHIP_CARD_UNCOMMON -> {
+                val (shipCardReward, unlockedShipId) = giveShipCard(CrateType.ADVANCED, ShipRarity.UNCOMMON)
+                if (shipCardReward != null) {
+                    // Reset cooldown counter
+                    resetAdvancedSinceCard()
+                    return CrateOpenResult(
+                        crateType = CrateType.ADVANCED,
+                        reward = shipCardReward,
+                        wasForcedByPity = false,
+                        unlockedShipId = unlockedShipId
+                    )
+                } else {
+                    // No eligible ship card - fallback to equipment
+                    val equipmentId = equipmentPool.random()
+                    InventoryRepository.addItem(equipmentId, 1)
+                    CrateReward.Equipment(equipmentId)
+                }
+            }
+            
+            else -> {
+                // Should not happen, but fallback to equipment
+                val equipmentId = equipmentPool.random()
+                InventoryRepository.addItem(equipmentId, 1)
+                CrateReward.Equipment(equipmentId)
+            }
+        }
+        
+        return CrateOpenResult(
+            crateType = CrateType.ADVANCED,
+            reward = reward,
+            wasForcedByPity = false,
+            unlockedShipId = null
+        )
+    }
+    
+    /**
+     * Special handler for Elite crate with custom rules:
+     * - After getting credits, next 2 crates won't give credits (chances go to equipment)
+     * - Can't get 2 ship cards in a row (1-crate cooldown)
+     * - Otherwise: 1% credits, 5% legendary, 15% epic, 45% uncommon, 34% equipment
+     */
+    private fun openEliteCrate(isTestMode: Boolean): CrateOpenResult? {
+        // Increment cooldown counters first
+        incrementEliteSinceCredits()
+        incrementEliteSinceCard()
+        val sinceCredits = getEliteSinceCredits()
+        val sinceCard = getEliteSinceCard()
+        
+        // Check if we're in the 2-crate credits cooldown period
+        val inCreditsCooldown = sinceCredits <= 2
+        
+        // Check if we're in the 1-crate ship card cooldown period
+        val inCardCooldown = sinceCard <= 1
+        
+        // Build modified table based on cooldowns
+        val modifiedTable = eliteTable.map { entry ->
+            when {
+                // If credits are blocked, remove them from table
+                entry.category == RewardCategory.CREDITS_50000 && inCreditsCooldown -> {
+                    null
+                }
+                // If ship cards are blocked, remove them from table
+                (entry.category == RewardCategory.SHIP_CARD_LEGENDARY ||
+                 entry.category == RewardCategory.SHIP_CARD_EPIC ||
+                 entry.category == RewardCategory.SHIP_CARD_UNCOMMON) && inCardCooldown -> {
+                    null
+                }
+                else -> entry
+            }
+        }.filterNotNull()
+        
+        // Calculate total weight of blocked rewards to add to equipment
+        val blockedWeight = eliteTable.sumOf { entry ->
+            when {
+                entry.category == RewardCategory.CREDITS_50000 && inCreditsCooldown -> entry.weight
+                (entry.category == RewardCategory.SHIP_CARD_LEGENDARY ||
+                 entry.category == RewardCategory.SHIP_CARD_EPIC ||
+                 entry.category == RewardCategory.SHIP_CARD_UNCOMMON) && inCardCooldown -> entry.weight
+                else -> 0
+            }
+        }
+        
+        // Add blocked weight to equipment
+        val finalTable = modifiedTable.map { entry ->
+            if (entry.category == RewardCategory.EQUIPMENT) {
+                entry.copy(weight = entry.weight + blockedWeight)
+            } else {
+                entry
+            }
+        }
+        
+        // Determine reward category
+        val rewardCategory = chooseRandomCategory(finalTable)
+        
+        // Apply the reward
+        val reward = when (rewardCategory) {
+            RewardCategory.CREDITS_50000 -> {
+                UserDataRepository.addCredits(50_000)
+                // Reset credits cooldown counter
+                resetEliteSinceCredits()
+                CrateReward.Credits(50_000)
+            }
+            
+            RewardCategory.EQUIPMENT -> {
+                val equipmentId = equipmentPool.random()
+                InventoryRepository.addItem(equipmentId, 1)
+                CrateReward.Equipment(equipmentId)
+            }
+            
+            RewardCategory.SHIP_CARD_LEGENDARY -> {
+                val (shipCardReward, unlockedShipId) = giveShipCard(CrateType.ELITE, ShipRarity.LEGENDARY)
+                if (shipCardReward != null) {
+                    // Reset ship card cooldown counter
+                    resetEliteSinceCard()
+                    return CrateOpenResult(
+                        crateType = CrateType.ELITE,
+                        reward = shipCardReward,
+                        wasForcedByPity = false,
+                        unlockedShipId = unlockedShipId
+                    )
+                } else {
+                    // No eligible ship card - fallback to equipment
+                    val equipmentId = equipmentPool.random()
+                    InventoryRepository.addItem(equipmentId, 1)
+                    CrateReward.Equipment(equipmentId)
+                }
+            }
+            
+            RewardCategory.SHIP_CARD_EPIC -> {
+                val (shipCardReward, unlockedShipId) = giveShipCard(CrateType.ELITE, ShipRarity.EPIC)
+                if (shipCardReward != null) {
+                    // Reset ship card cooldown counter
+                    resetEliteSinceCard()
+                    return CrateOpenResult(
+                        crateType = CrateType.ELITE,
+                        reward = shipCardReward,
+                        wasForcedByPity = false,
+                        unlockedShipId = unlockedShipId
+                    )
+                } else {
+                    // No eligible ship card - fallback to equipment
+                    val equipmentId = equipmentPool.random()
+                    InventoryRepository.addItem(equipmentId, 1)
+                    CrateReward.Equipment(equipmentId)
+                }
+            }
+            
+            RewardCategory.SHIP_CARD_UNCOMMON -> {
+                val (shipCardReward, unlockedShipId) = giveShipCard(CrateType.ELITE, ShipRarity.UNCOMMON)
+                if (shipCardReward != null) {
+                    // Reset ship card cooldown counter
+                    resetEliteSinceCard()
+                    return CrateOpenResult(
+                        crateType = CrateType.ELITE,
+                        reward = shipCardReward,
+                        wasForcedByPity = false,
+                        unlockedShipId = unlockedShipId
+                    )
+                } else {
+                    // No eligible ship card - fallback to equipment
+                    val equipmentId = equipmentPool.random()
+                    InventoryRepository.addItem(equipmentId, 1)
+                    CrateReward.Equipment(equipmentId)
+                }
+            }
+            
+            else -> {
+                // Should not happen, but fallback to equipment
+                val equipmentId = equipmentPool.random()
+                InventoryRepository.addItem(equipmentId, 1)
+                CrateReward.Equipment(equipmentId)
+            }
+        }
+        
+        return CrateOpenResult(
+            crateType = CrateType.ELITE,
+            reward = reward,
+            wasForcedByPity = false,
+            unlockedShipId = null
+        )
+    }
+    
+    /**
      * Main entry point to open a crate.
      *
      * Handles:
@@ -245,6 +686,21 @@ object CrateRepository {
         // Increment global test counter (for any future test‑mode specific logic).
         if (isTestMode) {
             ShipCardRepository.incrementTestCratesOpened()
+        }
+
+        // Special handling for Standard crate
+        if (crateType == CrateType.STANDARD) {
+            return openStandardCrate(isTestMode)
+        }
+        
+        // Special handling for Advanced crate
+        if (crateType == CrateType.ADVANCED) {
+            return openAdvancedCrate(isTestMode)
+        }
+        
+        // Special handling for Elite crate
+        if (crateType == CrateType.ELITE) {
+            return openEliteCrate(isTestMode)
         }
 
         val fails = getFailsSinceCard(crateType)
@@ -335,7 +791,8 @@ object CrateRepository {
         val boostedTable = baseTable.map { entry ->
             val shouldBoost = when (crateType) {
                 CrateType.STANDARD ->
-                    entry.category == RewardCategory.SHIP_CARD_UNCOMMON
+                    entry.category == RewardCategory.SHIP_CARD_UNCOMMON ||
+                        entry.category == RewardCategory.SHIP_CARD_EPIC
 
                 CrateType.ADVANCED ->
                     entry.category == RewardCategory.SHIP_CARD_UNCOMMON ||
@@ -379,7 +836,7 @@ object CrateRepository {
      */
     private fun chooseForcedShipCardCategory(crateType: CrateType): RewardCategory {
         val candidates = when (crateType) {
-            CrateType.STANDARD -> listOf(RewardCategory.SHIP_CARD_UNCOMMON)
+            CrateType.STANDARD -> listOf(RewardCategory.SHIP_CARD_UNCOMMON) // Standard only has uncommon/epic, but for forced we use uncommon
             CrateType.ADVANCED -> listOf(
                 RewardCategory.SHIP_CARD_UNCOMMON,
                 RewardCategory.SHIP_CARD_EPIC
@@ -412,7 +869,7 @@ object CrateRepository {
 
     private fun hasAnyEligibleShipCard(crateType: CrateType): Boolean {
         val rarities = when (crateType) {
-            CrateType.STANDARD -> listOf(ShipRarity.UNCOMMON)
+            CrateType.STANDARD -> listOf(ShipRarity.UNCOMMON, ShipRarity.EPIC) // Standard has uncommon and epic
             CrateType.ADVANCED -> listOf(ShipRarity.UNCOMMON, ShipRarity.EPIC)
             CrateType.ELITE -> listOf(ShipRarity.UNCOMMON, ShipRarity.EPIC, ShipRarity.LEGENDARY)
         }
@@ -474,6 +931,11 @@ object CrateRepository {
             .remove(KEY_FAILS_SINCE_CARD_STANDARD)
             .remove(KEY_FAILS_SINCE_CARD_ADVANCED)
             .remove(KEY_FAILS_SINCE_CARD_ELITE)
+            .remove(KEY_STANDARD_TOTAL_OPENED)
+            .remove(KEY_STANDARD_SINCE_CARD)
+            .remove(KEY_ADVANCED_SINCE_CARD)
+            .remove(KEY_ELITE_SINCE_CREDITS)
+            .remove(KEY_ELITE_SINCE_CARD)
             .apply()
     }
 }
