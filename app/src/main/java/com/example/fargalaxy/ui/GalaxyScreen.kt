@@ -2738,6 +2738,22 @@ fun GalaxyScreen(
     
     // Unstable cargo cancellation modal
     var showUnstableCargoCanceledModal by remember { mutableStateOf(false) }
+
+    // Flight control motivational quotes for launch start toast
+    val flightControlQuotes = listOf(
+        "Go do something awesome.",
+        "A focused pilot is a capable pilot.",
+        "Set your course and engage.",
+        "The galaxy rewards disciplined pilots.",
+        "Time to focus. The mission awaits.",
+        "One session at a time.",
+        "Stay sharp out there, pilot.",
+        "Every mission counts.",
+        "Remember why you started this mission.",
+        "Your future self will appreciate this session.",
+        "This is the part where you actually work.",
+        "Focus engaged."
+    )
     
     // Notify parent when bottom sheet visibility changes
     LaunchedEffect(showBoostSelectionBottomSheet) {
@@ -3330,6 +3346,10 @@ fun GalaxyScreen(
                     }
                 }
                 
+                // Show flight control motivational toast when travel actually starts
+                val randomQuote = flightControlQuotes.random()
+                onShowToast(randomQuote)
+
                 // Start travel immediately (don't wait for sound)
                 isPreparingLaunch = false
                 isTraveling = true

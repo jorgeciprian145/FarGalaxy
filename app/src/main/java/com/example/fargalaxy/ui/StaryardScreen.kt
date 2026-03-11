@@ -121,18 +121,18 @@ fun StaryardScreen(
     // Ship prices based on focus time unlock requirements
     val shipPrices = mapOf(
         "type45c_shooting_star" to 2500, // ship2: 15 mins
-        "navakeshi_star_pouncer" to 5000, // ship3: 25 mins
-        "a300_albatross" to 8500, // ship4: 35 mins
-        "b7f_starforce" to 12000, // ship5: 50 mins
-        "navakeshi_star_crusher" to 15000, // ship6: 80 mins
-        "b15_specter" to 20000, // ship7: 105 mins
-        "n6_98_melina" to 26000, // ship8: 150 mins
-        "model3_tortoise_ccp" to 32000, // ship9: 200 mins
-        "h98_valkyrie" to 38000, // ship10: 250 mins
-        "navakeshi_star_ravager" to 45000, // ship11: 300 mins
-        "silver_lightning" to 60000, // ship12: 350 mins
-        "vulcani_legenda_f1" to 65000, // ship13: 450 mins
-        "force_of_nature" to 80000 // ship14: 600 mins
+        "navakeshi_star_pouncer" to 5000, // ship3: 40 mins
+        "a300_albatross" to 8500, // ship4: 60 mins
+        "b7f_starforce" to 12000, // ship5: 90 mins
+        "navakeshi_star_crusher" to 15000, // ship6: 150 mins
+        "b15_specter" to 20000, // ship7: 240 mins
+        "n6_98_melina" to 26000, // ship8: 360 mins
+        "model3_tortoise_ccp" to 32000, // ship9: 500 mins
+        "h98_valkyrie" to 38000, // ship10: 700 mins
+        "navakeshi_star_ravager" to 45000, // ship11: 1000 mins
+        "silver_lightning" to 60000, // ship12: 1400 mins
+        "vulcani_legenda_f1" to 65000, // ship13: 2000 mins
+        "force_of_nature" to 80000 // ship14: 3000 mins
     )
     
     // Calculate if content is being clipped (scroll position >= 16dp means content moved up past initial spacer)

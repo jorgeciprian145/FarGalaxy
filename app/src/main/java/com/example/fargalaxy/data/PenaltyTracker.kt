@@ -117,7 +117,7 @@ object PenaltyTracker {
                             EquipmentUsageRepository.markUnstableCargoPenalty()
                             onTripCancelled?.invoke("unstable_cargo")
                         } else {
-                            onTripCancelled?.invoke("timeout")
+                        onTripCancelled?.invoke("timeout")
                         }
                         break
                     }
@@ -205,17 +205,17 @@ object PenaltyTracker {
                             penaltyCount = 0
                         } else {
                             // Normal penalty or emergency modulator already used
-                            penaltyCount++
+                        penaltyCount++
                             
                             // Check for unstable cargo: if equipped, mark penalty and cancel trip
                             if (equippedItem == "unstable_cargo") {
                                 EquipmentUsageRepository.markUnstableCargoPenalty()
                                 onTripCancelled?.invoke("unstable_cargo")
                             }
-                            
-                            // Check if penalty count reached 5 - cancel trip
-                            if (penaltyCount >= 5) {
-                                onTripCancelled?.invoke("penalties")
+                        
+                        // Check if penalty count reached 5 - cancel trip
+                        if (penaltyCount >= 5) {
+                            onTripCancelled?.invoke("penalties")
                             }
                         }
                     }

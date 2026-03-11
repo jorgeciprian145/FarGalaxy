@@ -116,19 +116,19 @@ object GameStateRepository {
      */
     fun getShipFocusTimeRequirement(shipId: String): Int? {
         return when (shipId) {
-            "type45c_shooting_star" -> 15 // ship2
-            "navakeshi_star_pouncer" -> 25 // ship3
-            "a300_albatross" -> 35 // ship4
-            "b7f_starforce" -> 50 // ship5
-            "navakeshi_star_crusher" -> 80 // ship6
-            "b15_specter" -> 105 // ship7
-            "n6_98_melina" -> 150 // ship8
-            "model3_tortoise_ccp" -> 200 // ship9
-            "h98_valkyrie" -> 250 // ship10
-            "navakeshi_star_ravager" -> 300 // ship11
-            "silver_lightning" -> 350 // ship12
-            "vulcani_legenda_f1" -> 450 // ship13
-            "force_of_nature" -> 600 // ship14
+            "type45c_shooting_star" -> 15 // ship2 (unchanged - easy win)
+            "navakeshi_star_pouncer" -> 40 // ship3
+            "a300_albatross" -> 60 // ship4
+            "b7f_starforce" -> 90 // ship5
+            "navakeshi_star_crusher" -> 150 // ship6
+            "b15_specter" -> 240 // ship7
+            "n6_98_melina" -> 360 // ship8
+            "model3_tortoise_ccp" -> 500 // ship9
+            "h98_valkyrie" -> 700 // ship10
+            "navakeshi_star_ravager" -> 1000 // ship11
+            "silver_lightning" -> 1400 // ship12
+            "vulcani_legenda_f1" -> 2000 // ship13
+            "force_of_nature" -> 3000 // ship14
             else -> null // No focus time requirement (e.g., b14_phantom starting ship)
         }
     }
@@ -215,32 +215,32 @@ object GameStateRepository {
      */
     fun getLocationFocusTimeRequirement(locationId: String): Int? {
         return when (locationId) {
-            "location1" -> 10
-            "location2" -> 25
-            "location3" -> 40
-            "location4" -> 60
-            "location5" -> 85
-            "location6" -> 100
-            "location7" -> 135
-            "location8" -> 190
-            "location9" -> 300
-            "location10" -> 450
-            "location11" -> 750
-            "location12" -> 950
-            "location13" -> 1150
-            "location14" -> 1300
-            "location15" -> 1500
-            "location16" -> 1750
-            "location17" -> 1950
-            "location18" -> 2200
-            "location19" -> 2450
-            "location20" -> 2700
-            "location21" -> 2950
-            "location22" -> 3200
-            "location23" -> 3500
-            "location24" -> 3800
-            "location25" -> 4100
-            "location26" -> 4600
+            "location1" -> 10 // Aurelia (unchanged - easy win)
+            "location2" -> 44 // Valthor (25 * 1.75)
+            "location3" -> 70 // ASN Folkshore (40 * 1.75)
+            "location4" -> 105 // Verdantis II (60 * 1.75)
+            "location5" -> 149 // Krython B-2 (85 * 1.75)
+            "location6" -> 175 // Primeway Station (100 * 1.75)
+            "location7" -> 236 // Elyrion (135 * 1.75)
+            "location8" -> 333 // KEG Stoneweld (190 * 1.75)
+            "location9" -> 525 // Hjorn-4 (300 * 1.75)
+            "location10" -> 788 // Tavros-IV (450 * 1.75)
+            "location11" -> 1313 // ASN Silver Meridian (750 * 1.75)
+            "location12" -> 1663 // Vaelaris (950 * 1.75)
+            "location13" -> 2013 // Sylthara (1150 * 1.75)
+            "location14" -> 2275 // ISC New Harlinger (1300 * 1.75)
+            "location15" -> 2625 // Khaelor Prime (1500 * 1.75)
+            "location16" -> 3063 // Navakeshi Iron from Beneath (1750 * 1.75)
+            "location17" -> 3413 // Ardenfall (1950 * 1.75)
+            "location18" -> 3850 // Tiravel (2200 * 1.75)
+            "location19" -> 4288 // Starhaven Station (2450 * 1.75)
+            "location20" -> 4725 // Badavorn (2700 * 1.75)
+            "location21" -> 5163 // ISC Dawnbreaker (2950 * 1.75)
+            "location22" -> 5600 // Elyndar (3200 * 1.75)
+            "location23" -> 6125 // ASN Hammer of Eternity (3500 * 1.75)
+            "location24" -> 6650 // Navakesh (3800 * 1.75)
+            "location25" -> 7175 // ISC Indomitable Horizon (4100 * 1.75)
+            "location26" -> 8050 // Mysterious superstructure (4600 * 1.75)
             else -> null // No focus time requirement
         }
     }

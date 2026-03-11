@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -53,8 +54,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
@@ -80,6 +85,10 @@ fun VaultScreen(
 ) {
     // Read credits from global repository
     val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
+    
+    // Tooltip state
+    var showSectorTooltip by remember { mutableStateOf(false) }
+    var showCreditsTooltip by remember { mutableStateOf(false) }
     Box(modifier = modifier.fillMaxSize()) {
         // Top gradient overlay: Covers 20% of screen height, creating a fade effect at the top.
         // Gradient transitions from solid black at the top to transparent at the bottom.
@@ -252,12 +261,22 @@ fun VaultScreen(
                             .offset(x = labelsWidth / 2 + 16.dp), // Move to the right edge of labels + 16dp
                         contentAlignment = Alignment.Center // Center the icon vertically within the box
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.infoicon),
-                            contentDescription = "Info",
-                            modifier = Modifier.height(40.dp), // 40dp height, maintaining aspect ratio
-                            contentScale = ContentScale.Fit
-                        )
+                        CustomTooltip(
+                            text = "This is your current galaxy sector, rewards, ships and factions you discover are a part of this sector. More sectors will become available in future releases.",
+                            showTooltip = showSectorTooltip,
+                            onDismiss = { showSectorTooltip = false },
+                            anchorAlignment = Alignment.BottomStart,
+                            anchorOffset = DpOffset(x = 0.dp, y = 8.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.infoicon),
+                                contentDescription = "Info",
+                                modifier = Modifier
+                                    .height(40.dp) // 40dp height, maintaining aspect ratio
+                                    .clickable(onClick = { showSectorTooltip = !showSectorTooltip }),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
                     }
                 }
                 
@@ -430,6 +449,9 @@ fun VaultScreen(
                 // Credits section
                 CreditsSection(
                     creditsAmount = userCredits, // TODO: Replace with dynamic value
+                    showCreditsTooltip = showCreditsTooltip,
+                    onCreditsTooltipToggle = { showCreditsTooltip = !showCreditsTooltip },
+                    onCreditsTooltipDismiss = { showCreditsTooltip = false },
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -484,11 +506,17 @@ private fun HorizontalDivider(modifier: Modifier = Modifier) {
  * Spacing between rows: -8dp
  * 
  * @param creditsAmount The amount of credits to display
+ * @param showCreditsTooltip Whether the credits tooltip is visible
+ * @param onCreditsTooltipToggle Callback to toggle the credits tooltip
+ * @param onCreditsTooltipDismiss Callback to dismiss the credits tooltip
  * @param modifier Modifier for the section
  */
 @Composable
 private fun CreditsSection(
     creditsAmount: Int,
+    showCreditsTooltip: Boolean,
+    onCreditsTooltipToggle: () -> Unit,
+    onCreditsTooltipDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -537,12 +565,22 @@ private fun CreditsSection(
             )
             
             // Info icon: 40dp size, maintaining aspect ratio
-            Image(
-                painter = painterResource(id = R.drawable.infoicon),
-                contentDescription = "Info",
-                modifier = Modifier.size(40.dp), // 40dp size, maintaining aspect ratio
-                contentScale = ContentScale.Fit
-            )
+            CustomTooltip(
+                text = "The universal interstellar currency. Use it to buy new ships, equipment, or crates.",
+                showTooltip = showCreditsTooltip,
+                onDismiss = onCreditsTooltipDismiss,
+                anchorAlignment = Alignment.BottomStart,
+                anchorOffset = DpOffset(x = 0.dp, y = 8.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.infoicon),
+                    contentDescription = "Info",
+                    modifier = Modifier
+                        .size(40.dp) // 40dp size, maintaining aspect ratio
+                        .clickable(onClick = onCreditsTooltipToggle),
+                    contentScale = ContentScale.Fit
+                )
+            }
         }
     }
 }
@@ -1020,6 +1058,87 @@ private fun PurchaseRow(
                     modifier = Modifier.height(16.dp), // 16dp height, maintaining aspect ratio
                     contentScale = ContentScale.Fit
                 )
+            }
+        }
+    }
+}
+
+/**
+ * CustomTooltip composable - displays a tooltip with modal styling.
+ * 
+ * Uses the same styling as modals in the app:
+ * - Vertical gradient background (Color(0xFF373A3E) to Color(0xFF2B2E32))
+ * - 1dp border with Color(0xFF6B6C6F)
+ * - 8dp corner radius
+ * - 14sp font size with Exo2 font
+ * - White text color
+ * 
+ * @param text The tooltip text to display
+ * @param showTooltip Whether the tooltip is visible
+ * @param onDismiss Callback when tooltip should be dismissed
+ * @param anchorAlignment Alignment of the tooltip relative to the anchor
+ * @param anchorOffset Offset from the anchor position
+ * @param content The composable that triggers the tooltip (e.g., info icon)
+ */
+@Composable
+private fun CustomTooltip(
+    text: String,
+    showTooltip: Boolean,
+    onDismiss: () -> Unit,
+    anchorAlignment: Alignment = Alignment.BottomStart,
+    anchorOffset: DpOffset = DpOffset(x = 0.dp, y = 8.dp),
+    content: @Composable () -> Unit
+) {
+    val density = LocalDensity.current
+    
+    Box {
+        // Anchor content (the icon that triggers the tooltip)
+        content()
+        
+        // Tooltip popup
+        if (showTooltip) {
+            Popup(
+                alignment = anchorAlignment,
+                offset = with(density) {
+                    IntOffset(
+                        x = anchorOffset.x.roundToPx(),
+                        y = anchorOffset.y.roundToPx()
+                    )
+                },
+                onDismissRequest = onDismiss,
+                properties = PopupProperties(
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF373A3E), // Top color
+                                    Color(0xFF2B2E32)  // Bottom color
+                                )
+                            ),
+                            shape = RoundedCornerShape(8.dp) // 8dp corner radius
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFF6B6C6F),
+                            shape = RoundedCornerShape(8.dp) // 8dp corner radius
+                        )
+                        .padding(12.dp)
+                        .widthIn(max = 280.dp) // Max width to prevent tooltip from being too wide
+                ) {
+                    Text(
+                        text = text,
+                        fontFamily = Exo2,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W400, // Regular
+                        color = Color(0xFFFFFFFF),
+                        lineHeight = 20.sp // Slightly larger line height for readability
+                    )
+                }
             }
         }
     }
