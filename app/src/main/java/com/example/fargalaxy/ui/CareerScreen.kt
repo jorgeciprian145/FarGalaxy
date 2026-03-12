@@ -408,8 +408,8 @@ fun CareerScreen(
                 // LevelStatusCard: combines the badge and SpaceLicenseCard into a single component
                 // Card has 8px left margin and 16px right margin, full width otherwise
                 // Uses dynamic values from UserDataRepository
-                // Long-press to toggle test mode (developer feature)
-                val context = LocalContext.current
+                // DISABLED FOR PRODUCTION: Long-press to toggle test mode (developer feature)
+                // val context = LocalContext.current
                 LevelStatusCard(
                     title = "Space license",
                     xpCurrent = com.example.fargalaxy.data.UserDataRepository.userXP,
@@ -419,23 +419,24 @@ fun CareerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 8.dp, end = 16.dp)
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onLongPress = {
-                                    // Toggle test mode
-                                    val newTestMode = !com.example.fargalaxy.data.GameStateRepository.isTestMode
-                                    com.example.fargalaxy.data.GameStateRepository.isTestMode = newTestMode
-                                    
-                                    // Show toast message
-                                    val message = if (newTestMode) {
-                                        "Test mode ON"
-                                    } else {
-                                        "Test mode OFF"
-                                    }
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
+                        // DISABLED FOR PRODUCTION: Test mode toggle removed
+                        // .pointerInput(Unit) {
+                        //     detectTapGestures(
+                        //         onLongPress = {
+                        //             // Toggle test mode
+                        //             val newTestMode = !com.example.fargalaxy.data.GameStateRepository.isTestMode
+                        //             com.example.fargalaxy.data.GameStateRepository.isTestMode = newTestMode
+                        //             
+                        //             // Show toast message
+                        //             val message = if (newTestMode) {
+                        //                 "Test mode ON"
+                        //             } else {
+                        //                 "Test mode OFF"
+                        //             }
+                        //             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        //         }
+                        //     )
+                        // }
                 )
                 
                 // 24.dp spacing between level card and horizontal divider
@@ -597,28 +598,28 @@ private fun TotalTimeTravelingCounter(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .pointerInput(Unit) {
-                // Secret test feature: Long press for 5 seconds to reset progress
-                detectTapGestures(
-                    onPress = {
-                        val startTime = System.currentTimeMillis()
-                        
-                        // Launch coroutine to check if 5 seconds have passed
-                        val resetJob = scope.launch {
-                            delay(5000) // Wait 5 seconds
-                            // Still pressed after 5 seconds, reset progress
-                            com.example.fargalaxy.data.GameStateRepository.resetProgress()
-                            Toast.makeText(context, "progress has been reset", Toast.LENGTH_SHORT).show()
-                        }
-                        
-                        // Wait for release
-                        tryAwaitRelease()
-                        
-                        // Cancel the reset job if released before 5 seconds
-                        resetJob.cancel()
-                    }
-                )
-            }
+            // DISABLED FOR PRODUCTION: Secret test feature - Long press for 5 seconds to reset progress
+            // .pointerInput(Unit) {
+            //     detectTapGestures(
+            //         onPress = {
+            //             val startTime = System.currentTimeMillis()
+            //             
+            //             // Launch coroutine to check if 5 seconds have passed
+            //             val resetJob = scope.launch {
+            //                 delay(5000) // Wait 5 seconds
+            //                 // Still pressed after 5 seconds, reset progress
+            //                 com.example.fargalaxy.data.GameStateRepository.resetProgress()
+            //                 Toast.makeText(context, "progress has been reset", Toast.LENGTH_SHORT).show()
+            //             }
+            //             
+            //             // Wait for release
+            //             tryAwaitRelease()
+            //             
+            //             // Cancel the reset job if released before 5 seconds
+            //             resetJob.cancel()
+            //         }
+            //     )
+            // }
     ) {
         val totalWidth = maxWidth
         val sidePadding = 16.dp

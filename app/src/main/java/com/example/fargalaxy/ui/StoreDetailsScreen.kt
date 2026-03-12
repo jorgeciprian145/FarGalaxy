@@ -763,14 +763,25 @@ fun StoreDetailsScreen(
                             }
                         }
                         
-                        // Purchase button
-                        // For credit items: show red when can't afford, for dollar items: always white
-                        val buttonColor = if (priceType == "credits" && !canAfford) {
-                            Color(0xFFF87F7F) // Red when can't afford credits
+                        // Purchase / select button
+                        // Determine if this is the Dying Star ship and whether it's already owned
+                        val isDyingStar = itemName == "Dying Star"
+                        val isDyingStarOwned = if (isDyingStar) {
+                            com.example.fargalaxy.data.GameStateRepository.isShipOwned("dying_star")
                         } else {
-                            Color(0xFFFFFFFF) // White otherwise
+                            false
                         }
-                        
+
+                        // For credit items: show red when can't afford, for dollar items and Dying Star: white
+                        val buttonColor = when {
+                            !isDyingStar && priceType == "credits" && !canAfford -> Color(0xFFF87F7F)
+                            else -> Color(0xFFFFFFFF)
+                        }
+
+                        // Disable when it's a credit item you can't afford, OR when Dying Star is already owned
+                        val isDisabled = (!isDyingStar && priceType == "credits" && !canAfford) || 
+                                        (isDyingStar && isDyingStarOwned)
+
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -781,8 +792,8 @@ fun StoreDetailsScreen(
                                     shape = RoundedCornerShape(40.dp)
                                 )
                                 .then(
-                                    if (priceType == "credits" && !canAfford) {
-                                        Modifier // Disabled when can't afford credits
+                                    if (isDisabled) {
+                                        Modifier
                                     } else {
                                         Modifier.clickable(onClick = onPurchaseClick)
                                     }
@@ -790,17 +801,23 @@ fun StoreDetailsScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = if (itemName == "Dying Star") {
-                                    // For Dying Star ship: "Buy ship for "$VALUE""
-                                    "Buy ship for \"$price\""
-                                } else if (priceType == "credits") {
-                                    if (canAfford) {
-                                        "BUY FOR $price CREDITS"
-                                    } else {
-                                        "NOT ENOUGH CREDITS"
+                                text = when {
+                                    isDyingStar && isDyingStarOwned -> {
+                                        "YOU OWN THIS SHIP"
                                     }
-                                } else {
-                                    "BUY PACK FOR $price"
+                                    isDyingStar && !isDyingStarOwned -> {
+                                        "BUY FOR $price"
+                                    }
+                                    priceType == "credits" -> {
+                                        if (canAfford) {
+                                            "BUY FOR $price CREDITS"
+                                        } else {
+                                            "NOT ENOUGH CREDITS"
+                                        }
+                                    }
+                                    else -> {
+                                        "BUY PACK FOR $price"
+                                    }
                                 },
                                 fontFamily = Exo2,
                                 fontSize = 16.sp,

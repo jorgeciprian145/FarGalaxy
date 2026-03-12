@@ -77,6 +77,8 @@ fun StoreScreen(
 ) {
     // Read credits from global repository
     val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
+    // Read whether Dying Star has already been purchased
+    val isDyingStarOwned = com.example.fargalaxy.data.GameStateRepository.isShipOwned("dying_star")
     // Scroll state
     val scrollState = rememberScrollState()
     
@@ -520,24 +522,42 @@ fun StoreScreen(
                                                             color = Color(0xFFFFFFFF)
                                                         )
 
-                                                    // BUY button
+                                                    // BUY / BOUGHT button
+                                                    val canBuyDyingStar = !isDyingStarOwned
+
                                                     Box(
                                                         modifier = Modifier
                                                             .height(24.dp)
                                                             .border(
                                                                 width = 1.dp,
-                                                                color = Color(0xFFFFFFFF),
+                                                                color = if (canBuyDyingStar) {
+                                                                    Color(0xFFFFFFFF)
+                                                                } else {
+                                                                    Color(0xFF6B6C6F)
+                                                                },
                                                                 shape = RoundedCornerShape(50.dp)
                                                             )
-                                                            .clickable { onPurchaseClick("Dying Star", 199) },
+                                                            .then(
+                                                                if (canBuyDyingStar) {
+                                                                    Modifier.clickable {
+                                                                        onPurchaseClick("Dying Star", 199)
+                                                                    }
+                                                                } else {
+                                                                    Modifier
+                                                                }
+                                                            ),
                                                         contentAlignment = Alignment.Center
                                                     ) {
                                                         Text(
-                                                            text = "BUY",
+                                                            text = if (canBuyDyingStar) "BUY" else "BOUGHT",
                                                             fontFamily = Exo2,
                                                             fontSize = 14.sp,
                                                             fontWeight = FontWeight.W400,
-                                                            color = Color(0xFFFFFFFF),
+                                                            color = if (canBuyDyingStar) {
+                                                                Color(0xFFFFFFFF)
+                                                            } else {
+                                                                Color(0xFF6B6C6F)
+                                                            },
                                                             modifier = Modifier
                                                                 .offset(y = (-1).dp)
                                                                 .padding(horizontal = 16.dp)

@@ -11,11 +11,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.fargalaxy"
+        applicationId = "com.jorgeciprian.fargalaxy"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -54,9 +54,17 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation("androidx.compose.foundation:foundation:1.7.4")
+
+    // Google Mobile Ads (AdMob) for interstitial ads
+    implementation("com.google.android.gms:play-services-ads:23.0.0")
+
     // Coil for GIF support
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("io.coil-kt:coil-gif:2.5.0")
+
+    // Google Play Billing for in-app purchases (Dying Star + credits pack)
+    implementation("com.android.billingclient:billing-ktx:6.2.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

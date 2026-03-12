@@ -68,7 +68,7 @@ import com.example.fargalaxy.R
 fun ProgressSection(
     starshipsCount: String = "1/10",
     locationsCount: String = "1/30",
-    collectiblesCount: String = "1/30",
+    collectiblesCount: String = "0/30",
     showTitle: Boolean = true,
     onStarshipsClick: () -> Unit = {},
     onLocationsClick: () -> Unit = {},
@@ -136,7 +136,7 @@ fun ProgressSection(
             // ProgressItem 3: Medals (fixed width, no weight)
             ProgressItem(
                 badgeResId = R.drawable.collectiblesbadge,
-                title = "Medals",
+                title = "Coming soon",
                 count = collectiblesCount
             )
         }
@@ -205,27 +205,14 @@ private fun ProgressItem(
         // 8dp spacing between count and title
         Spacer(modifier = Modifier.height(2.dp))
         
-        // Title label with chevron: 14sp, regular, Exo2 font (now second, below)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp), // 4dp spacing between label and chevron
-            verticalAlignment = Alignment.CenterVertically // Vertically align label and chevron
-        ) {
-            Text(
-                text = title,
-                fontFamily = Exo2,
-                fontWeight = FontWeight.W400, // Regular
-                fontSize = 14.sp,
-                color = Color(0xFFFFFFFF)
-            )
-            Image(
-                painter = painterResource(id = R.drawable.chevronsmall),
-                contentDescription = null,
-                modifier = Modifier
-                    .height(12.dp) // 12dp height, maintaining aspect ratio
-                    .offset(y = 1.dp), // Move downwards by 1dp
-                contentScale = ContentScale.Fit // Maintain original aspect ratio
-            )
-        }
+        // Title label: 14sp, regular, Exo2 font (no chevron)
+        Text(
+            text = title,
+            fontFamily = Exo2,
+            fontWeight = FontWeight.W400, // Regular
+            fontSize = 14.sp,
+            color = Color(0xFFFFFFFF)
+        )
     }
 }
 

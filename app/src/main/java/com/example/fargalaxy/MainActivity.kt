@@ -11,8 +11,10 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-import com.example.fargalaxy.ui.theme.FarGalaxyTheme
+import com.example.fargalaxy.ads.AdManager
+import com.example.fargalaxy.billing.BillingManager
 import com.example.fargalaxy.ui.MainScreen
+import com.example.fargalaxy.ui.theme.FarGalaxyTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,15 +62,25 @@ class MainActivity : ComponentActivity() {
         com.example.fargalaxy.data.EquipmentUsageRepository.initialize(this)
         com.example.fargalaxy.data.ShipCardRepository.initialize(this)
         com.example.fargalaxy.data.CrateRepository.initialize(this)
+        com.example.fargalaxy.data.AdsRepository.initialize(this)
+
+        // Initialize Google Play Billing for in-app purchases
+        BillingManager.initialize(applicationContext)
+
+        // Initialize AdMob and preload the first interstitial
+        AdManager.initialize(this) {
+            AdManager.loadInterstitialAd(this)
+        }
         
         // TODO: REMOVE TESTING CODE - Reset progress to zero for testing ship unlock
         // NOTE: Commented out to preserve progress across app sessions
         // Uncomment only when testing reset functionality
         // com.example.fargalaxy.data.GameStateRepository.resetProgress()
         
-        // Set credits to 50000 in test mode (for testing purposes)
+        // DISABLED FOR PRODUCTION: Set credits to 50000 in test mode (for testing purposes)
         // Must be called AFTER resetProgress() to avoid credits being reset to 0
-        com.example.fargalaxy.data.UserDataRepository.setTestModeCreditsIfEnabled()
+        // com.example.fargalaxy.data.UserDataRepository.setTestModeCreditsIfEnabled()
+        // Users now start with 0 credits by default
         
         setContent {
             // Override font scale to always be 1.0 (no scaling) to prevent system font size

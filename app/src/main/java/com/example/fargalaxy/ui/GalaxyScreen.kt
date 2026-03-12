@@ -349,11 +349,11 @@ fun TimeLabel(
     isTraveling: Boolean = false,
     isPreparingLaunch: Boolean = false,
     launchCountdown: Int = 3,
-    isTestMode: Boolean = false, // TODO: REMOVE TESTING CODE
+    isTestMode: Boolean = false, // DISABLED FOR PRODUCTION: Test mode always false
     modifier: Modifier = Modifier
 ) {
     // Determine the text to display based on state
-    // TODO: REMOVE TESTING CODE - Show "TEST" when in test mode
+    // DISABLED FOR PRODUCTION: Test mode removed - Show "TEST" when in test mode
     val displayText = when {
         isPreparingLaunch -> "Launching in $launchCountdown"
         isTraveling -> {
@@ -361,12 +361,12 @@ fun TimeLabel(
             "$remainingMinutes mins remaining"
         }
         else -> {
-            // TODO: REMOVE TESTING CODE - Show "TEST" when in test mode
-            if (selectedMinutes == 5 && isTestMode) {
-                "TEST"
-            } else {
-                "$selectedMinutes mins"
-            }
+            // DISABLED: Test mode logic removed
+            // if (selectedMinutes == 5 && isTestMode) {
+            //     "TEST"
+            // } else {
+            "$selectedMinutes mins"
+            // }
         }
     }
     
@@ -487,7 +487,7 @@ fun TimeControlsBar(
     isTraveling: Boolean = false,
     isPreparingLaunch: Boolean = false,
     launchCountdown: Int = 3,
-    isTestMode: Boolean = false, // TODO: REMOVE TESTING CODE
+    isTestMode: Boolean = false, // DISABLED FOR PRODUCTION: Test mode always false
     modifier: Modifier = Modifier,
     onMinusClick: () -> Unit = {},
     onPlusClick: () -> Unit = {}
@@ -2787,8 +2787,9 @@ fun GalaxyScreen(
     // Track actual travel duration in seconds (may be reduced by experimental fuel)
     var actualTravelDurationSeconds by remember { mutableStateOf(0) }
     
-    // TODO: REMOVE TESTING CODE - Track if in test mode (10 seconds)
-    var isTestMode by remember { mutableStateOf(false) }
+    // DISABLED FOR PRODUCTION: Test mode removed - Track if in test mode (10 seconds)
+    // var isTestMode by remember { mutableStateOf(false) }
+    val isTestMode = false // Always false in production
     
     // Track app lifecycle to recalculate timer when app resumes
     var appLifecycleState by remember { mutableStateOf(Lifecycle.Event.ON_ANY) }
@@ -2850,11 +2851,13 @@ fun GalaxyScreen(
                 // Capture penalty count before resetting
                 travelPenaltyCount = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
                 isTraveling = false
-                travelMinutes = if (isTestMode) {
-                    0
-                } else {
-                    selectedMinutes
-                }
+                // DISABLED FOR PRODUCTION: Test mode removed
+                // travelMinutes = if (isTestMode) {
+                //     0
+                // } else {
+                //     selectedMinutes
+                // }
+                travelMinutes = selectedMinutes // Always use selected minutes in production
                 // Capture equipment info BEFORE consumption (for RewardsScreen display)
                 val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
                 travelEquippedItem = equippedItem
@@ -2963,32 +2966,33 @@ fun GalaxyScreen(
     // Only works when not traveling (buttons are disabled during travel)
     fun onIncrement() {
         if (!isTraveling) {
-            // TODO: REMOVE TESTING CODE - Exit test mode when incrementing
-            if (isTestMode) {
-                isTestMode = false
-                selectedMinutes = 5
-            } else {
+            // DISABLED FOR PRODUCTION: Test mode logic removed
+            // if (isTestMode) {
+            //     isTestMode = false
+            //     selectedMinutes = 5
+            // } else {
             selectedMinutes = (selectedMinutes + 5).coerceAtMost(60)
-            }
+            // }
         }
     }
 
     // Handler: Decrement selectedMinutes by 5, clamped to minimum of 5
     // Only works when not traveling (buttons are disabled during travel)
-    // TODO: REMOVE TESTING CODE - Allow going below 5 to enter test mode (10 seconds)
+    // DISABLED FOR PRODUCTION: Test mode removed - Allow going below 5 to enter test mode (10 seconds)
     fun onDecrement() {
         if (!isTraveling) {
-            if (selectedMinutes == 5 && !isTestMode) {
-                // At 5 minutes, go to test mode (10 seconds)
-                isTestMode = true
-                selectedMinutes = 5 // Keep at 5 for display, but will use 10 seconds
-            } else if (isTestMode) {
-                // Already in test mode, go back to 5 minutes
-                isTestMode = false
-                selectedMinutes = 5
-            } else {
+            // DISABLED: Test mode logic removed
+            // if (selectedMinutes == 5 && !isTestMode) {
+            //     // At 5 minutes, go to test mode (10 seconds)
+            //     isTestMode = true
+            //     selectedMinutes = 5 // Keep at 5 for display, but will use 10 seconds
+            // } else if (isTestMode) {
+            //     // Already in test mode, go back to 5 minutes
+            //     isTestMode = false
+            //     selectedMinutes = 5
+            // } else {
             selectedMinutes = (selectedMinutes - 5).coerceAtLeast(5)
-            }
+            // }
         }
     }
     
@@ -3353,10 +3357,11 @@ fun GalaxyScreen(
                 // Start travel immediately (don't wait for sound)
                 isPreparingLaunch = false
                 isTraveling = true
-                // TODO: REMOVE TESTING CODE - Use 10 seconds in test mode
+                // DISABLED FOR PRODUCTION: Test mode removed - Use 10 seconds in test mode
                 // Apply 10% reduction for experimental fuel if equipped
                 val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
-                val baseSeconds = if (isTestMode) 10 else selectedMinutes * 60
+                // val baseSeconds = if (isTestMode) 10 else selectedMinutes * 60
+                val baseSeconds = selectedMinutes * 60 // Always use selected minutes in production
                 actualTravelDurationSeconds = if (equippedItem == "experimental_fuel") {
                     (baseSeconds * 0.9f).toInt() // 10% reduction
                 } else {
@@ -3891,7 +3896,7 @@ fun GalaxyScreen(
                     isTraveling = isTraveling,
                     isPreparingLaunch = isPreparingLaunch,
                     launchCountdown = launchCountdown,
-                    isTestMode = isTestMode, // TODO: REMOVE TESTING CODE
+                    isTestMode = false, // DISABLED FOR PRODUCTION: Test mode always false
                     onMinusClick = ::onDecrement,
                     onPlusClick = ::onIncrement
                 )

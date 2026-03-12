@@ -215,11 +215,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Track ship unlocked via crate cards
     var shipUnlockedFromCrate by remember { mutableStateOf<String?>(null) }
 
-    // Get activity context for exiting app
+    // Get activity context for exiting app and for showing interstitial ads
     val context = LocalContext.current
     val activity = context as? Activity
     
-    // Update active screen when page changes
+    // Update active screen when page changes and trigger interstitials for Career/Vault visits
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             activeScreen = when (page) {
@@ -227,6 +227,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 1 -> ActiveScreen.CENTER // GalaxyScreen
                 2 -> ActiveScreen.RIGHT  // VaultScreen
                 else -> ActiveScreen.CENTER
+            }
+
+            // Trigger interstitial logic when user navigates to Career (0) or Vault (2)
+            // The second lifetime visit to either screen will be the first opportunity to show an ad.
+            val act = activity
+            if (act != null && (page == 0 || page == 2)) {
+                com.example.fargalaxy.ads.AdManager.maybeShowInterstitialOnCareerOrVaultVisit(act)
             }
         }
     }
@@ -359,7 +366,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         val isCreditPurchase = price >= 1000 // Credits are >= 1000, dollars are < 1000 (199 = $1.99)
         
         if (isCreditPurchase) {
-            // Credit purchase
+            // Credit purchase (paid with in‑game credits)
             if (price > 0 && price <= com.example.fargalaxy.data.UserDataRepository.userCredits) {
                 // Deduct credits
                 com.example.fargalaxy.data.UserDataRepository.addCredits(-price)
@@ -386,28 +393,39 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 toastMessage = "Bought $itemName for $price credits"
             }
         } else {
-            // Dollar purchase
-            when (itemName) {
-                "Interstellar credits pack" -> {
-                    com.example.fargalaxy.data.UserDataRepository.addCredits(100_000)
-                    toastMessage = "Bought Interstellar credits pack"
+            // Dollar purchase: route through Google Play Billing
+            val act = activity
+            if (act != null) {
+                when (itemName) {
+                    "Interstellar credits pack" -> {
+                        com.example.fargalaxy.billing.BillingManager.launchPurchase(
+                            act,
+                            com.example.fargalaxy.billing.PremiumProduct.CREDITS_PACK
+                        )
+                    }
+                    "Dying Star" -> {
+                        com.example.fargalaxy.billing.BillingManager.launchPurchase(
+                            act,
+                            com.example.fargalaxy.billing.PremiumProduct.DYING_STAR
+                        )
+                    }
                 }
-                "Dying Star" -> {
-                    // Handle Dying Star purchase (if needed)
-                    toastMessage = "Bought $itemName"
-                }
+            } else {
+                // Fallback if activity is not available
+                toastMessage = "Unable to start purchase flow"
             }
         }
     }
     
-    // Handle purchase click from StoreDetailsScreen
+    // Handle purchase / select click from StoreDetailsScreen
     val onStorePurchaseClick: () -> Unit = {
+        // Note: Dying Star button is disabled when already owned, so this path won't be called
         if (selectedStoreItemName.isNotEmpty()) {
             if (selectedStoreItemPriceType == "credits") {
                 val priceInt = selectedStoreItemPrice.toIntOrNull() ?: 0
                 handleStorePurchase(selectedStoreItemName, priceInt)
             } else {
-                // Dollar‑priced items
+                // Dollar‑priced items (Dying Star / credits pack)
                 val priceInt = 199 // $1.99 in cents
                 handleStorePurchase(selectedStoreItemName, priceInt)
             }
