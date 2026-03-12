@@ -1212,7 +1212,7 @@ fun ShipDetailsScreen(
                     val buttonText = if (canSelectShip) {
                         "SELECT SHIP"
                     } else {
-                        "Requires license level $requiredLevel"
+                        "LEVEL $requiredLevel REQUIRED TO EQUIP"
                     }
                     
                     // "SELECT SHIP" button - shown when viewing a ship that is not the current ship

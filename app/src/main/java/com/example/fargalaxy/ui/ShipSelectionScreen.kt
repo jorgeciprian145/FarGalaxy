@@ -380,10 +380,8 @@ fun ShipSelectionScreen(
                                         isCurrentShip = isCurrentShip,
                                         containerWidth = containerWidth,
                                         onShipClick = { onShipClick(ship) },
-                                        enabled = canSelectShip,
                                         modifier = Modifier
                                             .width(containerWidth)
-                                            .alpha(if (canSelectShip) 1f else 0.5f) // Reduce opacity when disabled
                                     )
                                 }
                             }

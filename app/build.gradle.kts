@@ -1,23 +1,4 @@
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-}
 
-android {
-    namespace = "com.example.fargalaxy"
-    compileSdk {
-        version = release(36)
-    }
-
-    defaultConfig {
-        applicationId = "com.jorgeciprian.fargalaxy"
-        minSdk = 24
-        targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
