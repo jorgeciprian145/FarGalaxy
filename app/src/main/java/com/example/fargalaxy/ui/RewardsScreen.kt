@@ -262,6 +262,17 @@ fun RewardsScreen(
     // Calculate new values (base values before penalties/space conditions are applied)
     val newXP = currentXP + earnedXP
     val newCredits = currentCredits + earnedCredits
+
+    // Persist earned XP and credits when the rewards screen is shown
+    // This is called once per completed travel session (not for cancelled travels)
+    LaunchedEffect(Unit) {
+        if (earnedXP > 0) {
+            UserDataRepository.addXp(earnedXP)
+        }
+        if (earnedCredits > 0) {
+            UserDataRepository.addCredits(earnedCredits)
+        }
+    }
     
     // Animation states
     var startXPAnimation by remember { mutableStateOf(false) }

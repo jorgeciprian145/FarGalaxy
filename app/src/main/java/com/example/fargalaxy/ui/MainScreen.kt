@@ -151,20 +151,21 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Ship prices for testing (matching StaryardScreen)
     // Ship prices based on focus time unlock requirements (must match StaryardScreen.kt)
+    // All prices except Type 45C Shooting Star have been increased by 75%
     val shipPrices = mapOf(
-        "type45c_shooting_star" to 2500, // ship2: 15 mins
-        "navakeshi_star_pouncer" to 5000, // ship3: 40 mins
-        "a300_albatross" to 8500, // ship4: 60 mins
-        "b7f_starforce" to 12000, // ship5: 90 mins
-        "navakeshi_star_crusher" to 15000, // ship6: 150 mins
-        "b15_specter" to 20000, // ship7: 240 mins
-        "n6_98_melina" to 26000, // ship8: 360 mins
-        "model3_tortoise_ccp" to 32000, // ship9: 500 mins
-        "h98_valkyrie" to 38000, // ship10: 700 mins
-        "navakeshi_star_ravager" to 45000, // ship11: 1000 mins
-        "silver_lightning" to 60000, // ship12: 1400 mins
-        "vulcani_legenda_f1" to 65000, // ship13: 2000 mins
-        "force_of_nature" to 80000 // ship14: 3000 mins
+        "type45c_shooting_star" to 2500,   // ship2: 15 mins (unchanged)
+        "navakeshi_star_pouncer" to 8750,   // ship3: 40 mins (was 5000)
+        "a300_albatross" to 14875,          // ship4: 60 mins (was 8500)
+        "b7f_starforce" to 21000,           // ship5: 90 mins (was 12000)
+        "navakeshi_star_crusher" to 26250,  // ship6: 150 mins (was 15000)
+        "b15_specter" to 35000,             // ship7: 240 mins (was 20000)
+        "n6_98_melina" to 45500,            // ship8: 360 mins (was 26000)
+        "model3_tortoise_ccp" to 56000,     // ship9: 500 mins (was 32000)
+        "h98_valkyrie" to 66500,            // ship10: 700 mins (was 38000)
+        "navakeshi_star_ravager" to 78750,  // ship11: 1000 mins (was 45000)
+        "silver_lightning" to 105000,       // ship12: 1400 mins (was 60000)
+        "vulcani_legenda_f1" to 113750,     // ship13: 2000 mins (was 65000)
+        "force_of_nature" to 140000         // ship14: 3000 mins (was 80000)
     )
     
     // Track if FactionDetailsScreen should be shown
