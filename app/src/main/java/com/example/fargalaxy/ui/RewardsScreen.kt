@@ -326,13 +326,27 @@ fun RewardsScreen(
     var penaltyLabelAlpha by remember { mutableStateOf(1f) } // Fade out/in instead of slide
     var flawlessTravelAlpha by remember { mutableStateOf(0f) }
     
-    // Main label offset animation states removed - using natural Row centering instead
-    
     // Fade-in animation states for 14sp labels (now appearing with main labels)
     var penaltyPercentageAlpha by remember { mutableStateOf(0f) } // Fade in with main label
     var spaceConditionsAlpha by remember { mutableStateOf(0f) } // Fade in with main label
     
-    // Counter animation removed - XP and Credits show final values immediately
+    // Level animation state (level number and per-level progress for the bar)
+    var animatedLevel by remember { mutableStateOf(calculateLevelFromXP(currentXP)) }
+    var animatedLevelProgress by remember {
+        mutableStateOf(
+            run {
+                val lvl = calculateLevelFromXP(currentXP)
+                val totalForLevel = UserDataRepository.getTotalXPForLevel(lvl)
+                val xpInLevel = currentXP - totalForLevel
+                val xpRequired = UserDataRepository.getXPRequiredForLevel(lvl)
+                if (xpRequired > 0) {
+                    (xpInLevel.toFloat() / xpRequired.toFloat()).coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
+            }
+        )
+    }
     
     // Get context for MediaPlayer
     val context = LocalContext.current
@@ -499,12 +513,48 @@ fun RewardsScreen(
             val steps = 30
             val stepDelay = duration / steps
             val stepValue = (endValue - startValue) / steps
-            
+
+            // Initialize per-level tracking for smoother level bar animation
+            var xpForAnim = startValue
+            var levelForAnim = calculateLevelFromXP(currentXP)
+            var totalXPAtLevelStart = UserDataRepository.getTotalXPForLevel(levelForAnim).toFloat()
+            var xpRequiredForLevel = UserDataRepository.getXPRequiredForLevel(levelForAnim).toFloat().coerceAtLeast(1f)
+
             for (i in 0..steps) {
-                animatedXP = (startValue + stepValue * i).toInt()
+                val nextXp = startValue + stepValue * i
+                animatedXP = nextXp.toInt()
+
+                // Update per-level XP and handle level-ups
+                xpForAnim = nextXp
+                var xpInLevel = xpForAnim - totalXPAtLevelStart
+                while (xpInLevel >= xpRequiredForLevel) {
+                    // Level up: move to next level and reset level progress
+                    levelForAnim += 1
+                    totalXPAtLevelStart += xpRequiredForLevel
+                    xpInLevel = xpForAnim - totalXPAtLevelStart
+                    xpRequiredForLevel = UserDataRepository
+                        .getXPRequiredForLevel(levelForAnim)
+                        .toFloat()
+                        .coerceAtLeast(1f)
+                }
+
+                animatedLevel = levelForAnim
+                animatedLevelProgress = (xpInLevel / xpRequiredForLevel).coerceIn(0f, 1f)
+
                 delay(stepDelay)
             }
             animatedXP = newXP
+            // Ensure final level/progress are correct at end of animation
+            val finalLevel = calculateLevelFromXP(newXP)
+            val finalLevelBase = UserDataRepository.getTotalXPForLevel(finalLevel)
+            val finalXpInLevel = newXP - finalLevelBase
+            val finalXpRequired = UserDataRepository.getXPRequiredForLevel(finalLevel)
+            animatedLevel = finalLevel
+            animatedLevelProgress = if (finalXpRequired > 0) {
+                (finalXpInLevel.toFloat() / finalXpRequired.toFloat()).coerceIn(0f, 1f)
+            } else {
+                0f
+            }
             // Update global state
             UserDataRepository.userXP = newXP
             
@@ -1025,12 +1075,12 @@ fun RewardsScreen(
                 )
                 
                 if (showLevelStatusCard) {
-                    // Calculate level, progress, and xpToNext based on animated XP
-                    val currentLevel = calculateLevelFromXP(animatedXP)
+                    // Use animatedLevel and animatedLevelProgress for smooth per-level bar animation
+                    val currentLevel = animatedLevel
                     val xpForCurrentLevel = UserDataRepository.getTotalXPForLevel(currentLevel)
-                    val xpInCurrentLevel = animatedXP - xpForCurrentLevel
+                    val xpInCurrentLevel = (animatedXP - xpForCurrentLevel).coerceAtLeast(0)
                     val xpRequiredForNext = UserDataRepository.getXPRequiredForLevel(currentLevel)
-                    val progress = (xpInCurrentLevel.toFloat() / xpRequiredForNext).coerceIn(0f, 1f)
+                    val progress = animatedLevelProgress.coerceIn(0f, 1f)
                     val xpToNext = (xpRequiredForNext - xpInCurrentLevel).coerceAtLeast(0)
                     
                     LevelStatusCard(
