@@ -219,6 +219,19 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Get activity context for exiting app and for showing interstitial ads
     val context = LocalContext.current
     val activity = context as? Activity
+
+    // Main-screen onboarding tutorials
+    var showMainWelcomeTutorial by remember { mutableStateOf(false) }
+    var showMainLaunchTutorial by remember { mutableStateOf(false) }
+
+    // Trigger first-time main welcome tutorial after 1 second
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(1000)
+        if (!com.example.fargalaxy.data.UserDataRepository.hasSeenMainWelcomeTutorial) {
+            showMainWelcomeTutorial = true
+            com.example.fargalaxy.data.UserDataRepository.markMainWelcomeTutorialSeen()
+        }
+    }
     
     // Update active screen when page changes and trigger interstitials for Career/Vault visits
     LaunchedEffect(pagerState) {
@@ -230,10 +243,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 else -> ActiveScreen.CENTER
             }
 
-            // Trigger interstitial logic when user navigates to Career (0) or Vault (2)
+            // Trigger interstitial logic when user navigates to Career (0) or Vault (2),
+            // but only after the user has completed all tutorial modals.
             // The second lifetime visit to either screen will be the first opportunity to show an ad.
             val act = activity
-            if (act != null && (page == 0 || page == 2)) {
+            val tutorialsDone =
+                com.example.fargalaxy.data.UserDataRepository.hasCompletedAllTutorials()
+            if (act != null && tutorialsDone && (page == 0 || page == 2)) {
                 com.example.fargalaxy.ads.AdManager.maybeShowInterstitialOnCareerOrVaultVisit(act)
             }
         }
@@ -621,8 +637,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
     }
     
-    // Disable user scrolling when not idle or when overlay screens are shown
-    val userScrollEnabled = isGalaxyIdle && !isShipUnlockedScreenShown && !isLocationDiscoveredScreenShown && !showShipAcquiredScreen
+    // Disable user scrolling when not idle, when overlay screens are shown, or when onboarding tutorial is active
+    val userScrollEnabled =
+        isGalaxyIdle &&
+        !isShipUnlockedScreenShown &&
+        !isLocationDiscoveredScreenShown &&
+        !showShipAcquiredScreen &&
+        !showMainWelcomeTutorial &&
+        !showMainLaunchTutorial
     
     // Handle back button press
     BackHandler(enabled = true) {
@@ -774,6 +796,36 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     )
                 }
             }
+        }
+
+        // First-time main onboarding: step 1 (welcome)
+        if (showMainWelcomeTutorial) {
+            TutorialModal(
+                title = "Welcome to\nFar Galaxy",
+                body = "Hello pilot, this app will help you manage your phone use when you need to focus",
+                buttonText = "NEXT",
+                onButtonClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    showMainWelcomeTutorial = false
+                    if (!com.example.fargalaxy.data.UserDataRepository.hasSeenMainLaunchTutorial) {
+                        showMainLaunchTutorial = true
+                        com.example.fargalaxy.data.UserDataRepository.markMainLaunchTutorialSeen()
+                    }
+                }
+            )
+        }
+
+        // First-time main onboarding: step 2 (launching a session)
+        if (showMainLaunchTutorial && !showMainWelcomeTutorial) {
+            TutorialModal(
+                title = "Launching a session",
+                body = "Select the amount of time you want and then tap on launch to start a new focus session",
+                buttonText = "CONTINUE",
+                onButtonClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    showMainLaunchTutorial = false
+                }
+            )
         }
         
         // Static noise overlay - doesn't move when swiping (above content, below indicator)

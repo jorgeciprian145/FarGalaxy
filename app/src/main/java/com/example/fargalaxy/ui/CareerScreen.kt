@@ -102,6 +102,17 @@ fun CareerScreen(
     scrollToTopTrigger: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    // Tutorial modal state (first time user opens CareerScreen)
+    var showCareerTutorial by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (!com.example.fargalaxy.data.UserDataRepository.hasSeenCareerTutorial) {
+            delay(1000)
+            showCareerTutorial = true
+            com.example.fargalaxy.data.UserDataRepository.markCareerTutorialSeen()
+        }
+    }
+
     // State to trigger animation playback when screen becomes visible
     var animationKey by remember { mutableStateOf(0) }
     
@@ -561,6 +572,16 @@ fun CareerScreen(
                     )
                 }
             }
+        }
+
+        // First-time CareerScreen tutorial modal
+        if (showCareerTutorial) {
+            TutorialModal(
+                title = "Your career",
+                body = "Here you can find your focus progress and your collection of ships and discovered locations",
+                buttonText = "CONTINUE",
+                onButtonClick = { showCareerTutorial = false }
+            )
         }
     }
 }

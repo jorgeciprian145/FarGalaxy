@@ -1969,6 +1969,140 @@ fun TravelSuccessModal(
 }
 
 /**
+ * Generic tutorial modal using the modalship JSON animation.
+ * Blocks all interaction behind it.
+ */
+@Composable
+fun TutorialModal(
+    title: String,
+    body: String,
+    buttonText: String,
+    onButtonClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val jsonComposition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.modalship)
+    )
+    var jsonHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
+
+    Box(
+        modifier = modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        // Blur + dark overlay, block all touches behind
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    renderEffect = AndroidRenderEffect.createBlurEffect(
+                        16f,
+                        16f,
+                        Shader.TileMode.CLAMP
+                    ).asComposeRenderEffect()
+                }
+                .background(Color.Black.copy(alpha = 0.96f))
+                .clickable(enabled = false) { }
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF373A3E),
+                                Color(0xFF2B2E32)
+                            )
+                        ),
+                        shape = RoundedCornerShape(32.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF6B6C6F),
+                        shape = RoundedCornerShape(32.dp)
+                    )
+                    .padding(
+                        top = 72.dp,
+                        bottom = 24.dp,
+                        start = 24.dp,
+                        end = 24.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = title,
+                    fontFamily = Exo2,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = body,
+                    fontFamily = Exo2,
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(80.dp))
+                        .background(Color.White)
+                        .clickable(onClick = onButtonClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = buttonText,
+                        fontFamily = Exo2,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.W400,
+                        color = Color(0xFF010102),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            // JSON animation: same sizing/position approach as TravelSuccessModal
+            val configuration = LocalConfiguration.current
+            val screenWidth = with(density) { configuration.screenWidthDp.dp }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .width(screenWidth * 0.7f)
+                    .onSizeChanged { size ->
+                        jsonHeight = with(density) { size.height.toDp() }
+                    }
+                    .offset(y = -jsonHeight + jsonHeight / 2)
+            ) {
+                LottieAnimation(
+                    composition = jsonComposition,
+                    iterations = 1, // Play once and then stay on last frame
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
+    }
+}
+
+/**
  * Helper function to get the ship image resource ID for GalaxyScreen based on ship ID.
  * Maps ship IDs to their corresponding ship images (ship1, ship2, etc.).
  */
@@ -2739,6 +2873,9 @@ fun GalaxyScreen(
     // Unstable cargo cancellation modal
     var showUnstableCargoCanceledModal by remember { mutableStateOf(false) }
 
+    // In-travel tutorial (first focus session)
+    var showTravelTutorial by remember { mutableStateOf(false) }
+
     // Flight control motivational quotes for launch start toast
     val flightControlQuotes = listOf(
         "Go do something awesome.",
@@ -2802,6 +2939,22 @@ fun GalaxyScreen(
             while (isTraveling) {
                 delay(1000) // Update every second
                 timerTrigger = System.currentTimeMillis() // Trigger recomposition
+            }
+        }
+    }
+
+    // Trigger in-travel tutorial on first successful travel start (after 2 seconds)
+    LaunchedEffect(isTraveling) {
+        if (isTraveling &&
+            !com.example.fargalaxy.data.UserDataRepository.hasSeenTravelTutorial &&
+            !showTravelTutorial
+        ) {
+            delay(2000)
+            if (isTraveling &&
+                !com.example.fargalaxy.data.UserDataRepository.hasSeenTravelTutorial
+            ) {
+                showTravelTutorial = true
+                com.example.fargalaxy.data.UserDataRepository.markTravelTutorialSeen()
             }
         }
     }
@@ -3962,6 +4115,18 @@ fun GalaxyScreen(
                     playMouseClickSound(context, coroutineScope)
                     showTravelSuccessModal = false
                     showRewardsScreen = true
+                }
+            )
+        }
+
+        // In-travel tutorial modal (first time only)
+        if (showTravelTutorial) {
+            TutorialModal(
+                title = "Having a focus session",
+                body = "During a focus session, the goal is to not pay attention to your phone and focus in another activity. Therefore, if you quit the app 5 times or you exit for more than 20 s, the travel will be lost",
+                buttonText = "CONTINUE",
+                onButtonClick = {
+                    showTravelTutorial = false
                 }
             )
         }

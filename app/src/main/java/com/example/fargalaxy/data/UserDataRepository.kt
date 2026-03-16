@@ -29,6 +29,13 @@ object UserDataRepository {
     private const val KEY_SESSION_DURATIONS = "session_durations" // Comma-separated list of session durations in minutes
     private const val KEY_LONGEST_SESSION = "longest_session_minutes" // Longest session duration in minutes
     private const val KEY_LAST_SESSION_DURATION = "last_session_duration_minutes" // Last session duration in minutes
+
+    // Tutorial flags
+    private const val KEY_TUTORIAL_MAIN_WELCOME = "tutorial_main_welcome"
+    private const val KEY_TUTORIAL_MAIN_LAUNCH = "tutorial_main_launch"
+    private const val KEY_TUTORIAL_TRAVEL = "tutorial_travel"
+    private const val KEY_TUTORIAL_CAREER = "tutorial_career"
+    private const val KEY_TUTORIAL_VAULT = "tutorial_vault"
     
     private var prefs: SharedPreferences? = null
     
@@ -47,6 +54,13 @@ object UserDataRepository {
             _currentStreakDays = mutableStateOf(prefs!!.getInt(KEY_CURRENT_STREAK, 0))
             _sessionsThisMonth = mutableStateOf(prefs!!.getInt(KEY_SESSIONS_THIS_MONTH, 0))
             _totalSessions = mutableStateOf(prefs!!.getInt(KEY_TOTAL_SESSIONS, 0))
+
+            // Load tutorial flags
+            hasSeenMainWelcomeTutorial = prefs!!.getBoolean(KEY_TUTORIAL_MAIN_WELCOME, false)
+            hasSeenMainLaunchTutorial = prefs!!.getBoolean(KEY_TUTORIAL_MAIN_LAUNCH, false)
+            hasSeenTravelTutorial = prefs!!.getBoolean(KEY_TUTORIAL_TRAVEL, false)
+            hasSeenCareerTutorial = prefs!!.getBoolean(KEY_TUTORIAL_CAREER, false)
+            hasSeenVaultTutorial = prefs!!.getBoolean(KEY_TUTORIAL_VAULT, false)
             
             // Check if we need to reset sessions this month (new month)
             checkAndResetMonthlySessions()
@@ -64,6 +78,33 @@ object UserDataRepository {
             userCredits = 50000
         }
     }
+
+    // --- Tutorial flag helpers ---
+
+    fun markMainWelcomeTutorialSeen() {
+        hasSeenMainWelcomeTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_MAIN_WELCOME, true)?.apply()
+    }
+
+    fun markMainLaunchTutorialSeen() {
+        hasSeenMainLaunchTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_MAIN_LAUNCH, true)?.apply()
+    }
+
+    fun markTravelTutorialSeen() {
+        hasSeenTravelTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_TRAVEL, true)?.apply()
+    }
+
+    fun markCareerTutorialSeen() {
+        hasSeenCareerTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_CAREER, true)?.apply()
+    }
+
+    fun markVaultTutorialSeen() {
+        hasSeenVaultTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_VAULT, true)?.apply()
+    }
     
     private var _userCredits = mutableStateOf(0)
     private var _userXP = mutableStateOf(0)
@@ -72,6 +113,30 @@ object UserDataRepository {
     private var _currentStreakDays = mutableStateOf(0)
     private var _sessionsThisMonth = mutableStateOf(0)
     private var _totalSessions = mutableStateOf(0)
+
+    // Tutorial flags (in-memory)
+    var hasSeenMainWelcomeTutorial: Boolean = false
+        private set
+    var hasSeenMainLaunchTutorial: Boolean = false
+        private set
+    var hasSeenTravelTutorial: Boolean = false
+        private set
+    var hasSeenCareerTutorial: Boolean = false
+        private set
+    var hasSeenVaultTutorial: Boolean = false
+        private set
+
+    /**
+     * Returns true when the user has seen all onboarding/tutorial modals.
+     * Used to gate certain features (e.g., interstitial ads) until onboarding is complete.
+     */
+    fun hasCompletedAllTutorials(): Boolean {
+        return hasSeenMainWelcomeTutorial &&
+                hasSeenMainLaunchTutorial &&
+                hasSeenTravelTutorial &&
+                hasSeenCareerTutorial &&
+                hasSeenVaultTutorial
+    }
     
     // Current user credits (persisted)
     var userCredits: Int

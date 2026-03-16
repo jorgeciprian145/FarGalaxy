@@ -28,6 +28,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +65,7 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
+import kotlinx.coroutines.delay
 
 /**
  * VaultScreen composable - displays the vault/collection screen content.
@@ -86,6 +88,17 @@ fun VaultScreen(
     // Read credits from global repository
     val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
     
+    // Tutorial modal state (first time user opens VaultScreen)
+    var showVaultTutorial by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (!com.example.fargalaxy.data.UserDataRepository.hasSeenVaultTutorial) {
+            delay(1000)
+            showVaultTutorial = true
+            com.example.fargalaxy.data.UserDataRepository.markVaultTutorialSeen()
+        }
+    }
+
     // Tooltip state
     var showSectorTooltip by remember { mutableStateOf(false) }
     var showCreditsTooltip by remember { mutableStateOf(false) }
@@ -475,6 +488,16 @@ fun VaultScreen(
                 // 24dp bottom spacer for extra space when scrolling
                 Spacer(modifier = Modifier.height(24.dp))
             }
+        }
+
+        // First-time VaultScreen tutorial modal
+        if (showVaultTutorial) {
+            TutorialModal(
+                title = "Galaxy progress and store",
+                body = "Here you can track your progress in your current sector and access the store to buy new ships, equipment or crates",
+                buttonText = "CONTINUE",
+                onButtonClick = { showVaultTutorial = false }
+            )
         }
     }
 }
