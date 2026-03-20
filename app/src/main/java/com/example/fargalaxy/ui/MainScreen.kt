@@ -33,6 +33,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.DisposableEffect
+import android.media.MediaPlayer
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.CrateOpenResult
 import com.example.fargalaxy.data.CrateRepository
@@ -77,6 +82,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Track if location discovered screen is shown (to hide indicator and block pager)
     var isLocationDiscoveredScreenShown by remember { mutableStateOf(false) }
+
+    // Track travel completion/cancellation modals shown (used to pause main theme soundtrack)
+    var isTravelSuccessModalShown by remember { mutableStateOf(false) }
+    var isTravelCanceledModalShown by remember { mutableStateOf(false) }
+    var isUnstableCargoCanceledModalShown by remember { mutableStateOf(false) }
     
     // Track if ship acquired screen is shown (to hide indicator and block pager)
     var showShipAcquiredScreen by remember { mutableStateOf(false) }
@@ -219,6 +229,110 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Get activity context for exiting app and for showing interstitial ads
     val context = LocalContext.current
     val activity = context as? Activity
+
+    // --- Main theme soundtrack (maintheme.mp3) ---
+    // Plays on loop across all screens, but pauses while traveling and while the crate JSON animation plays.
+    // Also fades out on background/minimize and fades in when the app returns.
+    // Start as ON_ANY so audio can begin immediately on first render.
+    // We still pause via lifecycle events when the app is backgrounded / locked.
+    var appLifecycleState by remember { mutableStateOf(Lifecycle.Event.ON_ANY) }
+
+    DisposableEffect(Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            appLifecycleState = event
+        }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+        onDispose {
+            ProcessLifecycleOwner.get().lifecycle.removeObserver(observer)
+        }
+    }
+
+    val mainThemePlayer = remember(context) {
+        // Use applicationContext to avoid issues with wrapper contexts.
+        val appCtx = context.applicationContext
+        MediaPlayer.create(appCtx, R.raw.maintheme)?.apply {
+            isLooping = true
+            setVolume(0f, 0f)
+        }
+    }
+    var mainThemeVolume by remember { mutableStateOf(0f) }
+
+    DisposableEffect(mainThemePlayer) {
+        onDispose {
+            try {
+                mainThemePlayer?.stop()
+            } catch (_: Exception) {
+                // Ignore
+            }
+            mainThemePlayer?.release()
+        }
+    }
+
+    // Only actively foreground apps should play audio.
+    // Covers phone lock / screen-off / app "idle" by pausing on ON_PAUSE/ON_STOP.
+    val isAppForeground =
+        appLifecycleState == Lifecycle.Event.ON_START ||
+            appLifecycleState == Lifecycle.Event.ON_RESUME ||
+            appLifecycleState == Lifecycle.Event.ON_ANY
+
+    // `isGalaxyIdle` is only updated by `GalaxyScreen` when page == 1.
+    // When the user is on Career/Vault pages, treat the app as "idle" so music keeps playing.
+    val isGalaxyIdleEffective = if (pagerState.currentPage == 1) isGalaxyIdle else true
+
+    val shouldPlayMainTheme =
+        isAppForeground &&
+            isGalaxyIdleEffective &&
+            !showCrateOpeningOverlay
+
+    LaunchedEffect(shouldPlayMainTheme) {
+        val player = mainThemePlayer ?: return@LaunchedEffect
+
+        if (shouldPlayMainTheme) {
+            // Fade in over 2 seconds and restart from the beginning.
+            try { player.seekTo(0) } catch (_: Exception) {}
+            player.setVolume(0f, 0f)
+            if (!player.isPlaying) player.start()
+
+            val durationMs = 2000L
+            val steps = 20
+            val stepDelay = durationMs / steps
+            for (i in 0..steps) {
+                val v = i.toFloat() / steps.toFloat()
+                player.setVolume(v, v)
+                mainThemeVolume = v
+                delay(stepDelay)
+            }
+            player.setVolume(1f, 1f)
+            mainThemeVolume = 1f
+        } else {
+            // Fade out over 1 second and stop/pause.
+            val startVol = mainThemeVolume.coerceIn(0f, 1f)
+
+            // If we're already at 0 volume, just pause quickly.
+            if (startVol <= 0.001f) {
+                player.setVolume(0f, 0f)
+                mainThemeVolume = 0f
+                try { player.pause() } catch (_: Exception) {}
+                try { player.seekTo(0) } catch (_: Exception) {}
+                return@LaunchedEffect
+            }
+
+            val durationMs = 1000L
+            val steps = 20
+            val stepDelay = durationMs / steps
+            for (i in 0..steps) {
+                val t = i.toFloat() / steps.toFloat()
+                val v = startVol * (1f - t)
+                player.setVolume(v, v)
+                mainThemeVolume = v
+                delay(stepDelay)
+            }
+            player.setVolume(0f, 0f)
+            mainThemeVolume = 0f
+            try { player.pause() } catch (_: Exception) {}
+            try { player.seekTo(0) } catch (_: Exception) {}
+        }
+    }
 
     // Main-screen onboarding tutorials
     var showMainWelcomeTutorial by remember { mutableStateOf(false) }
@@ -780,7 +894,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onShipUnlockedScreenVisibilityChange = { isShown -> isShipUnlockedScreenShown = isShown },
                         onLocationDiscoveredScreenVisibilityChange = { isShown -> isLocationDiscoveredScreenShown = isShown },
                         onBoostSelectionBottomSheetVisibilityChange = { isShown -> isBoostSelectionBottomSheetShown = isShown },
-                        onShowToast = { message -> toastMessage = message }
+                        onShowToast = { message -> toastMessage = message },
+                        onTravelSuccessModalVisibilityChange = { shown -> isTravelSuccessModalShown = shown },
+                        onTravelCanceledModalVisibilityChange = { shown -> isTravelCanceledModalShown = shown },
+                        onUnstableCargoCanceledModalVisibilityChange = { shown -> isUnstableCargoCanceledModalShown = shown }
                     )
                 }
                 2 -> {

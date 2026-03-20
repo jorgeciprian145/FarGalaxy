@@ -2810,7 +2810,10 @@ fun GalaxyScreen(
     onShipUnlockedScreenVisibilityChange: (Boolean) -> Unit = {},
     onLocationDiscoveredScreenVisibilityChange: (Boolean) -> Unit = {},
     onBoostSelectionBottomSheetVisibilityChange: (Boolean) -> Unit = {},
-    onShowToast: (String) -> Unit = {}
+    onShowToast: (String) -> Unit = {},
+    onTravelSuccessModalVisibilityChange: (Boolean) -> Unit = {},
+    onTravelCanceledModalVisibilityChange: (Boolean) -> Unit = {},
+    onUnstableCargoCanceledModalVisibilityChange: (Boolean) -> Unit = {}
 ) {
     // State management: All state is saved across configuration changes (screen rotation, etc.)
     // selectedMinutes: The time duration selected by the user (range: 5-60, step: 5)
@@ -2875,6 +2878,7 @@ fun GalaxyScreen(
 
     // In-travel tutorial (first focus session)
     var showTravelTutorial by remember { mutableStateOf(false) }
+    var showTravelTutorialStep2 by remember { mutableStateOf(false) }
 
     // Flight control motivational quotes for launch start toast
     val flightControlQuotes = listOf(
@@ -3113,6 +3117,20 @@ fun GalaxyScreen(
     // Notify parent about location discovered screen visibility
     LaunchedEffect(showLocationDiscoveredScreen) {
         onLocationDiscoveredScreenVisibilityChange(showLocationDiscoveredScreen)
+    }
+
+    // Notify parent about travel completion/cancellation modals visibility.
+    // Music should remain paused while these are visible (before rewards/unlocks flow).
+    LaunchedEffect(showTravelSuccessModal) {
+        onTravelSuccessModalVisibilityChange(showTravelSuccessModal)
+    }
+
+    LaunchedEffect(showTravelCanceledModal) {
+        onTravelCanceledModalVisibilityChange(showTravelCanceledModal)
+    }
+
+    LaunchedEffect(showUnstableCargoCanceledModal) {
+        onUnstableCargoCanceledModalVisibilityChange(showUnstableCargoCanceledModal)
     }
     
     // Handler: Increment selectedMinutes by 5, clamped to maximum of 60
@@ -3430,7 +3448,7 @@ fun GalaxyScreen(
     // Launch preparation countdown: 3-second countdown before actual travel begins
     // Decrements launchCountdown every second (3, 2, 1)
     // Get context for MediaPlayer
-    val context = LocalContext.current
+    val launchBeepContext = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     
     // After countdown completes, automatically starts travel if not cancelled
@@ -3438,38 +3456,76 @@ fun GalaxyScreen(
         if (isPreparingLaunch) {
             launchCountdown = 3 // Reset to 3
             while (isPreparingLaunch && launchCountdown > 0) {
+                val countdownValue = launchCountdown
+                val isFinalBeep = countdownValue == 1
+
                 // Play beep sound for current countdown number (3, 2, or 1)
-                val beepPlayer = MediaPlayer.create(context, R.raw.beep)
+                val beepPlayer = MediaPlayer.create(launchBeepContext, R.raw.beep)
                 beepPlayer?.let { player ->
+                    // Play volume is consistent with other sound effects
                     try {
                         player.setVolume(1f, 1f)
                         player.start()
-                        
-                        // Play for 1 second (duration the number is on screen)
-                        delay(1000)
-                        
-                        player.stop()
-                        player.release()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
+                        // If starting fails, ensure we don't leak the instance.
+                        try { player.release() } catch (_: Exception) {}
+                    }
+
+                    // For the final beep, keep it playing for its full MediaPlayer duration,
+                    // allowing it to overlap with the starship "launch" sound.
+                    var beepCleanupJob: Job? = null
+                    if (isFinalBeep) {
+                        val durationMs = player.duration.takeIf { it > 0 } ?: 1000
+                        beepCleanupJob = coroutineScope.launch {
+                            delay(durationMs.toLong())
+                            try {
+                                if (player.isPlaying) {
+                                    player.stop()
+                                }
+                                player.release()
+                            } catch (_: Exception) {
+                                // Ignore cleanup errors
+                            }
+                        }
+                    }
+
+                    // Keep countdown timing: the number stays on screen for 1s.
+                    delay(1000)
+
+                    if (!isFinalBeep) {
+                        // For the first two beeps, preserve the previous behavior: stop at 1s.
                         try {
                             if (player.isPlaying) {
                                 player.stop()
                             }
                             player.release()
-                        } catch (e2: Exception) {
+                        } catch (_: Exception) {
                             // Ignore release errors
+                        }
+                    } else {
+                        // If the user canceled during the final beep, stop early.
+                        if (!isPreparingLaunch) {
+                            beepCleanupJob?.cancel()
+                            try {
+                                if (player.isPlaying) {
+                                    player.stop()
+                                }
+                                player.release()
+                            } catch (_: Exception) {
+                                // Ignore release errors
+                            }
                         }
                     }
                 }
-                
-                if (isPreparingLaunch) { // Check if still preparing (not cancelled)
+
+                if (isPreparingLaunch) {
                     launchCountdown--
                 }
             }
             // After countdown completes, play starship sound in parallel and start travel if still preparing
             if (isPreparingLaunch) {
                 // Start starship sound in parallel (don't wait for it to finish)
-                val starshipPlayer = MediaPlayer.create(context, R.raw.starship)
+                val starshipPlayer = MediaPlayer.create(launchBeepContext, R.raw.starship)
                 starshipPlayer?.let { player ->
                     try {
                         player.setVolume(1f, 1f)
@@ -4119,14 +4175,27 @@ fun GalaxyScreen(
             )
         }
 
-        // In-travel tutorial modal (first time only)
+        // In-travel tutorial modal (first time only) - step 1
         if (showTravelTutorial) {
             TutorialModal(
                 title = "Having a focus session",
                 body = "During a focus session, the goal is to not pay attention to your phone and focus in another activity. Therefore, if you quit the app 5 times or you exit for more than 20 s, the travel will be lost",
-                buttonText = "CONTINUE",
+                buttonText = "NEXT",
                 onButtonClick = {
                     showTravelTutorial = false
+                    showTravelTutorialStep2 = true
+                }
+            )
+        }
+
+        // In-travel tutorial modal - step 2 (penalty counter)
+        if (showTravelTutorialStep2) {
+            TutorialModal(
+                title = "Penalty counter",
+                body = "You can lock the phone during the travel and you can also receive phone calls without that counting as penalties",
+                buttonText = "CONTINUE",
+                onButtonClick = {
+                    showTravelTutorialStep2 = false
                 }
             )
         }
