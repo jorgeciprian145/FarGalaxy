@@ -578,7 +578,7 @@ fun CareerScreen(
         if (showCareerTutorial) {
             TutorialModal(
                 title = "Your career",
-                body = "Here you can find your focus progress and your collection of ships and discovered locations",
+                body = "Here you can track your focus progress and explore your collection of ships and discovered locations.",
                 buttonText = "CONTINUE",
                 onButtonClick = { showCareerTutorial = false }
             )

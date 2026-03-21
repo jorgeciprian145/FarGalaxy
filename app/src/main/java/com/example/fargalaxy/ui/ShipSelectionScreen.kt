@@ -54,6 +54,7 @@ import com.example.fargalaxy.data.GameStateRepository
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
 import androidx.compose.ui.draw.alpha
+import kotlinx.coroutines.delay
 
 /**
  * Helper function to get the required space license level for a ship.
@@ -195,6 +196,16 @@ fun ShipSelectionScreen(
     val isContentClipped = derivedStateOf {
         with(density) {
             scrollState.value >= 16.dp.toPx().toInt()
+        }
+    }
+
+    // First-time tutorial (not part of hasCompletedAllTutorials — does not gate interstitial ads)
+    var showShipSelectionTutorial by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!UserDataRepository.hasSeenShipSelectionTutorial) {
+            delay(1000)
+            showShipSelectionTutorial = true
+            UserDataRepository.markShipSelectionTutorialSeen()
         }
     }
     
@@ -401,6 +412,15 @@ fun ShipSelectionScreen(
                         .background(Color(0xFFFFFFFF)) // White line, full width, 1px
                 )
             }
+        }
+
+        if (showShipSelectionTutorial) {
+            TutorialModal(
+                title = "Your ships",
+                body = "Here you can browse your ships. To add a new one to your collection, you first need to unlock it by completing focus sessions, and then purchase it in the shipyard.",
+                buttonText = "CONTINUE",
+                onButtonClick = { showShipSelectionTutorial = false }
+            )
         }
     }
 }

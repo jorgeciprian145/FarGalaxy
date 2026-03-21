@@ -96,6 +96,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
+import com.example.fargalaxy.data.UserDataRepository
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.utils.playMouseClickSound
 import kotlinx.coroutines.delay
@@ -2880,6 +2881,10 @@ fun GalaxyScreen(
     var showTravelTutorial by remember { mutableStateOf(false) }
     var showTravelTutorialStep2 by remember { mutableStateOf(false) }
 
+    // Galaxy ADD → boost/inventory bottom sheet (not part of hasCompletedAllTutorials)
+    var showGalaxyAddInventoryTutorial1 by remember { mutableStateOf(false) }
+    var showGalaxyAddInventoryTutorial2 by remember { mutableStateOf(false) }
+
     // Flight control motivational quotes for launch start toast
     val flightControlQuotes = listOf(
         "Go do something awesome.",
@@ -2896,9 +2901,21 @@ fun GalaxyScreen(
         "Focus engaged."
     )
     
-    // Notify parent when bottom sheet visibility changes
+    // Notify parent when bottom sheet visibility changes; first-time ADD inventory tutorials
     LaunchedEffect(showBoostSelectionBottomSheet) {
         onBoostSelectionBottomSheetVisibilityChange(showBoostSelectionBottomSheet)
+        if (!showBoostSelectionBottomSheet) {
+            showGalaxyAddInventoryTutorial1 = false
+            showGalaxyAddInventoryTutorial2 = false
+            return@LaunchedEffect
+        }
+        delay(1000)
+        when {
+            !UserDataRepository.hasSeenGalaxyAddInventoryTutorial1 ->
+                showGalaxyAddInventoryTutorial1 = true
+            !UserDataRepository.hasSeenGalaxyAddInventoryTutorial2 ->
+                showGalaxyAddInventoryTutorial2 = true
+        }
     }
     
     // showRewardsScreen: Controls visibility of the rewards screen
@@ -4179,7 +4196,7 @@ fun GalaxyScreen(
         if (showTravelTutorial) {
             TutorialModal(
                 title = "Having a focus session",
-                body = "During a focus session, the goal is to not pay attention to your phone and focus in another activity. Therefore, if you quit the app 5 times or you exit for more than 20 s, the travel will be lost",
+                body = "During a focus session, your goal is to stay away from your phone and focus on a real-world activity.\n\nIf you leave the app 5 times or stay away for more than 20 seconds, the travel will be lost.",
                 buttonText = "NEXT",
                 onButtonClick = {
                     showTravelTutorial = false
@@ -4192,7 +4209,7 @@ fun GalaxyScreen(
         if (showTravelTutorialStep2) {
             TutorialModal(
                 title = "Penalty counter",
-                body = "You can lock the phone during the travel and you can also receive phone calls without that counting as penalties",
+                body = "You can lock your phone during a session, and incoming calls won't count as penalties.",
                 buttonText = "CONTINUE",
                 onButtonClick = {
                     showTravelTutorialStep2 = false
@@ -4509,6 +4526,32 @@ fun GalaxyScreen(
                     showExperimentalFuelRemoveModal = true
                 }
             )
+
+            if (showGalaxyAddInventoryTutorial1) {
+                TutorialModal(
+                    title = "Adding equipment",
+                    body = "You can equip special modifiers called equipment that affect your travel. Purchase equipment in the store, then come here to select and equip it.",
+                    buttonText = "NEXT",
+                    onButtonClick = {
+                        playMouseClickSound(context, coroutineScope)
+                        UserDataRepository.markGalaxyAddInventoryTutorial1Seen()
+                        showGalaxyAddInventoryTutorial1 = false
+                        showGalaxyAddInventoryTutorial2 = true
+                    }
+                )
+            }
+            if (showGalaxyAddInventoryTutorial2 && !showGalaxyAddInventoryTutorial1) {
+                TutorialModal(
+                    title = "Flight conditions",
+                    body = "Space conditions change every day, and different ships perform better depending on the environment. Use the Deep Space Scanner to reveal the current conditions and choose the best ship for your journey.\n\nFlight conditions update every 24 hours.",
+                    buttonText = "CONTINUE",
+                    onButtonClick = {
+                        playMouseClickSound(context, coroutineScope)
+                        UserDataRepository.markGalaxyAddInventoryTutorial2Seen()
+                        showGalaxyAddInventoryTutorial2 = false
+                    }
+                )
+            }
         }
         
         // Scanner Progress Screen: First intermediate screen (shows scanning animation)

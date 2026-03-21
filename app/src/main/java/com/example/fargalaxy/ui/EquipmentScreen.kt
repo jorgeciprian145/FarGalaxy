@@ -29,8 +29,12 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -43,6 +47,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fargalaxy.R
+import com.example.fargalaxy.data.UserDataRepository
+import kotlinx.coroutines.delay
 
 /**
  * EquipmentScreen composable - displays the equipment screen where users can purchase boosts.
@@ -69,7 +75,7 @@ fun EquipmentScreen(
     modifier: Modifier = Modifier
 ) {
     // Read credits from global repository
-    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
+    val userCredits = UserDataRepository.userCredits
     // Scroll state
     val scrollState = rememberScrollState()
     
@@ -81,6 +87,16 @@ fun EquipmentScreen(
     val isContentClipped = derivedStateOf {
         with(density) {
             scrollState.value >= 16.dp.toPx().toInt()
+        }
+    }
+
+    // First-time tutorial (not part of hasCompletedAllTutorials — does not gate interstitial ads)
+    var showEquipmentScreenTutorial by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!UserDataRepository.hasSeenEquipmentScreenTutorial) {
+            delay(1000)
+            showEquipmentScreenTutorial = true
+            UserDataRepository.markEquipmentScreenTutorialSeen()
         }
     }
     
@@ -1137,6 +1153,15 @@ fun EquipmentScreen(
                     }
                 }
             }
+        }
+
+        if (showEquipmentScreenTutorial) {
+            TutorialModal(
+                title = "Buying equipment",
+                body = "Equipment consists of unique modifiers that affect different aspects of your travel. Purchase equipment here to use during your journeys.",
+                buttonText = "CONTINUE",
+                onButtonClick = { showEquipmentScreenTutorial = false }
+            )
         }
     }
 }

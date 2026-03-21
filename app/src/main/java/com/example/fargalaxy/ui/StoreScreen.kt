@@ -30,8 +30,12 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -45,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.CrateType
+import com.example.fargalaxy.data.UserDataRepository
+import kotlinx.coroutines.delay
 
 /**
  * StoreScreen composable - displays the store screen where users can browse crates and offers.
@@ -76,7 +82,7 @@ fun StoreScreen(
     modifier: Modifier = Modifier
 ) {
     // Read credits from global repository
-    val userCredits = com.example.fargalaxy.data.UserDataRepository.userCredits
+    val userCredits = UserDataRepository.userCredits
     // Read whether Dying Star has already been purchased
     val isDyingStarOwned = com.example.fargalaxy.data.GameStateRepository.isShipOwned("dying_star")
     // Scroll state
@@ -90,6 +96,16 @@ fun StoreScreen(
     val isContentClipped = derivedStateOf {
         with(density) {
             scrollState.value >= 16.dp.toPx().toInt()
+        }
+    }
+
+    // First-time tutorial (not part of hasCompletedAllTutorials — does not gate interstitial ads)
+    var showStoreScreenTutorial by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!UserDataRepository.hasSeenStoreScreenTutorial) {
+            delay(1000)
+            showStoreScreenTutorial = true
+            UserDataRepository.markStoreScreenTutorialSeen()
         }
     }
     
@@ -1348,8 +1364,17 @@ fun StoreScreen(
                 }
             }
         }
+
+        if (showStoreScreenTutorial) {
+            TutorialModal(
+                title = "The store",
+                body = "Here you can find exclusive ships, credit packs, and crates. Crates contain random rewards, including credits, equipment, or ship cards.\n\nCollect 6 ship cards of the same ship to unlock it.",
+                buttonText = "CONTINUE",
+                onButtonClick = { showStoreScreenTutorial = false }
+            )
         }
     }
+}
 }
 
 @Composable

@@ -56,6 +56,8 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.LocationRepository
+import com.example.fargalaxy.data.UserDataRepository
+import kotlinx.coroutines.delay
 import com.example.fargalaxy.model.Location
 import com.example.fargalaxy.model.LocationRarity
 
@@ -140,6 +142,16 @@ fun LocationsScreen(
             with(density) {
                 listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset >= 16.dp.toPx().toInt()
             }
+        }
+    }
+
+    // First-time tutorial (not part of hasCompletedAllTutorials — does not gate interstitial ads)
+    var showLocationsSelectionTutorial by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!UserDataRepository.hasSeenLocationsSelectionTutorial) {
+            delay(1000)
+            showLocationsSelectionTutorial = true
+            UserDataRepository.markLocationsSelectionTutorialSeen()
         }
     }
     
@@ -365,6 +377,15 @@ fun LocationsScreen(
                 )
                 }
             }
+        }
+
+        if (showLocationsSelectionTutorial) {
+            TutorialModal(
+                title = "Discovered locations",
+                body = "View the locations you've discovered during your travels. New locations are added automatically.",
+                buttonText = "CONTINUE",
+                onButtonClick = { showLocationsSelectionTutorial = false }
+            )
         }
     }
 }

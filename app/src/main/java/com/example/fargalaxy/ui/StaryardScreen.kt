@@ -1,4 +1,4 @@
- package com.example.fargalaxy.ui
+package com.example.fargalaxy.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.ShipRepository
+import com.example.fargalaxy.data.UserDataRepository
+import kotlinx.coroutines.delay
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
 
@@ -141,6 +144,27 @@ fun StaryardScreen(
     val isContentClipped = derivedStateOf {
         with(density) {
             scrollState.value >= 16.dp.toPx().toInt()
+        }
+    }
+
+    // First-time tutorial (not part of hasCompletedAllTutorials — does not gate interstitial ads)
+    var showStaryardTutorial by remember { mutableStateOf(false) }
+    var showShipcardsTutorial by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!UserDataRepository.hasSeenStaryardTutorial) {
+            delay(1000)
+            showStaryardTutorial = true
+            UserDataRepository.markStaryardTutorialSeen()
+        }
+    }
+    LaunchedEffect(selectedTab) {
+        if (
+            selectedTab == StaryardTab.SHIPCARDS &&
+            !UserDataRepository.hasSeenStaryardShipcardsTutorial
+        ) {
+            delay(1000)
+            showShipcardsTutorial = true
+            UserDataRepository.markStaryardShipcardsTutorialSeen()
         }
     }
     
@@ -541,6 +565,24 @@ fun StaryardScreen(
                         .background(Color(0xFFFFFFFF)) // White line, full width, 1px
                 )
             }
+        }
+
+        if (showStaryardTutorial) {
+            TutorialModal(
+                title = "Buying new ships",
+                body = "Here you'll find unlocked ships available for purchase. Unlock ships by progressing through your focus sessions, then buy them here to add them to your collection.",
+                buttonText = "CONTINUE",
+                onButtonClick = { showStaryardTutorial = false }
+            )
+        }
+
+        if (showShipcardsTutorial) {
+            TutorialModal(
+                title = "Shipcards",
+                body = "Collect 6 ship cards of the same ship to unlock it. You can acquire ship cards by purchasing crates in the store.",
+                buttonText = "CONTINUE",
+                onButtonClick = { showShipcardsTutorial = false }
+            )
         }
     }
 }

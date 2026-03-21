@@ -336,6 +336,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
     // Main-screen onboarding tutorials
     var showMainWelcomeTutorial by remember { mutableStateOf(false) }
+    var showMainFocusRealLifeTutorial by remember { mutableStateOf(false) }
     var showMainLaunchTutorial by remember { mutableStateOf(false) }
 
     // Trigger first-time main welcome tutorial after 1 second
@@ -758,6 +759,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         !isLocationDiscoveredScreenShown &&
         !showShipAcquiredScreen &&
         !showMainWelcomeTutorial &&
+        !showMainFocusRealLifeTutorial &&
         !showMainLaunchTutorial
     
     // Handle back button press
@@ -919,24 +921,47 @@ fun MainScreen(modifier: Modifier = Modifier) {
         if (showMainWelcomeTutorial) {
             TutorialModal(
                 title = "Welcome to\nFar Galaxy",
-                body = "Hello pilot, this app will help you manage your phone use when you need to focus",
+                body = "Hello pilot, welcome to the beginning of your journey. Here, your focus becomes space exploration.",
                 buttonText = "NEXT",
                 onButtonClick = {
                     playMouseClickSound(context, coroutineScope)
                     showMainWelcomeTutorial = false
-                    if (!com.example.fargalaxy.data.UserDataRepository.hasSeenMainLaunchTutorial) {
-                        showMainLaunchTutorial = true
-                        com.example.fargalaxy.data.UserDataRepository.markMainLaunchTutorialSeen()
+                    when {
+                        !com.example.fargalaxy.data.UserDataRepository.hasSeenMainFocusRealLifeTutorial -> {
+                            com.example.fargalaxy.data.UserDataRepository.markMainFocusRealLifeTutorialSeen()
+                            showMainFocusRealLifeTutorial = true
+                        }
+                        !com.example.fargalaxy.data.UserDataRepository.hasSeenMainLaunchTutorial -> {
+                            com.example.fargalaxy.data.UserDataRepository.markMainLaunchTutorialSeen()
+                            showMainLaunchTutorial = true
+                        }
                     }
                 }
             )
         }
 
-        // First-time main onboarding: step 2 (launching a session)
-        if (showMainLaunchTutorial && !showMainWelcomeTutorial) {
+        // First-time main onboarding: step 2 (focus in real life)
+        if (showMainFocusRealLifeTutorial && !showMainWelcomeTutorial) {
+            TutorialModal(
+                title = "Focusing in real life",
+                body = "In this journey across the galaxy, your real-life focus drives your progress. Complete focus sessions to earn experience and credits, and unlock ships and new locations.",
+                buttonText = "NEXT",
+                onButtonClick = {
+                    playMouseClickSound(context, coroutineScope)
+                    showMainFocusRealLifeTutorial = false
+                    if (!com.example.fargalaxy.data.UserDataRepository.hasSeenMainLaunchTutorial) {
+                        com.example.fargalaxy.data.UserDataRepository.markMainLaunchTutorialSeen()
+                        showMainLaunchTutorial = true
+                    }
+                }
+            )
+        }
+
+        // First-time main onboarding: step 3 (launching a session)
+        if (showMainLaunchTutorial && !showMainWelcomeTutorial && !showMainFocusRealLifeTutorial) {
             TutorialModal(
                 title = "Launching a session",
-                body = "Select the amount of time you want and then tap on launch to start a new focus session",
+                body = "This app works best when paired with real-life tasks you want to focus on. Choose how long you want to focus, then tap \"Launch\" to begin your first session.",
                 buttonText = "CONTINUE",
                 onButtonClick = {
                     playMouseClickSound(context, coroutineScope)

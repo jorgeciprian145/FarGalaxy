@@ -32,10 +32,27 @@ object UserDataRepository {
 
     // Tutorial flags
     private const val KEY_TUTORIAL_MAIN_WELCOME = "tutorial_main_welcome"
+    private const val KEY_TUTORIAL_MAIN_FOCUS_REAL_LIFE = "tutorial_main_focus_real_life"
     private const val KEY_TUTORIAL_MAIN_LAUNCH = "tutorial_main_launch"
     private const val KEY_TUTORIAL_TRAVEL = "tutorial_travel"
     private const val KEY_TUTORIAL_CAREER = "tutorial_career"
     private const val KEY_TUTORIAL_VAULT = "tutorial_vault"
+    /** Not part of [hasCompletedAllTutorials] — interstitial ads must not wait on this screen. */
+    private const val KEY_TUTORIAL_SHIP_SELECTION = "tutorial_ship_selection"
+    /** Not part of [hasCompletedAllTutorials] — interstitial ads must not wait on this screen. */
+    private const val KEY_TUTORIAL_LOCATIONS_SELECTION = "tutorial_locations_selection"
+    /** Not part of [hasCompletedAllTutorials] — interstitial ads must not wait on this screen. */
+    private const val KEY_TUTORIAL_STARYARD = "tutorial_staryard"
+    /** Not part of [hasCompletedAllTutorials] — interstitial ads must not wait on this screen. */
+    private const val KEY_TUTORIAL_STARYARD_SHIPCARDS = "tutorial_staryard_shipcards"
+    /** Galaxy ADD → boost/inventory bottom sheet; not part of [hasCompletedAllTutorials]. */
+    private const val KEY_TUTORIAL_GALAXY_ADD_INVENTORY_1 = "tutorial_galaxy_add_inventory_1"
+    /** Galaxy ADD → boost/inventory bottom sheet; not part of [hasCompletedAllTutorials]. */
+    private const val KEY_TUTORIAL_GALAXY_ADD_INVENTORY_2 = "tutorial_galaxy_add_inventory_2"
+    /** Not part of [hasCompletedAllTutorials] — interstitial ads must not wait on this screen. */
+    private const val KEY_TUTORIAL_EQUIPMENT_SCREEN = "tutorial_equipment_screen"
+    /** Not part of [hasCompletedAllTutorials] — interstitial ads must not wait on this screen. */
+    private const val KEY_TUTORIAL_STORE_SCREEN = "tutorial_store_screen"
     
     private var prefs: SharedPreferences? = null
     
@@ -57,10 +74,24 @@ object UserDataRepository {
 
             // Load tutorial flags
             hasSeenMainWelcomeTutorial = prefs!!.getBoolean(KEY_TUTORIAL_MAIN_WELCOME, false)
+            hasSeenMainFocusRealLifeTutorial = prefs!!.getBoolean(KEY_TUTORIAL_MAIN_FOCUS_REAL_LIFE, false)
             hasSeenMainLaunchTutorial = prefs!!.getBoolean(KEY_TUTORIAL_MAIN_LAUNCH, false)
+            // Users who completed main onboarding before the "focus in real life" step existed
+            if (hasSeenMainLaunchTutorial && !hasSeenMainFocusRealLifeTutorial) {
+                hasSeenMainFocusRealLifeTutorial = true
+                prefs!!.edit().putBoolean(KEY_TUTORIAL_MAIN_FOCUS_REAL_LIFE, true).apply()
+            }
             hasSeenTravelTutorial = prefs!!.getBoolean(KEY_TUTORIAL_TRAVEL, false)
             hasSeenCareerTutorial = prefs!!.getBoolean(KEY_TUTORIAL_CAREER, false)
             hasSeenVaultTutorial = prefs!!.getBoolean(KEY_TUTORIAL_VAULT, false)
+            hasSeenShipSelectionTutorial = prefs!!.getBoolean(KEY_TUTORIAL_SHIP_SELECTION, false)
+            hasSeenLocationsSelectionTutorial = prefs!!.getBoolean(KEY_TUTORIAL_LOCATIONS_SELECTION, false)
+            hasSeenStaryardTutorial = prefs!!.getBoolean(KEY_TUTORIAL_STARYARD, false)
+            hasSeenStaryardShipcardsTutorial = prefs!!.getBoolean(KEY_TUTORIAL_STARYARD_SHIPCARDS, false)
+            hasSeenGalaxyAddInventoryTutorial1 = prefs!!.getBoolean(KEY_TUTORIAL_GALAXY_ADD_INVENTORY_1, false)
+            hasSeenGalaxyAddInventoryTutorial2 = prefs!!.getBoolean(KEY_TUTORIAL_GALAXY_ADD_INVENTORY_2, false)
+            hasSeenEquipmentScreenTutorial = prefs!!.getBoolean(KEY_TUTORIAL_EQUIPMENT_SCREEN, false)
+            hasSeenStoreScreenTutorial = prefs!!.getBoolean(KEY_TUTORIAL_STORE_SCREEN, false)
             
             // Check if we need to reset sessions this month (new month)
             checkAndResetMonthlySessions()
@@ -86,6 +117,11 @@ object UserDataRepository {
         prefs?.edit()?.putBoolean(KEY_TUTORIAL_MAIN_WELCOME, true)?.apply()
     }
 
+    fun markMainFocusRealLifeTutorialSeen() {
+        hasSeenMainFocusRealLifeTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_MAIN_FOCUS_REAL_LIFE, true)?.apply()
+    }
+
     fun markMainLaunchTutorialSeen() {
         hasSeenMainLaunchTutorial = true
         prefs?.edit()?.putBoolean(KEY_TUTORIAL_MAIN_LAUNCH, true)?.apply()
@@ -105,6 +141,46 @@ object UserDataRepository {
         hasSeenVaultTutorial = true
         prefs?.edit()?.putBoolean(KEY_TUTORIAL_VAULT, true)?.apply()
     }
+
+    fun markShipSelectionTutorialSeen() {
+        hasSeenShipSelectionTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_SHIP_SELECTION, true)?.apply()
+    }
+
+    fun markLocationsSelectionTutorialSeen() {
+        hasSeenLocationsSelectionTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_LOCATIONS_SELECTION, true)?.apply()
+    }
+
+    fun markStaryardTutorialSeen() {
+        hasSeenStaryardTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_STARYARD, true)?.apply()
+    }
+
+    fun markStaryardShipcardsTutorialSeen() {
+        hasSeenStaryardShipcardsTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_STARYARD_SHIPCARDS, true)?.apply()
+    }
+
+    fun markGalaxyAddInventoryTutorial1Seen() {
+        hasSeenGalaxyAddInventoryTutorial1 = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_GALAXY_ADD_INVENTORY_1, true)?.apply()
+    }
+
+    fun markGalaxyAddInventoryTutorial2Seen() {
+        hasSeenGalaxyAddInventoryTutorial2 = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_GALAXY_ADD_INVENTORY_2, true)?.apply()
+    }
+
+    fun markEquipmentScreenTutorialSeen() {
+        hasSeenEquipmentScreenTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_EQUIPMENT_SCREEN, true)?.apply()
+    }
+
+    fun markStoreScreenTutorialSeen() {
+        hasSeenStoreScreenTutorial = true
+        prefs?.edit()?.putBoolean(KEY_TUTORIAL_STORE_SCREEN, true)?.apply()
+    }
     
     private var _userCredits = mutableStateOf(0)
     private var _userXP = mutableStateOf(0)
@@ -117,6 +193,8 @@ object UserDataRepository {
     // Tutorial flags (in-memory)
     var hasSeenMainWelcomeTutorial: Boolean = false
         private set
+    var hasSeenMainFocusRealLifeTutorial: Boolean = false
+        private set
     var hasSeenMainLaunchTutorial: Boolean = false
         private set
     var hasSeenTravelTutorial: Boolean = false
@@ -126,12 +204,47 @@ object UserDataRepository {
     var hasSeenVaultTutorial: Boolean = false
         private set
 
+    /** First-time ShipSelectionScreen copy; intentionally excluded from [hasCompletedAllTutorials]. */
+    var hasSeenShipSelectionTutorial: Boolean = false
+        private set
+
+    /** First-time LocationsScreen copy; intentionally excluded from [hasCompletedAllTutorials]. */
+    var hasSeenLocationsSelectionTutorial: Boolean = false
+        private set
+
+    /** First-time StaryardScreen copy; intentionally excluded from [hasCompletedAllTutorials]. */
+    var hasSeenStaryardTutorial: Boolean = false
+        private set
+
+    /** First-time Staryard Shipcards tab copy; intentionally excluded from [hasCompletedAllTutorials]. */
+    var hasSeenStaryardShipcardsTutorial: Boolean = false
+        private set
+
+    /** First step: Galaxy ADD inventory / boost sheet; excluded from [hasCompletedAllTutorials]. */
+    var hasSeenGalaxyAddInventoryTutorial1: Boolean = false
+        private set
+
+    /** Second step: Galaxy ADD inventory / boost sheet; excluded from [hasCompletedAllTutorials]. */
+    var hasSeenGalaxyAddInventoryTutorial2: Boolean = false
+        private set
+
+    /** First-time EquipmentScreen copy; intentionally excluded from [hasCompletedAllTutorials]. */
+    var hasSeenEquipmentScreenTutorial: Boolean = false
+        private set
+
+    /** First-time StoreScreen copy; intentionally excluded from [hasCompletedAllTutorials]. */
+    var hasSeenStoreScreenTutorial: Boolean = false
+        private set
+
     /**
      * Returns true when the user has seen all onboarding/tutorial modals.
      * Used to gate certain features (e.g., interstitial ads) until onboarding is complete.
+     * Optional screen-specific tutorials (e.g. ship selection, locations, staryard, shipcards tab, Galaxy ADD inventory, equipment store, store) are not included so ads are not blocked
+     * if the user never opens those screens.
      */
     fun hasCompletedAllTutorials(): Boolean {
         return hasSeenMainWelcomeTutorial &&
+                hasSeenMainFocusRealLifeTutorial &&
                 hasSeenMainLaunchTutorial &&
                 hasSeenTravelTutorial &&
                 hasSeenCareerTutorial &&
