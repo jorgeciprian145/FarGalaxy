@@ -671,15 +671,25 @@ private fun ShipCardPlaceholderContainer(
 ) {
     val backgroundResId = getStaryardBackgroundResId(rarity)
 
+    val deckImageResId = getShipCardDeckImageResId(rarity)
+
     Box(
         modifier = modifier
             .width(containerWidth)
             .aspectRatio(1f)
             .clickable(onClick = onClick)
     ) {
-        // Background SVG only – no inner content yet
+        // Background SVG (selection frame)
         Image(
             painter = painterResource(id = backgroundResId),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds
+        )
+
+        // Deck art on top, fills the square (same layering as ship tiles)
+        Image(
+            painter = painterResource(id = deckImageResId),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds
@@ -770,6 +780,21 @@ private fun PriceBadge(
  * @param rarity The ship's rarity (COMMON, UNCOMMON, RARE, EPIC, LEGENDARY)
  * @return The drawable resource ID for the background
  */
+/**
+ * Deck illustration for shipcard placeholders: uncommon / rare / legendary assets.
+ * EPIC uses [R.drawable.raredeck] to match the three shipcard slots (uncommon, epic-as-“rare”, legendary).
+ */
+private fun getShipCardDeckImageResId(rarity: ShipRarity): Int {
+    return when (rarity) {
+        ShipRarity.COMMON -> R.drawable.uncommondeck
+        ShipRarity.UNCOMMON -> R.drawable.uncommondeck
+        ShipRarity.RARE -> R.drawable.raredeck
+        ShipRarity.EPIC -> R.drawable.raredeck
+        ShipRarity.LEGENDARY -> R.drawable.legendarydeck
+        ShipRarity.MYTHICAL -> R.drawable.legendarydeck
+    }
+}
+
 private fun getStaryardBackgroundResId(rarity: ShipRarity): Int {
     val rarityName = when (rarity) {
         ShipRarity.COMMON -> "common"
