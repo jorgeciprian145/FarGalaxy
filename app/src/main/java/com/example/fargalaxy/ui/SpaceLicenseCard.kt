@@ -2,6 +2,7 @@ package com.example.fargalaxy.ui
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -54,10 +59,18 @@ fun SpaceLicenseCard(
     progress: Float,
     modifier: Modifier = Modifier
 ) {
+    // If the user's level changes, we don't want the progress bar to tween/shrink across the boundary.
+    // Instead, snap the progress so it visually resets to the new level instantly.
+    var previousLevel by remember { mutableStateOf(level) }
+    val isLevelChange = level != previousLevel
+    LaunchedEffect(level) {
+        previousLevel = level
+    }
+
     // Animate progress value for smooth transitions
     val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 500),
+        animationSpec = if (isLevelChange) snap() else tween(durationMillis = 500),
         label = "progress_animation"
     )
     

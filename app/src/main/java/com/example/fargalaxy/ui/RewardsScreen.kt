@@ -263,17 +263,6 @@ fun RewardsScreen(
     val newXP = currentXP + earnedXP
     val newCredits = currentCredits + earnedCredits
 
-    // Persist earned XP and credits when the rewards screen is shown
-    // This is called once per completed travel session (not for cancelled travels)
-    LaunchedEffect(Unit) {
-        if (earnedXP > 0) {
-            UserDataRepository.addXp(earnedXP)
-        }
-        if (earnedCredits > 0) {
-            UserDataRepository.addCredits(earnedCredits)
-        }
-    }
-    
     // Animation states
     var startXPAnimation by remember { mutableStateOf(false) }
     var startCreditsAnimation by remember { mutableStateOf(false) }
@@ -522,13 +511,19 @@ fun RewardsScreen(
 
             for (i in 0..steps) {
                 val nextXp = startValue + stepValue * i
-                animatedXP = nextXp.toInt()
 
                 // Update per-level XP and handle level-ups
                 xpForAnim = nextXp
                 var xpInLevel = xpForAnim - totalXPAtLevelStart
                 while (xpInLevel >= xpRequiredForLevel) {
-                    // Level up: move to next level and reset level progress
+                    // Render a "level completed" frame first (full bar), then advance to the next level.
+                    // Without this, the UI can appear to abruptly jump to the next level with 0 XP.
+                    animatedXP = (totalXPAtLevelStart + xpRequiredForLevel).toInt()
+                    animatedLevel = levelForAnim
+                    animatedLevelProgress = 1f
+                    delay(stepDelay)
+
+                    // Level up: move to next level
                     levelForAnim += 1
                     totalXPAtLevelStart += xpRequiredForLevel
                     xpInLevel = xpForAnim - totalXPAtLevelStart
@@ -538,6 +533,8 @@ fun RewardsScreen(
                         .coerceAtLeast(1f)
                 }
 
+                // Normal in-level update for this step.
+                animatedXP = nextXp.toInt()
                 animatedLevel = levelForAnim
                 animatedLevelProgress = (xpInLevel / xpRequiredForLevel).coerceIn(0f, 1f)
 
@@ -590,42 +587,43 @@ fun RewardsScreen(
     LaunchedEffect(startCreditsAnimation) {
         if (startCreditsAnimation) {
             // Play credits sound effect (start with animation)
-            val creditsSoundPlayer = try {
-                MediaPlayer.create(context, R.raw.coins)?.apply {
-                    isLooping = true
+            var creditsSoundPlayer: MediaPlayer? = null
+            try {
+                creditsSoundPlayer = MediaPlayer.create(context, R.raw.coins)
+                creditsSoundPlayer?.apply {
+                    // This sound should play once. Looping can continue forever if the composable is disposed mid-animation.
+                    isLooping = false
                     setVolume(1f, 1f)
                     start()
                 }
-            } catch (e: Exception) {
-                null
-            }
             
-            // Animate credits from currentCredits to newCredits over 500ms
-            val creditsStartValue = currentCredits.toFloat()
-            val creditsEndValue = newCredits.toFloat()
-            val creditsDuration = 500L
-            val creditsSteps = 30
-            val creditsStepDelay = creditsDuration / creditsSteps
-            val creditsStepValue = (creditsEndValue - creditsStartValue) / creditsSteps
-            
-            for (i in 0..creditsSteps) {
-                animatedCredits = (creditsStartValue + creditsStepValue * i).toInt()
-                delay(creditsStepDelay)
-            }
-            animatedCredits = newCredits
-            // Update global state
-            UserDataRepository.userCredits = newCredits
-            
-            // Stop credits sound effect
-            try {
-                creditsSoundPlayer?.let { player ->
-                    if (player.isPlaying) {
-                        player.stop()
-                    }
-                    player.release()
+                // Animate credits from currentCredits to newCredits over 500ms
+                val creditsStartValue = currentCredits.toFloat()
+                val creditsEndValue = newCredits.toFloat()
+                val creditsDuration = 500L
+                val creditsSteps = 30
+                val creditsStepDelay = creditsDuration / creditsSteps
+                val creditsStepValue = (creditsEndValue - creditsStartValue) / creditsSteps
+
+                for (i in 0..creditsSteps) {
+                    animatedCredits = (creditsStartValue + creditsStepValue * i).toInt()
+                    delay(creditsStepDelay)
                 }
-            } catch (e: Exception) {
-                // Ignore sound errors
+                animatedCredits = newCredits
+                // Update global state
+                UserDataRepository.userCredits = newCredits
+            } finally {
+                // Always stop/release even if the coroutine gets cancelled.
+                try {
+                    creditsSoundPlayer?.let { player ->
+                        if (player.isPlaying) {
+                            player.stop()
+                        }
+                        player.release()
+                    }
+                } catch (_: Exception) {
+                    // Ignore sound errors
+                }
             }
         }
     }
