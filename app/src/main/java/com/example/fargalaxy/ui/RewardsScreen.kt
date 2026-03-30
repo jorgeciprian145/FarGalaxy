@@ -34,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -255,13 +256,27 @@ fun RewardsScreen(
         (baseRewardsCredits * (1f + equipmentCreditsModifier)).toInt()
     }
     
-    // Get current user data
-    val currentXP = UserDataRepository.userXP
-    val currentCredits = UserDataRepository.userCredits
+    // Snapshot current user data for this rewards instance so animation start/end values stay stable.
+    val currentXP = remember { UserDataRepository.userXP }
+    val currentCredits = remember { UserDataRepository.userCredits }
     
     // Calculate new values (base values before penalties/space conditions are applied)
     val newXP = currentXP + earnedXP
     val newCredits = currentCredits + earnedCredits
+
+    // Persist rewards exactly once per rewards screen instance, independent of animation completion.
+    var rewardsApplied by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(earnedXP, earnedCredits, rewardsApplied) {
+        if (!rewardsApplied) {
+            if (earnedXP > 0) {
+                UserDataRepository.addXp(earnedXP)
+            }
+            if (earnedCredits > 0) {
+                UserDataRepository.addCredits(earnedCredits)
+            }
+            rewardsApplied = true
+        }
+    }
 
     // Animation states
     var startXPAnimation by remember { mutableStateOf(false) }
@@ -552,9 +567,6 @@ fun RewardsScreen(
             } else {
                 0f
             }
-            // Update global state
-            UserDataRepository.userXP = newXP
-            
             // Stop XP sound effect
             try {
                 xpSoundPlayer?.let { player ->
@@ -610,8 +622,6 @@ fun RewardsScreen(
                     delay(creditsStepDelay)
                 }
                 animatedCredits = newCredits
-                // Update global state
-                UserDataRepository.userCredits = newCredits
             } finally {
                 // Always stop/release even if the coroutine gets cancelled.
                 try {
