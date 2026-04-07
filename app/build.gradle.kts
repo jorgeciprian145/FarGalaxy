@@ -14,8 +14,8 @@ android {
         applicationId = "com.jorgeciprian.fargalaxy"
         minSdk = 24
         targetSdk = 36
-        versionCode = 11
-        versionName = "1.0.9"
+        versionCode = 13
+        versionName = "1.0.11"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -63,7 +63,7 @@ dependencies {
     implementation("io.coil-kt:coil-gif:2.5.0")
 
     // Google Play Billing for in-app purchases (Dying Star + credits pack)
-    implementation("com.android.billingclient:billing-ktx:6.2.1")
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

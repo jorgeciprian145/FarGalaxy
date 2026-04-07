@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -84,11 +85,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.media.MediaPlayer
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import android.content.Context
+import android.view.ViewConfiguration
 import kotlin.math.abs
 import kotlin.math.sqrt
 import com.airbnb.lottie.compose.LottieAnimation
@@ -106,6 +104,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 
 // Exo 2 font family definition - variable font set to Regular weight (W400)
 val Exo2 = FontFamily(Font(R.font.exo2, weight = FontWeight.W400))
+
+/**
+ * Finger movement vs ship movement (screen-relative). E.g. 0.25 ⇒ dragging 20% of screen height
+ * moves the ship by ~5% of screen height before clamps.
+ */
+private const val TRAVEL_SHIP_DRAG_SENSITIVITY = 0.25f
 
 /**
  * Enum to represent which screen is active in the indicator
@@ -3726,128 +3730,57 @@ fun GalaxyScreen(
             )
         }
 
-        // Tilt-based movement for ship and impulse during travel
-        val context = LocalContext.current
-        val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager }
-        val accelerometer = remember { sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
-        val coroutineScope = rememberCoroutineScope()
+        // Drag-based ship movement during travel (tilt removed). Max travel: 15% screen width (X), 20% height (Y).
+        val localDensity = LocalDensity.current
+        val configuration = LocalConfiguration.current
+        val travelDragContext = LocalContext.current
+        val touchSlopPx = remember(travelDragContext) {
+            ViewConfiguration.get(travelDragContext).scaledTouchSlop.toFloat()
+        }
+        val maxHorizontalTravelDp = configuration.screenWidthDp * 0.15f
+        val maxVerticalTravelDp = configuration.screenHeightDp * 0.20f
         
-        // Target offsets based on tilt (will be animated to)
-        var targetVerticalOffset by remember { mutableStateOf(0f) } // in dp
-        var targetHorizontalOffset by remember { mutableStateOf(0f) } // in dp
+        var targetVerticalOffset by remember { mutableStateOf(0f) } // dp
+        var targetHorizontalOffset by remember { mutableStateOf(0f) } // dp
+        var isDraggingShip by remember { mutableStateOf(false) }
+        // Avoid mutableState during drag — recompositions can interrupt the gesture.
+        val dragAccumulatedPxHolder = remember { floatArrayOf(0f) }
         
-        // Track if we're in the last 10 seconds (need to return to center)
+        // Track if we're in the last 10 seconds (ship stays centered, no drag)
         val isLast10Seconds = remainingSeconds <= 10 && isTraveling
         
-        // Sensor listener to detect device tilt
-        // Capture remainingSeconds to check in the last 10 seconds
-        var currentRemainingSeconds by remember { mutableStateOf(remainingSeconds) }
-        
-        // Update currentRemainingSeconds when remainingSeconds changes
-        LaunchedEffect(remainingSeconds) {
-            currentRemainingSeconds = remainingSeconds
-        }
-        
-        DisposableEffect(isTraveling, accelerometer, sensorManager) {
-            var listener: SensorEventListener? = null
-            
-            if (isTraveling && accelerometer != null && sensorManager != null) {
-                listener = object : SensorEventListener {
-                    override fun onSensorChanged(event: SensorEvent?) {
-                        if (event == null) return
-                        
-                        // Don't respond to tilt in the last 10 seconds - ship should stay centered
-                        // Ignore all sensor input if we're in the last 10 seconds
-                        if (currentRemainingSeconds <= 10) {
-                            return // Don't update offsets, ship will be forced to center by LaunchedEffect
-                        }
-                        
-                        // Get accelerometer values (x, y, z)
-                        val x = event.values[0]
-                        val y = event.values[1]
-                        val z = event.values[2]
-                        
-                        // Calculate tilt sensitivity
-                        // For a 10-degree tilt: sin(10°) ≈ 0.174, so acceleration component ≈ 0.174 * 9.8 ≈ 1.7 m/s²
-                        // We want this to give us good movement (maybe 15-18dp)
-                        // So sensitivity = 15 / 1.7 ≈ 8.8, we'll use 9 for good responsiveness
-                        val sensitivity = 9f
-                        
-                        // Calculate tilt in horizontal direction only
-                        // X axis: In portrait mode, when you tilt LEFT, X becomes negative
-                        //        When you tilt RIGHT, X becomes positive
-                        //        We want: tilt left → ship moves left (negative offset)
-                        //                 tilt right → ship moves right (positive offset)
-                        //        So we use -x to flip the direction
-                        val tiltX = -x * sensitivity // Negate X so left tilt = left movement, right tilt = right movement
-                        
-                        // Check if device is relatively level horizontally (tilt is minimal)
-                        // Use a threshold of ~0.2 m/s² which corresponds to ~2dp movement
-                        val levelThreshold = 0.2f // m/s²
-                        
-                        // Update state on main thread to ensure recomposition
-                        val newHorizontal = if (abs(x) < levelThreshold) {
-                            0f
-                        } else {
-                            tiltX.coerceIn(-20f, 20f) // Max movement reduced to 20dp
-                        }
-                        
-                        // Vertical movement is disabled - always keep at center
-                        val newVertical = 0f
-                        
-                        // Only update if values changed to avoid unnecessary recompositions
-                        if (abs(targetHorizontalOffset - newHorizontal) > 0.1f || abs(targetVerticalOffset - newVertical) > 0.1f) {
-                            targetHorizontalOffset = newHorizontal
-                            targetVerticalOffset = newVertical
-                        }
-                    }
-                    
-                    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-                        // Not needed for this use case
-                    }
-                }
-                
-                // Register sensor listener
-                sensorManager.registerListener(
-                    listener,
-                    accelerometer,
-                    SensorManager.SENSOR_DELAY_GAME // Use GAME delay for faster updates (~50Hz)
-                )
-            } else {
+        LaunchedEffect(isTraveling) {
+            if (!isTraveling) {
+                isDraggingShip = false
                 targetVerticalOffset = 0f
                 targetHorizontalOffset = 0f
-            }
-            
-            onDispose {
-                listener?.let {
-                    sensorManager?.unregisterListener(it)
-                }
+                dragAccumulatedPxHolder[0] = 0f
             }
         }
         
-        // Force center in last 10 seconds
         LaunchedEffect(isLast10Seconds) {
             if (isLast10Seconds) {
+                isDraggingShip = false
                 targetVerticalOffset = 0f
                 targetHorizontalOffset = 0f
+                dragAccumulatedPxHolder[0] = 0f
             }
         }
         
-        // Animate to target position smoothly over 4 seconds
         val verticalOffset = animateDpAsState(
             targetValue = targetVerticalOffset.dp,
-            animationSpec = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+            animationSpec = if (isDraggingShip) snap() else tween(durationMillis = 700, easing = FastOutSlowInEasing),
             label = "vertical_offset"
         ).value
         
         val horizontalOffset = animateDpAsState(
             targetValue = targetHorizontalOffset.dp,
-            animationSpec = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+            animationSpec = if (isDraggingShip) snap() else tween(durationMillis = 700, easing = FastOutSlowInEasing),
             label = "horizontal_offset"
         ).value
         
         // Calculate impulse opacity: 100% -> 60% (2s) -> 100% (2s), repeating every 4 seconds
-        // Keep the opacity animation separate from tilt movement
+        // Keep the opacity animation separate from ship drag offset
         var opacityAnimationStartTime by remember { mutableStateOf(0L) }
         var opacityProgress by remember { mutableStateOf(0f) }
         
@@ -3922,10 +3855,61 @@ fun GalaxyScreen(
                     if (isTraveling) {
                         Modifier
                             .offset(x = horizontalOffset, y = verticalOffset)
-                            .clickable { 
-                                // Toggle ring visibility when tapping ship during travel
-                                isRingVisible = !isRingVisible
-                            }
+                            .then(
+                                if (isLast10Seconds) {
+                                    Modifier.clickable {
+                                        isRingVisible = !isRingVisible
+                                    }
+                                } else {
+                                    Modifier.pointerInput(
+                                        isTraveling,
+                                        maxHorizontalTravelDp,
+                                        maxVerticalTravelDp,
+                                        touchSlopPx,
+                                        localDensity.density
+                                    ) {
+                                        detectDragGestures(
+                                            onDragStart = {
+                                                isDraggingShip = true
+                                                dragAccumulatedPxHolder[0] = 0f
+                                            },
+                                            onDrag = { change, dragAmount ->
+                                                dragAccumulatedPxHolder[0] += dragAmount.getDistance()
+                                                val dxDp =
+                                                    dragAmount.x / localDensity.density * TRAVEL_SHIP_DRAG_SENSITIVITY
+                                                val dyDp =
+                                                    dragAmount.y / localDensity.density * TRAVEL_SHIP_DRAG_SENSITIVITY
+                                                targetHorizontalOffset =
+                                                    (targetHorizontalOffset + dxDp).coerceIn(
+                                                        -maxHorizontalTravelDp,
+                                                        maxHorizontalTravelDp
+                                                    )
+                                                targetVerticalOffset =
+                                                    (targetVerticalOffset + dyDp).coerceIn(
+                                                        -maxVerticalTravelDp,
+                                                        maxVerticalTravelDp
+                                                    )
+                                                change.consume()
+                                            },
+                                            onDragEnd = {
+                                                isDraggingShip = false
+                                                if (dragAccumulatedPxHolder[0] < touchSlopPx) {
+                                                    isRingVisible = !isRingVisible
+                                                }
+                                                targetHorizontalOffset = 0f
+                                                targetVerticalOffset = 0f
+                                                dragAccumulatedPxHolder[0] = 0f
+                                            },
+                                            onDragCancel = {
+                                                isDraggingShip = false
+                                                targetHorizontalOffset = 0f
+                                                targetVerticalOffset = 0f
+                                                dragAccumulatedPxHolder[0] = 0f
+                                            }
+                                        )
+                                    }
+                                }
+                            )
                     } else {
                         Modifier
                     }

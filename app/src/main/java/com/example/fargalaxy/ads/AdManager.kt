@@ -9,6 +9,7 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.ads.RequestConfiguration
 
 /**
  * AdManager - handles loading and showing interstitial ads.
@@ -22,16 +23,23 @@ object AdManager {
 
     // TODO: Replace this with your real AdMob interstitial ad unit ID before release.
     // This is Google's sample test ID and is safe for development.
-    private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
+    private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-4733251926083453/8274858297"
 
     /**
      * Initialize the Google Mobile Ads SDK.
      * Safe to call multiple times; initialization is idempotent.
      */
     fun initialize(context: Context, onInitialized: () -> Unit = {}) {
-        MobileAds.initialize(context) {
-            onInitialized()
-        }
+
+        MobileAds.setRequestConfiguration(
+            RequestConfiguration.Builder()
+                .setTestDeviceIds(listOf("EB3EF56509E4305D7CEDD508687CBB60"))
+                .build()
+        )
+
+        MobileAds.initialize(context)
+
+        onInitialized()
     }
 
     /**
