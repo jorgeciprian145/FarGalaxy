@@ -12,6 +12,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import com.example.fargalaxy.ads.AdManager
+import com.example.fargalaxy.analytics.FirebaseAnalyticsTracker
 import com.example.fargalaxy.billing.BillingManager
 import com.example.fargalaxy.ui.MainScreen
 import com.example.fargalaxy.ui.theme.FarGalaxyTheme
@@ -71,6 +72,9 @@ class MainActivity : ComponentActivity() {
         AdManager.initialize(this) {
             AdManager.loadInterstitialAd(this)
         }
+
+        // Explicit app_open custom event for funnel analysis.
+        FirebaseAnalyticsTracker.logAppOpen(this)
         
         // TODO: REMOVE TESTING CODE - Reset progress to zero for testing ship unlock
         // NOTE: Commented out to preserve progress across app sessions

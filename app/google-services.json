@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "912484975785",
+    "project_id": "far-galaxy-2",
+    "storage_bucket": "far-galaxy-2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:912484975785:android:6d7649af016539cfeb55b8",
+        "android_client_info": {
+          "package_name": "com.jorgeciprian.fargalaxy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDb5uP1DFuEVhm8n2OSTJmbqPyhok4wYYk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -40,14 +40,17 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.example.fargalaxy.R
 import com.example.fargalaxy.data.CrateOpenResult
+import com.example.fargalaxy.data.CrateReward
 import com.example.fargalaxy.data.CrateRepository
 import com.example.fargalaxy.data.CrateType
 import com.example.fargalaxy.data.GameStateRepository
 import com.example.fargalaxy.data.ShipRepository
+import com.example.fargalaxy.analytics.FirebaseAnalyticsTracker
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.model.ShipRarity
 import com.example.fargalaxy.utils.playMouseClickSound
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -69,6 +72,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     )
     
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     
     // Track if GalaxyScreen is idle (not preparing or traveling)
     // This will be updated by GalaxyScreen
@@ -100,7 +104,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     
     // Track active screen based on current page
     var activeScreen by remember { mutableStateOf(ActiveScreen.CENTER) }
-    
+
     // Track if ShipDetailsScreen should be shown
     var showShipDetails by remember { mutableStateOf(false) }
     
@@ -227,7 +231,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var shipUnlockedFromCrate by remember { mutableStateOf<String?>(null) }
 
     // Get activity context for exiting app and for showing interstitial ads
-    val context = LocalContext.current
     val activity = context as? Activity
 
     // --- Main theme soundtrack (maintheme.mp3) ---
@@ -367,6 +370,33 @@ fun MainScreen(modifier: Modifier = Modifier) {
             if (act != null && tutorialsDone && (page == 0 || page == 2)) {
                 com.example.fargalaxy.ads.AdManager.maybeShowInterstitialOnCareerOrVaultVisit(act)
             }
+        }
+    }
+
+    // Track main screen usage (Career/Galaxy/Vault)
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collectLatest { page ->
+            val screenName = when (page) {
+                0 -> "career"
+                1 -> "galaxy"
+                2 -> "vault"
+                else -> "unknown"
+            }
+            FirebaseAnalyticsTracker.logScreenView(context, screenName)
+        }
+    }
+
+    // Store usage entry
+    LaunchedEffect(showStore) {
+        if (showStore) {
+            FirebaseAnalyticsTracker.logStoreOpened(context)
+        }
+    }
+
+    // Onboarding funnel entry (first tutorial modal)
+    LaunchedEffect(showMainWelcomeTutorial) {
+        if (showMainWelcomeTutorial) {
+            FirebaseAnalyticsTracker.logOnboardingStarted(context)
         }
     }
     
@@ -966,6 +996,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 onButtonClick = {
                     playMouseClickSound(context, coroutineScope)
                     showMainLaunchTutorial = false
+                    FirebaseAnalyticsTracker.logOnboardingCompleted(context)
                 }
             )
         }
@@ -1229,6 +1260,18 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         // Open crate through repository and show opening overlay
                         val result = CrateRepository.openCrate(crateType, GameStateRepository.isTestMode)
                         if (result != null) {
+                            val rewardType = when (result.reward) {
+                                is CrateReward.Credits -> "credits"
+                                is CrateReward.Equipment -> "equipment"
+                                is CrateReward.ShipCard -> "ship_card"
+                            }
+                            FirebaseAnalyticsTracker.logCrateOpened(
+                                context = context,
+                                crateType = crateType.name.lowercase(),
+                                rewardType = rewardType,
+                                unlockedShipId = result.unlockedShipId
+                            )
+
                             // Refresh counts after consumption
                             standardCrates = CrateRepository.getCrateCount(CrateType.STANDARD)
                             advancedCrates = CrateRepository.getCrateCount(CrateType.ADVANCED)
@@ -1296,6 +1339,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     
                     // If a ship was unlocked, show the ship unlocked screen
                     if (unlockedShipId != null) {
+                        FirebaseAnalyticsTracker.logShipUnlocked(
+                            context = context,
+                            shipId = unlockedShipId,
+                            source = "crate"
+                        )
                         shipUnlockedFromCrate = unlockedShipId
                     }
                 }

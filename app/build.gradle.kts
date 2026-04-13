@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -14,8 +15,8 @@ android {
         applicationId = "com.jorgeciprian.fargalaxy"
         minSdk = 24
         targetSdk = 36
-        versionCode = 13
-        versionName = "1.0.11"
+        versionCode = 14
+        versionName = "1.0.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -54,6 +55,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation("androidx.compose.foundation:foundation:1.7.4")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
     // Google Mobile Ads (AdMob) for interstitial ads
     implementation("com.google.android.gms:play-services-ads:23.0.0")

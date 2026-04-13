@@ -94,6 +94,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.fargalaxy.R
+import com.example.fargalaxy.analytics.FirebaseAnalyticsTracker
 import com.example.fargalaxy.data.UserDataRepository
 import com.example.fargalaxy.model.Ship
 import com.example.fargalaxy.utils.playMouseClickSound
@@ -2820,6 +2821,8 @@ fun GalaxyScreen(
     onTravelCanceledModalVisibilityChange: (Boolean) -> Unit = {},
     onUnstableCargoCanceledModalVisibilityChange: (Boolean) -> Unit = {}
 ) {
+    val analyticsContext = LocalContext.current
+
     // State management: All state is saved across configuration changes (screen rotation, etc.)
     // selectedMinutes: The time duration selected by the user (range: 5-60, step: 5)
     var selectedMinutes by rememberSaveable { mutableStateOf(25) }
@@ -3026,6 +3029,11 @@ fun GalaxyScreen(
             
             // Check if travel completed
             if (remainingSeconds <= 0 && !wasTravelCancelled) {
+                FirebaseAnalyticsTracker.logFocusSessionCompleted(
+                    context = analyticsContext,
+                    durationMinutes = selectedMinutes,
+                    penalties = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
+                )
                 // Capture penalty count before resetting
                 travelPenaltyCount = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
                 isTraveling = false
@@ -3134,6 +3142,17 @@ fun GalaxyScreen(
     LaunchedEffect(showShipUnlockedScreen) {
         onShipUnlockedScreenVisibilityChange(showShipUnlockedScreen)
     }
+
+    // Analytics: ship unlocked during focus-session flow
+    LaunchedEffect(showShipUnlockedScreen, currentShipUnlockedIndex, newlyUnlockedShips) {
+        if (showShipUnlockedScreen && currentShipUnlockedIndex in newlyUnlockedShips.indices) {
+            FirebaseAnalyticsTracker.logShipUnlocked(
+                context = analyticsContext,
+                shipId = newlyUnlockedShips[currentShipUnlockedIndex],
+                source = "focus_session"
+            )
+        }
+    }
     
     // Notify parent about location discovered screen visibility
     LaunchedEffect(showLocationDiscoveredScreen) {
@@ -3217,6 +3236,11 @@ fun GalaxyScreen(
                 .toSet()
         } else {
             // Stop travel: Cancel countdown
+            FirebaseAnalyticsTracker.logFocusSessionAbandoned(
+                context = analyticsContext,
+                reason = "manual_stop",
+                penalties = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
+            )
             isTraveling = false
             isInitialRingAppearance = false // Reset for next launch
             wasTravelCancelled = true // Mark as cancelled
@@ -3302,6 +3326,11 @@ fun GalaxyScreen(
             // Set up callback for trip cancellation (if user is away for >20 seconds or has 5+ penalties)
             com.example.fargalaxy.data.PenaltyTracker.onTripCancelled = { reason ->
                 // Cancel the trip
+                FirebaseAnalyticsTracker.logFocusSessionAbandoned(
+                    context = analyticsContext,
+                    reason = reason,
+                    penalties = com.example.fargalaxy.data.PenaltyTracker.getPenaltyCount()
+                )
                 wasTravelCancelled = true
             isTraveling = false
                 cancellationReason = reason // Store the cancellation reason
@@ -3587,6 +3616,11 @@ fun GalaxyScreen(
                 // Start travel immediately (don't wait for sound)
                 isPreparingLaunch = false
                 isTraveling = true
+                FirebaseAnalyticsTracker.logFocusSessionStarted(
+                    context = analyticsContext,
+                    durationMinutes = selectedMinutes,
+                    shipId = currentShip.id
+                )
                 // DISABLED FOR PRODUCTION: Test mode removed - Use 10 seconds in test mode
                 // Apply 10% reduction for experimental fuel if equipped
                 val equippedItem = com.example.fargalaxy.data.EquipmentRepository.getEquippedItem()
